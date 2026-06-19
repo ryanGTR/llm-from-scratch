@@ -1,5 +1,9 @@
 # llm-from-scratch
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
+
 從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成」做成一條可重跑的
 pipeline。目標是**搞懂 LLM 原理**（A），同時練習**模型生產流水線的工程化**（C）。
 從本機（FW16 + NVIDIA 5070）起步，結構保留得很乾淨，之後可平滑搬上雲端 GPU。
