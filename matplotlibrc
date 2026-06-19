@@ -1,0 +1,4 @@
+# 專案層 matplotlib 設定：中文圖表用 CJK 字型。
+# make lab 會以 MATPLOTLIBRC 指向本檔；系統需有 Noto Sans CJK 系列字型。
+font.sans-serif: Noto Sans CJK TC, Noto Sans CJK SC, WenQuanYi Zen Hei, DejaVu Sans
+axes.unicode_minus: False

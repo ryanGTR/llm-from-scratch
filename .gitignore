@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+artifacts/*.bin
+artifacts/*.pt
+artifacts/*.json
+artifacts/*.png
+artifacts/*.txt
+artifacts/runs/
+data/raw/*.txt
+
+# Jupyter checkpoints / 生成的示範資料
+.ipynb_checkpoints/
+data/raw/demo/

@@ -1,0 +1,13 @@
+# 本專案用 uv + .venv（Python 3.12）管理；安裝見 README。
+# 參考用清單（實際請用 `uv pip install`）：
+
+# 資料探索 / Jupyter（已裝）
+numpy
+matplotlib
+jupyterlab
+
+# 訓練（要訓練時再裝；CUDA 版要從 PyTorch 官方 index，別只 `pip install torch`）
+# uv pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch
+
+# 註：純資料 pipeline（make test / verify / data-demo / stats）只用 stdlib，免裝也能跑。
