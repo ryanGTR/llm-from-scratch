@@ -81,8 +81,13 @@ class CausalSelfAttention(nn.Module):
         assert cfg.n_embd % cfg.n_head == 0, "n_embd 必須能被 n_head 整除"
         self.n_head = cfg.n_head
         self.n_embd = cfg.n_embd
-        # 一次算出 query / key / value（三份各 n_embd 維）
-        self.c_attn = nn.Linear(cfg.n_embd, 3 * cfg.n_embd, bias=cfg.bias)
+        self.head_dim = cfg.n_embd // cfg.n_head
+        # GQA：n_kv_head 組 key/value 給 n_head 個 query 共用（0=標準 MHA）
+        self.n_kv_head = cfg.n_kv_head or cfg.n_head
+        assert cfg.n_head % self.n_kv_head == 0, "n_head 要能被 n_kv_head 整除"
+        self.kv_dim = self.n_kv_head * self.head_dim
+        # q 是 n_embd 維，k/v 各只有 kv_dim 維（GQA 時更小 → 省 KV-cache）
+        self.c_attn = nn.Linear(cfg.n_embd, cfg.n_embd + 2 * self.kv_dim, bias=cfg.bias)
         self.c_proj = nn.Linear(cfg.n_embd, cfg.n_embd, bias=cfg.bias)
         self.attn_dropout = nn.Dropout(cfg.dropout)
         self.resid_dropout = nn.Dropout(cfg.dropout)
@@ -98,17 +103,21 @@ class CausalSelfAttention(nn.Module):
 
     def forward(self, x):
         B, T, C = x.shape  # batch, time(序列長), channels(n_embd)
-        q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
-        head_dim = C // self.n_head
-        # 拆成多頭：(B, T, C) -> (B, n_head, T, head_dim)
-        k = k.view(B, T, self.n_head, head_dim).transpose(1, 2)
-        q = q.view(B, T, self.n_head, head_dim).transpose(1, 2)
-        v = v.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        hd = self.head_dim
+        # q 有 n_head 個頭、k/v 只有 n_kv_head 個頭
+        q, k, v = self.c_attn(x).split([self.n_embd, self.kv_dim, self.kv_dim], dim=2)
+        q = q.view(B, T, self.n_head, hd).transpose(1, 2)
+        k = k.view(B, T, self.n_kv_head, hd).transpose(1, 2)
+        v = v.view(B, T, self.n_kv_head, hd).transpose(1, 2)
         if self.use_rope:                 # 依位置旋轉 q、k（v 不轉）
             q = apply_rope(q, self.rope_cos, self.rope_sin)
             k = apply_rope(k, self.rope_cos, self.rope_sin)
+        if self.n_kv_head != self.n_head:  # GQA：把每組 k/v 複製給該組的 query 頭共用
+            rep = self.n_head // self.n_kv_head
+            k = k.repeat_interleave(rep, dim=1)
+            v = v.repeat_interleave(rep, dim=1)
         # attention scores，scale 防止數值爆掉
-        att = (q @ k.transpose(-2, -1)) / math.sqrt(head_dim)
+        att = (q @ k.transpose(-2, -1)) / math.sqrt(hd)
         att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)

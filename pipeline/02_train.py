@@ -51,6 +51,8 @@ def main():
                     help="用 SwiGLU MLP（現代）取代 GELU MLP")
     ap.add_argument("--use_rope", action="store_true",
                     help="用 RoPE 旋轉位置編碼取代學習式 position embedding")
+    ap.add_argument("--n_kv_head", type=int, default=0,
+                    help="GQA：k/v 頭數（0=標準 MHA；<n_head=GQA，省 KV-cache）")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
@@ -67,6 +69,7 @@ def main():
     gcfg.use_rmsnorm = args.use_rmsnorm
     gcfg.use_swiglu = args.use_swiglu
     gcfg.use_rope = args.use_rope
+    gcfg.n_kv_head = args.n_kv_head
 
     torch.manual_seed(tcfg.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"

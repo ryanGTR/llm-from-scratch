@@ -209,6 +209,25 @@ class TestModernComponents(unittest.TestCase):
         self.assertIsNone(m.pos_emb)
         self.assertTrue(m(torch.randint(0, 20, (1, 8)), torch.randint(0, 20, (1, 8)))[1].item() > 0)
 
+    def test_gqa_fewer_params_and_runs(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+
+        def mk(nkv):
+            return GPT(GPTConfig(vocab_size=20, n_layer=2, n_head=4, n_embd=64,
+                                 block_size=8, n_kv_head=nkv))
+        mha, gqa, mqa = mk(0), mk(2), mk(1)   # 0 = 標準 MHA
+        # kv 頭越少 → 參數越少（k/v 投影變小）
+        self.assertLess(gqa.num_params(), mha.num_params())
+        self.assertLess(mqa.num_params(), gqa.num_params())
+        idx = torch.randint(0, 20, (1, 8))
+        for m in (gqa, mqa):                    # 都能正常 forward
+            self.assertTrue(m(idx, idx)[1].item() > 0)
+
 
 class TestAttention(unittest.TestCase):
     def test_attention_shapes_and_properties(self):
