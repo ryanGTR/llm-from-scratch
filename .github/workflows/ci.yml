@@ -1,0 +1,31 @@
+name: CI
+
+# 每次 push 與 PR 自動跑：在乾淨的 CPU 機器上驗「程式對不對」
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝 uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: 建立環境（CPU 版 torch——GitHub runner 沒有 GPU）
+        run: |
+          uv venv --python 3.12
+          uv pip install numpy
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: 單元測試（make test）
+        run: |
+          source .venv/bin/activate
+          make test
+
+      - name: 資料驗收 playbook（make verify）
+        run: |
+          source .venv/bin/activate
+          make verify

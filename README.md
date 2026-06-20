@@ -1,5 +1,6 @@
 # llm-from-scratch
 
+![CI](https://github.com/ryanGTR/llm-from-scratch/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
