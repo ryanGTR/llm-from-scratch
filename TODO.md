@@ -35,13 +35,13 @@
 
 - [ ] 🟡 BPE 從 char-level → **byte-level**（處理任何 unicode/emoji，修「遇生字直接丟掉」的真 bug）
 - [ ] 🟡 BPE 效率：純 Python O(N×merges) 太慢 → 增量計數，或直接接 **tiktoken**
-- [ ] 🟢 `.bin` uint16 → **uint32**（解 vocab 上限卡在 65535）
+- [x] 🟢 `.bin` 自適應 **uint16/uint32** ✅（vocab>65535 自動用 uint32，dtype 記進 meta，所有讀取端依此讀；解溢位）
 - 對應缺陷：技術債「BPE 慢/char 起步」「uint16 上限」。
 
 ## 4. 實驗嚴謹度（讓數據站得住腳）
 
 - [x] 🟡 多 seed 重跑（mean ± std + 誤差線）✅ `scripts/multi_seed.py`：確認 SwiGLU/RoPE 真差異、雜訊地板≈0.01
-- [ ] 🟢 加獨立 **test set**（現在只有 train/val）
+- [x] 🟢 獨立 **test set** ✅（train/val/test 三切；`--test_frac`、`03_eval --split test`）
 - [x] 🟡 **Deep Ensemble** ✅ `scripts/deep_ensemble.py`：3 個不同 seed 模型機率平均 → val 1.799 < 最佳單一 1.835（降 0.035，「免費」提升，隨機森林的神經網路版）。
 - 對應缺陷：「實驗不嚴謹」。多 seed 已做；test set / deep ensemble 待補。
 
