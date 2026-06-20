@@ -53,11 +53,15 @@ def main():
                     help="用 RoPE 旋轉位置編碼取代學習式 position embedding")
     ap.add_argument("--n_kv_head", type=int, default=0,
                     help="GQA：k/v 頭數（0=標準 MHA；<n_head=GQA，省 KV-cache）")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="隨機種子（多 seed 嚴謹實驗用；不給則用 config 預設）")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
     gcfg = GPTConfig()
     # 命令列覆寫（沒給就用 config.py 預設）
+    if args.seed is not None:
+        tcfg.seed = args.seed
     if args.max_iters is not None:
         tcfg.max_iters = args.max_iters
     if args.block_size is not None:
