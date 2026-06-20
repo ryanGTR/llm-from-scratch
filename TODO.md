@@ -37,14 +37,28 @@
 - [ ] 🟢 加獨立 **test set**（現在只有 train/val）
 - 對應缺陷：「實驗不嚴謹、README 略高估」。做完才能把「趨勢」變「定論」。
 
-## 5. 工程化（往生產級靠）
+## 5. MLOps（工程化往生產級靠）★ Ryan 的戰略甜點
 
-- [ ] 🟡 config 管理：argparse → **Hydra / OmegaConf**（或 pydantic-settings），超參數集中可組合
-- [ ] 🟡 實驗追蹤：**Weights & Biases (W&B)** 或 MLflow，自動記每次 run 的參數+曲線
-- [ ] 🟢 依賴鎖定：**`uv lock`**（uv.lock）保證換機器可重現
-- [ ] 🟡 **CI（GitHub Actions）**：push 自動跑 `make test`
-- [ ] 🟡 資料/模型版本：**DVC**
-- 對應缺陷：「無 config/CI/lockfile/實驗追蹤」。
+MLOps = DevOps 的 ML 版：把「notebook 訓一個模型」變成「可重現、可靠、能持續
+運作的生產系統」。比 DevOps 多了「資料」與「模型會腐壞（data drift）」兩個變數，
+所以模型永遠不算做完，要持續監控+重訓。**這條線正好接 Ryan 的企業 IT / 治理 /
+CI-CD / IDP-CaaS 既有技能——走「ML 平台 / MLOps 工程師」用 ops 底子當差異化，
+不必跟研究員拼數學/算力。** 專案已有「嬰兒版」，標 ✅。
+
+整個生命週期：
+
+- [ ] 🟡 **config 管理**：argparse → Hydra / OmegaConf（或 pydantic-settings），超參數集中可組合
+- [ ] 🟢 **依賴鎖定**：`uv lock`（uv.lock）保證換機器可重現
+- [ ] 🟡 **實驗追蹤**：W&B / MLflow，自動記每次 run 的參數+曲線（✅ 嬰兒版＝`runs/*.csv` + `02_monitor` 面板）
+- [ ] 🟡 **資料 / 模型版本**：DVC，哪版資料訓出哪版模型、可追溯
+- [ ] 🟡 **pipeline 編排**：Makefile → Airflow / Kubeflow / Prefect（✅ 嬰兒版＝Makefile）
+- [ ] 🟡 **CI/CD for ML**：GitHub Actions，push 自動跑 `make test` + `make verify`（eval gate，品質沒過不上線）（✅ 嬰兒版＝verify playbook + test gate）
+- [ ] 🟡 **model registry**：模型版本/升版/回滾、標記哪個在 prod
+- [ ] 🔴 **部署 / 服務**：打包模型上線推論 API、KV-cache、批次、自動擴縮（vLLM）
+- [ ] 🔴 **生產監控**：盯效能 / 資料漂移 / 延遲 / 成本，退化告警（ML 獨有）
+- [ ] 🔴 **重訓迴圈**：偵測漂移 → 自動重訓 + 重部署
+- 對應缺陷：「無 config/CI/lockfile/實驗追蹤」+ 生產級全套缺。
+- 建議起手（最熟、最快有感）：**GitHub Actions CI** → uv lock → Hydra config。
 
 ## 6. 能力：放大（需要算力，不只是技巧）
 
