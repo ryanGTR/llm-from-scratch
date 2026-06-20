@@ -201,7 +201,7 @@ class TestModernComponents(unittest.TestCase):
         x = torch.randn(1, 2, 8, 16)
         rx = apply_rope(x, cos, sin)
         # 旋轉保長度；位置 0 不動（角度=0）
-        self.assertTrue(torch.allclose(x.norm(-1), rx.norm(-1), atol=1e-4))
+        self.assertTrue(torch.allclose(x.norm(dim=-1), rx.norm(dim=-1), atol=1e-4))
         self.assertTrue(torch.allclose(rx[:, :, 0], x[:, :, 0], atol=1e-5))
         # use_rope 時模型不再有學習式 pos_emb
         m = GPT(GPTConfig(vocab_size=20, n_layer=2, n_head=2, n_embd=16,
