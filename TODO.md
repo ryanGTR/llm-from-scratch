@@ -33,9 +33,10 @@
 
 ## 4. 實驗嚴謹度（讓數據站得住腳）
 
-- [ ] 🟡 每個實驗**多 seed 重跑**，給平均 + 誤差線（現在單次跑，128vs256 差 0.026 在雜訊內）
+- [x] 🟡 多 seed 重跑（mean ± std + 誤差線）✅ `scripts/multi_seed.py`：確認 SwiGLU/RoPE 真差異、雜訊地板≈0.01
 - [ ] 🟢 加獨立 **test set**（現在只有 train/val）
-- 對應缺陷：「實驗不嚴謹、README 略高估」。做完才能把「趨勢」變「定論」。
+- [ ] 🟡 **Deep Ensemble**：把多 seed 的那幾個模型「輸出平均」起來當一個 ensemble（隨機森林的神經網路版）→ 看 loss 是否再降 + 順便估不確定性。**回收 B④ 的副產物模型**，幾乎免費。
+- 對應缺陷：「實驗不嚴謹」。多 seed 已做；test set / deep ensemble 待補。
 
 ## 5. MLOps（工程化往生產級靠）★ Ryan 的戰略甜點
 
