@@ -19,10 +19,17 @@
 
 ## 2. 效率：推論/訓練加速（最能立刻見效）
 
-- [ ] 🟢 樸素 attention → **FlashAttention**（torch `F.scaled_dot_product_attention`，一行換掉）→ context 上限實測可 ×4
-- [ ] 🔴 生成加 **KV-cache**：每步只算新 token，O(T²)→O(T)（真實 LLM 推論標配）
-- [ ] 🟢 取樣 top-k → **top-p（nucleus）**（現代主流取樣）
-- 對應缺陷：技術債「沒接 Flash/KV-cache」「取樣是舊的」。
+- [x] 🟢 **FlashAttention**（torch `F.scaled_dot_product_attention`）✅ `use_flash`；數學等價、記憶體 O(T²)→O(T)、context 上限實測 ×4
+- [x] 🔴 **KV-cache**（生成時每步只算新 token，O(T²)→O(T)）✅ `generate(use_kv_cache=True)`；驗證與不快取完全相同、~2.2× 快
+- [x] 🟢 取樣 **top-p / min-p**（自適應截斷）✅
+- 對應缺陷（軸一「要不要快取」）已解。
+
+### 2b. KV-cache 壓縮（軸二：把快取「變小」，省 VRAM；三條正交手法）
+
+- [x] **砍頭數** MQA/GQA（少存幾組 k/v）✅ 已做（`n_kv_head`；MQA=設 1）。Shazeer 2019 / Ainslie 2023（Google）
+- [ ] 🔴 **低秩潛在 MLA**（把每個 KV 壓成更小的潛在向量）— DeepSeek-V2 2024
+- [ ] 🔴 **量化 TurboQuant**（k/v 形狀不變，每數字 16-bit→~3.5-bit，4.5–5× 壓縮、準度幾乎不掉）— Google 2026。做法：隨機 Hadamard 旋轉消離群值 + 1-bit QJL 校正殘差；隨機矩陣免 calibration。**正交於 GQA → 可疊在 GQA 上面再壓**。
+- 註：三者正交，可組合（GQA × 量化 × 低秩）。我們已有 GQA，量化/低秩是進階。
 
 ## 3. tokenizer 補強
 
