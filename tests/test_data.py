@@ -190,6 +190,25 @@ class TestModernComponents(unittest.TestCase):
         idx = torch.randint(0, 20, (1, 8))
         self.assertTrue(swiglu(idx, idx)[1].item() > 0)
 
+    def test_rope_is_norm_preserving_and_drops_posemb(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT, build_rope_cache, apply_rope
+        cos, sin = build_rope_cache(16, 8)
+        x = torch.randn(1, 2, 8, 16)
+        rx = apply_rope(x, cos, sin)
+        # 旋轉保長度；位置 0 不動（角度=0）
+        self.assertTrue(torch.allclose(x.norm(-1), rx.norm(-1), atol=1e-4))
+        self.assertTrue(torch.allclose(rx[:, :, 0], x[:, :, 0], atol=1e-5))
+        # use_rope 時模型不再有學習式 pos_emb
+        m = GPT(GPTConfig(vocab_size=20, n_layer=2, n_head=2, n_embd=16,
+                          block_size=8, use_rope=True))
+        self.assertIsNone(m.pos_emb)
+        self.assertTrue(m(torch.randint(0, 20, (1, 8)), torch.randint(0, 20, (1, 8)))[1].item() > 0)
+
 
 class TestAttention(unittest.TestCase):
     def test_attention_shapes_and_properties(self):

@@ -49,6 +49,8 @@ def main():
                     help="用 RMSNorm（現代）取代 LayerNorm")
     ap.add_argument("--use_swiglu", action="store_true",
                     help="用 SwiGLU MLP（現代）取代 GELU MLP")
+    ap.add_argument("--use_rope", action="store_true",
+                    help="用 RoPE 旋轉位置編碼取代學習式 position embedding")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
@@ -64,6 +66,7 @@ def main():
         gcfg.n_embd = args.n_embd
     gcfg.use_rmsnorm = args.use_rmsnorm
     gcfg.use_swiglu = args.use_swiglu
+    gcfg.use_rope = args.use_rope
 
     torch.manual_seed(tcfg.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"

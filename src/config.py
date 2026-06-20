@@ -20,6 +20,7 @@ class GPTConfig:
     # 現代化開關（可切換對比 classic vs modern）
     use_rmsnorm: bool = False  # True = RMSNorm（LLaMA 同款）；False = LayerNorm
     use_swiglu: bool = False   # True = SwiGLU MLP（LLaMA 同款）；False = GELU MLP
+    use_rope: bool = False      # True = RoPE 旋轉位置編碼；False = 學習式 position embedding
 
 
 @dataclass

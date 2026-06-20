@@ -43,6 +43,36 @@ def make_norm(cfg: GPTConfig):
     return nn.LayerNorm(cfg.n_embd, bias=cfg.bias)
 
 
+def build_rope_cache(head_dim: int, max_seq: int, base: float = 10000.0):
+    """預先算好每個位置、每個維度對的旋轉角度的 cos/sin。
+
+    第 i 對維度的旋轉頻率 = base^(-2i/head_dim)：低維轉得快、高維轉得慢，
+    像時鐘的秒針/分針/時針——不同頻率組合就能唯一編碼位置。
+    回傳 cos, sin，形狀 (max_seq, head_dim/2)。
+    """
+    inv_freq = 1.0 / (base ** (torch.arange(0, head_dim, 2).float() / head_dim))
+    t = torch.arange(max_seq).float()
+    freqs = torch.outer(t, inv_freq)          # (max_seq, head_dim/2)
+    return torch.cos(freqs), torch.sin(freqs)
+
+
+def apply_rope(x, cos, sin):
+    """把 q 或 k 依其位置「旋轉」。x: (B, n_head, T, head_dim)。
+
+    把每相鄰兩維 (x1, x2) 當成平面上一個點，旋轉角度 θ：
+      x1' = x1·cosθ − x2·sinθ
+      x2' = x1·sinθ + x2·cosθ
+    旋轉不改變向量長度，只改方向 → q·k 點積會自然變成「相對位置」的函數。
+    """
+    T = x.shape[2]
+    cos = cos[:T].view(1, 1, T, -1)
+    sin = sin[:T].view(1, 1, T, -1)
+    x1, x2 = x[..., ::2], x[..., 1::2]        # 偶數維 / 奇數維
+    rx1 = x1 * cos - x2 * sin
+    rx2 = x1 * sin + x2 * cos
+    return torch.stack([rx1, rx2], dim=-1).flatten(-2)   # 交錯併回去
+
+
 class CausalSelfAttention(nn.Module):
     """Multi-head self-attention with a causal mask（只能看左邊，不能偷看未來）。"""
 
@@ -59,6 +89,12 @@ class CausalSelfAttention(nn.Module):
         # 下三角矩陣：第 i 個 token 只能 attend 到 <= i 的位置
         mask = torch.tril(torch.ones(cfg.block_size, cfg.block_size))
         self.register_buffer("mask", mask.view(1, 1, cfg.block_size, cfg.block_size))
+        # RoPE：預先算好旋轉用的 cos/sin（head_dim 必須是偶數）
+        self.use_rope = cfg.use_rope
+        if cfg.use_rope:
+            cos, sin = build_rope_cache(cfg.n_embd // cfg.n_head, cfg.block_size)
+            self.register_buffer("rope_cos", cos)
+            self.register_buffer("rope_sin", sin)
 
     def forward(self, x):
         B, T, C = x.shape  # batch, time(序列長), channels(n_embd)
@@ -68,6 +104,9 @@ class CausalSelfAttention(nn.Module):
         k = k.view(B, T, self.n_head, head_dim).transpose(1, 2)
         q = q.view(B, T, self.n_head, head_dim).transpose(1, 2)
         v = v.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        if self.use_rope:                 # 依位置旋轉 q、k（v 不轉）
+            q = apply_rope(q, self.rope_cos, self.rope_sin)
+            k = apply_rope(k, self.rope_cos, self.rope_sin)
         # attention scores，scale 防止數值爆掉
         att = (q @ k.transpose(-2, -1)) / math.sqrt(head_dim)
         att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
@@ -135,7 +174,8 @@ class GPT(nn.Module):
         assert cfg.vocab_size > 0, "vocab_size 還沒設定，先跑 prepare_data"
         self.cfg = cfg
         self.token_emb = nn.Embedding(cfg.vocab_size, cfg.n_embd)
-        self.pos_emb = nn.Embedding(cfg.block_size, cfg.n_embd)
+        # RoPE 把位置資訊放進 attention 的旋轉裡 → 不需要這個學習式位置 embedding
+        self.pos_emb = None if cfg.use_rope else nn.Embedding(cfg.block_size, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
         self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layer)])
         self.ln_f = make_norm(cfg)
@@ -158,8 +198,10 @@ class GPT(nn.Module):
     def forward(self, idx, targets=None):
         B, T = idx.shape
         assert T <= self.cfg.block_size, "輸入超過 block_size"
-        pos = torch.arange(T, device=idx.device)
-        x = self.drop(self.token_emb(idx) + self.pos_emb(pos))
+        x = self.token_emb(idx)
+        if self.pos_emb is not None:       # RoPE 模式下位置在 attention 處理，這裡不加
+            x = x + self.pos_emb(torch.arange(T, device=idx.device))
+        x = self.drop(x)
         for block in self.blocks:
             x = block(x)
         x = self.ln_f(x)
