@@ -37,6 +37,8 @@ def main():
                     help="單檔內的文件分隔字串；不給則整檔當一篇")
     ap.add_argument("--artifacts", default="artifacts")
     ap.add_argument("--val_frac", type=float, default=0.1)
+    ap.add_argument("--test_frac", type=float, default=0.1,
+                    help="獨立 test set 比例（訓練/驗證都不碰，最終報成績用）")
     ap.add_argument("--no_dedup", action="store_true", help="關閉去重（對照用）")
     ap.add_argument("--tokenizer", choices=["char", "bpe"], default="char",
                     help="char=字元級；bpe=子詞級")
@@ -108,26 +110,39 @@ def main():
         ids = tok.encode(full)
     print(f"  {len(full):,} 字元 -> {len(ids):,} token，vocab_size = {tok.vocab_size}")
 
-    # 7) Split + pack（純 Python 寫 uint16，x86 little-endian 與 numpy 相容） -
+    # 7) Split + pack（train / val / test 三份）-------------------------------
     print("[7] split + pack")
-    n_val = max(1, int(len(ids) * args.val_frac))
-    train_ids, val_ids = ids[:-n_val], ids[-n_val:]
+    n = len(ids)
+    n_test = max(1, int(n * args.test_frac))
+    n_val = max(1, int(n * args.val_frac))
+    train_ids = ids[:-(n_val + n_test)]
+    val_ids = ids[-(n_val + n_test):-n_test]
+    test_ids = ids[-n_test:]                      # ⑦ 獨立 test set：訓練/驗證都沒碰過
+
+    # ⑧ 自適應 dtype：vocab 超過 uint16 上限(65535)就用 uint32，避免 token id 溢位
+    big = tok.vocab_size > 65535
+    code = "I" if big else "H"                    # I=uint32(4B), H=uint16(2B)
+    token_dtype = "uint32" if big else "uint16"
+    assert array(code).itemsize == (4 if big else 2)
 
     out = Path(args.artifacts)
     out.mkdir(parents=True, exist_ok=True)
     tok.save(out / "tokenizer.json")
-    array("H", train_ids).tofile(open(out / "train.bin", "wb"))
-    array("H", val_ids).tofile(open(out / "val.bin", "wb"))
+    array(code, train_ids).tofile(open(out / "train.bin", "wb"))
+    array(code, val_ids).tofile(open(out / "val.bin", "wb"))
+    array(code, test_ids).tofile(open(out / "test.bin", "wb"))
     (out / "clean_corpus.txt").write_text(full, encoding="utf-8")
 
     meta = {
         "vocab_size": tok.vocab_size,
         "tokenizer": args.tokenizer,
+        "token_dtype": token_dtype,
         "docs_in": n0,
         "docs_out": len(docs),
         "total_chars": len(full),
         "train_tokens": len(train_ids),
         "val_tokens": len(val_ids),
+        "test_tokens": len(test_ids),
         "chars_per_token": round(len(full) / len(ids), 3),
     }
     (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
@@ -136,7 +151,7 @@ def main():
         json.dumps(report, indent=2, ensure_ascii=False))
 
     print(f"\n完成：{n0} 篇 -> {len(docs)} 篇，train={len(train_ids):,} "
-          f"val={len(val_ids):,} token  -> {out}/")
+          f"val={len(val_ids):,} test={len(test_ids):,} token（{token_dtype}）-> {out}/")
     print(f"報表：{out}/data_report.json   乾淨全文：{out}/clean_corpus.txt")
 
 

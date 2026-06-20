@@ -85,8 +85,9 @@ def main():
     art = Path(args.artifacts)
     meta = json.loads((art / "meta.json").read_text())
     gcfg.vocab_size = meta["vocab_size"]
-    train_data = np.fromfile(art / "train.bin", dtype=np.uint16)
-    val_data = np.fromfile(art / "val.bin", dtype=np.uint16)
+    dt = np.dtype(meta.get("token_dtype", "uint16"))   # ⑧ 依 meta 讀對的 dtype
+    train_data = np.fromfile(art / "train.bin", dtype=dt)
+    val_data = np.fromfile(art / "val.bin", dtype=dt)
     splits = {"train": train_data, "val": val_data}
 
     model = GPT(gcfg).to(device)

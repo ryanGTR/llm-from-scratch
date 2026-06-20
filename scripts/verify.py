@@ -100,7 +100,7 @@ def main():
     # ── 驗收項 4：打包的 .bin 能無損 decode 回原文 ───────────────────
     from src.tokenizer import CharTokenizer
     tok = CharTokenizer.load(ART / "tokenizer.json")
-    a = array("H")
+    a = array("I" if meta.get("token_dtype") == "uint32" else "H")
     a.frombytes((ART / "train.bin").read_bytes())
     decoded = tok.decode(list(a))
     check(".bin round-trip：train 解碼回乾淨全文前段",

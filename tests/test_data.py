@@ -89,6 +89,15 @@ class TestDedup(unittest.TestCase):
 
 
 class TestPackRoundTrip(unittest.TestCase):
+    def test_uint32_holds_large_token_ids(self):
+        # ⑧：uint16 上限 65535，大 vocab（如真實 BPE 10-20 萬）要用 uint32 才不溢位
+        big = [70000, 150000, 200000]
+        a = array("I", big)              # I = uint32（x86-64 上 4 bytes）
+        self.assertEqual(a.itemsize, 4)
+        b = array("I")
+        b.frombytes(a.tobytes())
+        self.assertEqual(list(b), big)   # 大於 65535 的 id 無損存取
+
     def test_tokenize_pack_decode(self):
         text = "hello GPT, this is a round-trip test.\n"
         tok = CharTokenizer.from_text(text)

@@ -29,8 +29,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BLOCK, TRAIN_LEN, ITERS, BATCH = 256, 64, 2000, 32
 
 vocab = json.loads((ART / "meta.json").read_text())["vocab_size"]
-train_data = np.fromfile(ART / "train.bin", dtype=np.uint16)
-val_data = np.fromfile(ART / "val.bin", dtype=np.uint16)
+_dt = np.dtype(__import__("json").loads((ART / "meta.json").read_text()).get("token_dtype", "uint16"))
+train_data = np.fromfile(ART / "train.bin", dtype=_dt)
+val_data = np.fromfile(ART / "val.bin", dtype=_dt)
 
 
 def get_batch(data, L):

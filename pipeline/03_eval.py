@@ -25,6 +25,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifacts", default="artifacts")
     ap.add_argument("--eval_iters", type=int, default=200)
+    ap.add_argument("--split", choices=["val", "test"], default="val",
+                    help="在哪個切分上評估；test=訓練/驗證都沒碰過的最終成績")
     args = ap.parse_args()
 
     art = Path(args.artifacts)
@@ -36,20 +38,23 @@ def main():
     model.load_state_dict(ckpt["model"])
     model.eval()
 
-    val_data = np.fromfile(art / "val.bin", dtype=np.uint16)
+    meta = json.loads((art / "meta.json").read_text())
+    dt = np.dtype(meta.get("token_dtype", "uint16"))
+    data = np.fromfile(art / f"{args.split}.bin", dtype=dt)
     tcfg = TrainConfig()
 
     losses = torch.zeros(args.eval_iters)
     with torch.no_grad():
         for k in range(args.eval_iters):
-            x, y = get_batch(val_data, gcfg.block_size, tcfg.batch_size, device)
+            x, y = get_batch(data, gcfg.block_size, tcfg.batch_size, device)
             _, loss = model(x, y)
             losses[k] = loss.item()
 
-    val_loss = losses.mean().item()
-    ppl = math.exp(val_loss)
+    eval_loss = losses.mean().item()
+    ppl = math.exp(eval_loss)
     report = {
-        "val_loss": round(val_loss, 4),
+        "split": args.split,
+        f"{args.split}_loss": round(eval_loss, 4),
         "perplexity": round(ppl, 2),
         "train_iter": ckpt.get("iter"),
         "params_M": round(model.num_params() / 1e6, 3),
