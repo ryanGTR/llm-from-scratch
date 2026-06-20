@@ -1,0 +1,25 @@
+[project]
+name = "llm-from-scratch"
+version = "0.1.0"
+description = "從零手刻一個小型 GPT，並把資料→訓練→評估→生成做成可重跑、可監控的 pipeline"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "jupyterlab",
+    "pandas",
+    "tiktoken",
+    "torch",
+]
+
+# torch 的 CUDA 版要從 PyTorch 官方 index 抓（RTX 5070 = Blackwell sm_120，需 cu128）
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.setuptools]
+py-modules = []

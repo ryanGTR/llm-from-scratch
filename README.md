@@ -169,12 +169,17 @@ llm-from-scratch/
 
 ```bash
 cd ~/Documents/llm-from-scratch
+# 方式 A（可重現，推薦）：依 uv.lock 裝「鎖死的精確版本」
+uv sync                          # 讀 pyproject.toml + uv.lock，建好一致的環境
+
+# 方式 B（手動）：
 uv venv --python 3.12 .venv && source .venv/bin/activate
 uv pip install numpy matplotlib jupyterlab pandas tiktoken
-# 訓練要 GPU 版 torch（RTX 5070 = Blackwell sm_120，需 cu128）：
 uv pip install torch --index-url https://download.pytorch.org/whl/cu128
 ```
 
+> 依賴版本鎖在 `pyproject.toml` + `uv.lock`（132 套件全部 pin 死）→ 換機器 `uv sync` 拿到
+> 「位元級一致」的環境，這是 MLOps 可重現性的基本功。
 > 純資料 pipeline（`make test / verify / data-demo / stats / bpe`）只需 stdlib，免裝套件也能跑。
 
 ## 跑跑看
