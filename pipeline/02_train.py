@@ -45,6 +45,8 @@ def main():
     ap.add_argument("--n_embd", type=int, default=None)
     ap.add_argument("--run_name", default="default",
                     help="這次訓練的名字；loss 記到 artifacts/runs/<name>.csv，方便多次比較")
+    ap.add_argument("--use_rmsnorm", action="store_true",
+                    help="用 RMSNorm（現代）取代 LayerNorm")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
@@ -58,6 +60,7 @@ def main():
         gcfg.n_layer = args.n_layer
     if args.n_embd is not None:
         gcfg.n_embd = args.n_embd
+    gcfg.use_rmsnorm = args.use_rmsnorm
 
     torch.manual_seed(tcfg.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"

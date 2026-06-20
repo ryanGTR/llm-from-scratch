@@ -146,6 +146,33 @@ class TestLossLog(unittest.TestCase):
         self.assertEqual(val, [4.2, 2.8])
 
 
+class TestModernComponents(unittest.TestCase):
+    def test_rmsnorm_normalizes_to_unit_rms(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.model import RMSNorm
+        x = torch.randn(4, 16) * 5 + 3
+        out = RMSNorm(16)(x)                       # weight 初始為 1
+        rms = out.pow(2).mean(-1).sqrt()
+        self.assertTrue(torch.allclose(rms, torch.ones(4), atol=1e-3))
+
+    def test_both_norms_build_and_run(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+        for flag in (False, True):
+            cfg = GPTConfig(vocab_size=20, n_layer=2, n_head=2, n_embd=16,
+                            block_size=8, use_rmsnorm=flag)
+            idx = torch.randint(0, 20, (1, 8))
+            _, loss = GPT(cfg)(idx, idx)
+            self.assertTrue(loss.item() > 0)
+
+
 class TestAttention(unittest.TestCase):
     def test_attention_shapes_and_properties(self):
         # 只在有裝 torch 時測（資料 pipeline 本身不需要 torch）

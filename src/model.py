@@ -18,6 +18,31 @@ from torch.nn import functional as F
 from .config import GPTConfig
 
 
+class RMSNorm(nn.Module):
+    """Root Mean Square Norm（LLaMA/Mistral 同款）。比 LayerNorm 更簡單。
+
+    LayerNorm：(x - 均值) / 標準差，再縮放平移 —— 要算均值跟變異數。
+    RMSNorm　：x / 均方根(RMS)，再縮放 —— 不減均值、不要 bias，更省、更穩，
+    實務上效果跟 LayerNorm 一樣好。現代 LLM 幾乎都換成它。
+    """
+
+    def __init__(self, dim: int, eps: float = 1e-5):
+        super().__init__()
+        self.weight = nn.Parameter(torch.ones(dim))
+        self.eps = eps
+
+    def forward(self, x):
+        rms = torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+        return x * rms * self.weight
+
+
+def make_norm(cfg: GPTConfig):
+    """依設定回傳 RMSNorm 或 LayerNorm，讓 model 可一鍵切換。"""
+    if cfg.use_rmsnorm:
+        return RMSNorm(cfg.n_embd)
+    return nn.LayerNorm(cfg.n_embd, bias=cfg.bias)
+
+
 class CausalSelfAttention(nn.Module):
     """Multi-head self-attention with a causal mask（只能看左邊，不能偷看未來）。"""
 
@@ -71,9 +96,9 @@ class Block(nn.Module):
 
     def __init__(self, cfg: GPTConfig):
         super().__init__()
-        self.ln_1 = nn.LayerNorm(cfg.n_embd, bias=cfg.bias)
+        self.ln_1 = make_norm(cfg)
         self.attn = CausalSelfAttention(cfg)
-        self.ln_2 = nn.LayerNorm(cfg.n_embd, bias=cfg.bias)
+        self.ln_2 = make_norm(cfg)
         self.mlp = MLP(cfg)
 
     def forward(self, x):
@@ -91,7 +116,7 @@ class GPT(nn.Module):
         self.pos_emb = nn.Embedding(cfg.block_size, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
         self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layer)])
-        self.ln_f = nn.LayerNorm(cfg.n_embd, bias=cfg.bias)
+        self.ln_f = make_norm(cfg)
         self.head = nn.Linear(cfg.n_embd, cfg.vocab_size, bias=False)
         # weight tying：輸入 embedding 和輸出層共用權重（省參數、常見技巧）
         self.token_emb.weight = self.head.weight

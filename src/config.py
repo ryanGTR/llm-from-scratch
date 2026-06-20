@@ -17,6 +17,8 @@ class GPTConfig:
     dropout: float = 0.1
     bias: bool = False         # Linear/LayerNorm 要不要 bias
     vocab_size: int = 0        # 由 tokenizer 決定，prepare_data 後寫入
+    # 現代化開關（可切換對比 classic vs modern）
+    use_rmsnorm: bool = False  # True = RMSNorm（LLaMA 同款）；False = LayerNorm
 
 
 @dataclass
