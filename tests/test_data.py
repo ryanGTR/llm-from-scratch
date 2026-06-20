@@ -228,6 +228,22 @@ class TestModernComponents(unittest.TestCase):
         for m in (gqa, mqa):                    # 都能正常 forward
             self.assertTrue(m(idx, idx)[1].item() > 0)
 
+    def test_flash_matches_naive(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+        kw = dict(vocab_size=30, n_layer=3, n_head=4, n_embd=64, block_size=32)
+        naive = GPT(GPTConfig(use_flash=False, **kw)).eval()
+        flash = GPT(GPTConfig(use_flash=True, **kw)).eval()
+        flash.load_state_dict(naive.state_dict())   # 同權重
+        idx = torch.randint(0, 30, (2, 16))
+        with torch.no_grad():
+            # FlashAttention 與樸素版數學等價 → 同權重下輸出幾乎相同
+            self.assertTrue(torch.allclose(naive(idx)[0], flash(idx)[0], atol=1e-4))
+
 
 class TestAttention(unittest.TestCase):
     def test_attention_shapes_and_properties(self):

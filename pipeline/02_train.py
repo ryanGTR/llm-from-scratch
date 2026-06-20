@@ -55,6 +55,8 @@ def main():
                     help="GQA：k/v 頭數（0=標準 MHA；<n_head=GQA，省 KV-cache）")
     ap.add_argument("--seed", type=int, default=None,
                     help="隨機種子（多 seed 嚴謹實驗用；不給則用 config 預設）")
+    ap.add_argument("--use_flash", action="store_true",
+                    help="用 FlashAttention（torch SDPA，省記憶體、可跑更長 context）")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
@@ -74,6 +76,7 @@ def main():
     gcfg.use_swiglu = args.use_swiglu
     gcfg.use_rope = args.use_rope
     gcfg.n_kv_head = args.n_kv_head
+    gcfg.use_flash = args.use_flash
 
     torch.manual_seed(tcfg.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"

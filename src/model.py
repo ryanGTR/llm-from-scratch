@@ -82,6 +82,8 @@ class CausalSelfAttention(nn.Module):
         self.n_head = cfg.n_head
         self.n_embd = cfg.n_embd
         self.head_dim = cfg.n_embd // cfg.n_head
+        self.use_flash = cfg.use_flash
+        self.dropout_p = cfg.dropout
         # GQA：n_kv_head 組 key/value 給 n_head 個 query 共用（0=標準 MHA）
         self.n_kv_head = cfg.n_kv_head or cfg.n_head
         assert cfg.n_head % self.n_kv_head == 0, "n_head 要能被 n_kv_head 整除"
@@ -116,12 +118,19 @@ class CausalSelfAttention(nn.Module):
             rep = self.n_head // self.n_kv_head
             k = k.repeat_interleave(rep, dim=1)
             v = v.repeat_interleave(rep, dim=1)
-        # attention scores，scale 防止數值爆掉
-        att = (q @ k.transpose(-2, -1)) / math.sqrt(hd)
-        att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
-        att = F.softmax(att, dim=-1)
-        att = self.attn_dropout(att)
-        y = att @ v                       # 加權平均出新的 representation
+        if self.use_flash:
+            # FlashAttention：torch 內建、不攤開 T×T 矩陣 → 記憶體 O(T²)→O(T)。
+            # 結果跟下面樸素版「數學上完全一樣」，只是算法更省。is_causal 幫忙做因果遮罩。
+            y = F.scaled_dot_product_attention(
+                q, k, v, is_causal=True,
+                dropout_p=self.dropout_p if self.training else 0.0)
+        else:
+            # 樸素版（教學用，把整個 T×T attention 矩陣攤出來）
+            att = (q @ k.transpose(-2, -1)) / math.sqrt(hd)
+            att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
+            att = F.softmax(att, dim=-1)
+            att = self.attn_dropout(att)
+            y = att @ v                   # 加權平均出新的 representation
         y = y.transpose(1, 2).contiguous().view(B, T, C)  # 多頭併回去
         return self.resid_dropout(self.c_proj(y))
 

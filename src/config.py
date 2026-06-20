@@ -22,6 +22,7 @@ class GPTConfig:
     use_swiglu: bool = False   # True = SwiGLU MLP（LLaMA 同款）；False = GELU MLP
     use_rope: bool = False      # True = RoPE 旋轉位置編碼；False = 學習式 position embedding
     n_kv_head: int = 0          # GQA：key/value 頭數（0=等於 n_head，即標準 MHA；<n_head=GQA）
+    use_flash: bool = False     # True = FlashAttention（torch SDPA，省記憶體）；False = 樸素攤 T×T
 
 
 @dataclass
