@@ -106,7 +106,11 @@ SwiGLU / RoPE 優化的是「準度」。評估新技巧前要先問「它優化
 loss 從 1.93 爆到 2.79（沒訓過的位置就垮），RoPE 只從 1.82 緩升到 2.11（優雅外推）。
 這就是長 context LLM 能「用比訓練更長的序列」的關鍵。見 `scripts/rope_extrapolation.py`。
 
-> 註：以上為單次跑的趨勢；嚴謹結論需多 seed 重跑（見 `TODO.md`）。
+**嚴謹度（多 seed 驗證）**：各跑 3 個 seed 取 mean ± std（`scripts/multi_seed.py`）——
+classic 1.787±.007 / SwiGLU 1.678±.010 / RoPE 1.625±.006。SwiGLU、RoPE 的改善
+是雜訊的 11–22 倍 → **確認為真差異**；雜訊地板 ≈ 0.01，故 RMSNorm（0.001）、
+128↔256（0.026）屬雜訊等級 = 平手。教訓：單一裸數字會騙人（單次 classic 1.7712
+其實是偏低的一抽，真實 mean 1.787），報數據要附 ±std。
 
 ## 心智模型（Java 類比）
 
@@ -147,6 +151,7 @@ llm-from-scratch/
 │   ├── make_messy_corpus.py # 產髒語料示範清洗/去重
 │   ├── train_bpe.py       # 跑 BPE + 可審核監控（合併 log / report）
 │   ├── rope_extrapolation.py # RoPE 外推 demo（train@64, eval→256）
+│   ├── multi_seed.py      # B④ 多 seed 嚴謹：mean±std + 誤差線 + 真差異判定
 │   └── verify.py          # 驗收 playbook 執行器
 ├── notebooks/
 │   ├── 01_explore_data.ipynb # 資料探索
