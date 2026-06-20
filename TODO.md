@@ -35,7 +35,7 @@
 
 - [x] 🟡 多 seed 重跑（mean ± std + 誤差線）✅ `scripts/multi_seed.py`：確認 SwiGLU/RoPE 真差異、雜訊地板≈0.01
 - [ ] 🟢 加獨立 **test set**（現在只有 train/val）
-- [ ] 🟡 **Deep Ensemble**：把多 seed 的那幾個模型「輸出平均」起來當一個 ensemble（隨機森林的神經網路版）→ 看 loss 是否再降 + 順便估不確定性。**回收 B④ 的副產物模型**，幾乎免費。
+- [x] 🟡 **Deep Ensemble** ✅ `scripts/deep_ensemble.py`：3 個不同 seed 模型機率平均 → val 1.799 < 最佳單一 1.835（降 0.035，「免費」提升，隨機森林的神經網路版）。
 - 對應缺陷：「實驗不嚴謹」。多 seed 已做；test set / deep ensemble 待補。
 
 ## 5. MLOps（工程化往生產級靠）★ Ryan 的戰略甜點
