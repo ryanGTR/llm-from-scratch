@@ -19,6 +19,7 @@ class GPTConfig:
     vocab_size: int = 0        # 由 tokenizer 決定，prepare_data 後寫入
     # 現代化開關（可切換對比 classic vs modern）
     use_rmsnorm: bool = False  # True = RMSNorm（LLaMA 同款）；False = LayerNorm
+    use_swiglu: bool = False   # True = SwiGLU MLP（LLaMA 同款）；False = GELU MLP
 
 
 @dataclass

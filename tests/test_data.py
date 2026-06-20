@@ -172,6 +172,24 @@ class TestModernComponents(unittest.TestCase):
             _, loss = GPT(cfg)(idx, idx)
             self.assertTrue(loss.item() > 0)
 
+    def test_swiglu_param_parity_and_runs(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+
+        def mk(flag):
+            return GPT(GPTConfig(vocab_size=20, n_layer=4, n_head=2, n_embd=128,
+                                 block_size=8, use_swiglu=flag))
+        mlp, swiglu = mk(False), mk(True)
+        # SwiGLU 用 8/3·n_embd 寬度 → 參數量跟 GELU MLP 相差 < 2%（公平對比）
+        ratio = swiglu.num_params() / mlp.num_params()
+        self.assertLess(abs(ratio - 1.0), 0.02)
+        idx = torch.randint(0, 20, (1, 8))
+        self.assertTrue(swiglu(idx, idx)[1].item() > 0)
+
 
 class TestAttention(unittest.TestCase):
     def test_attention_shapes_and_properties(self):

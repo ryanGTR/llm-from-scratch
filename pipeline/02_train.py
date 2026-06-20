@@ -47,6 +47,8 @@ def main():
                     help="這次訓練的名字；loss 記到 artifacts/runs/<name>.csv，方便多次比較")
     ap.add_argument("--use_rmsnorm", action="store_true",
                     help="用 RMSNorm（現代）取代 LayerNorm")
+    ap.add_argument("--use_swiglu", action="store_true",
+                    help="用 SwiGLU MLP（現代）取代 GELU MLP")
     args = ap.parse_args()
 
     tcfg = TrainConfig()
@@ -61,6 +63,7 @@ def main():
     if args.n_embd is not None:
         gcfg.n_embd = args.n_embd
     gcfg.use_rmsnorm = args.use_rmsnorm
+    gcfg.use_swiglu = args.use_swiglu
 
     torch.manual_seed(tcfg.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"

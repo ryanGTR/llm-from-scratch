@@ -91,6 +91,28 @@ class MLP(nn.Module):
         return self.dropout(self.c_proj(F.gelu(self.c_fc(x))))
 
 
+class SwiGLU(nn.Module):
+    """Swish-Gated MLP（LLaMA/PaLM 同款）。比普通 MLP 多一條「閘門」。
+
+    普通 MLP：x → Linear → GELU → Linear。
+    SwiGLU ：兩條並行投影，一條過 SiLU(swish) 當「閘門」去乘另一條（gating），
+             再投影回去：down( silu(gate(x)) * up(x) )。
+    閘門讓網路能「動態決定讓多少訊號通過」，表達力更強。
+    hidden 取 8/3·n_embd（而非 4·n_embd），讓參數量跟普通 MLP 幾乎相同 → 公平對比。
+    """
+
+    def __init__(self, cfg: GPTConfig):
+        super().__init__()
+        hidden = int(round(8 / 3 * cfg.n_embd / 8) * 8)   # ≈8/3·n_embd，湊 8 的倍數
+        self.w_gate = nn.Linear(cfg.n_embd, hidden, bias=cfg.bias)
+        self.w_up = nn.Linear(cfg.n_embd, hidden, bias=cfg.bias)
+        self.w_down = nn.Linear(hidden, cfg.n_embd, bias=cfg.bias)
+        self.dropout = nn.Dropout(cfg.dropout)
+
+    def forward(self, x):
+        return self.dropout(self.w_down(F.silu(self.w_gate(x)) * self.w_up(x)))
+
+
 class Block(nn.Module):
     """一個 Transformer block：attention + MLP，各帶 residual connection。"""
 
@@ -99,7 +121,7 @@ class Block(nn.Module):
         self.ln_1 = make_norm(cfg)
         self.attn = CausalSelfAttention(cfg)
         self.ln_2 = make_norm(cfg)
-        self.mlp = MLP(cfg)
+        self.mlp = SwiGLU(cfg) if cfg.use_swiglu else MLP(cfg)
 
     def forward(self, x):
         x = x + self.attn(self.ln_1(x))   # residual：x = x + f(x)
