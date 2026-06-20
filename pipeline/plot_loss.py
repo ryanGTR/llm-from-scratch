@@ -15,9 +15,8 @@ import csv
 import sys
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")          # 無 GUI 也能存圖（CLI / 遠端都行）
-import matplotlib.pyplot as plt   # noqa: E402
+# matplotlib 改成「延遲 import」（放在 main 裡）——這樣只用 load_run 解析 CSV
+# 的人（例如單元測試）不必裝 matplotlib。CI 抓到的就是這個隱藏依賴。
 
 
 def load_run(csv_path: Path):
@@ -31,6 +30,10 @@ def load_run(csv_path: Path):
 
 
 def main():
+    import matplotlib
+    matplotlib.use("Agg")          # 無 GUI 也能存圖（CLI / 遠端都行）
+    import matplotlib.pyplot as plt
+
     art = Path("artifacts")
     runs_dir = art / "runs"
     wanted = sys.argv[1:]   # 指定 run 名；不給就全畫
