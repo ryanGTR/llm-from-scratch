@@ -284,6 +284,21 @@ class TestSampling(unittest.TestCase):
             self.assertEqual(tuple(out.shape), (1, 13))
             self.assertTrue(0 <= out.min() and out.max() < 30)
 
+    def test_kv_cache_matches_no_cache(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+        # 含 RoPE/GQA/Flash 的現代設定也要對（offset/mask 都要正確）
+        m = GPT(GPTConfig(vocab_size=30, n_layer=3, n_head=4, n_embd=64,
+                          block_size=64, use_rope=True, n_kv_head=2, use_flash=True)).eval()
+        start = torch.randint(0, 30, (1, 5))
+        a = m.generate(start, 30, top_k=1, use_kv_cache=False)   # greedy=確定性
+        b = m.generate(start, 30, top_k=1, use_kv_cache=True)
+        self.assertTrue(torch.equal(a, b))   # 快取版必須逐 token 完全相同
+
 
 class TestStats(unittest.TestCase):
     def test_entropy_single_char_is_zero(self):

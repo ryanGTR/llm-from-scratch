@@ -56,17 +56,18 @@ def build_rope_cache(head_dim: int, max_seq: int, base: float = 10000.0):
     return torch.cos(freqs), torch.sin(freqs)
 
 
-def apply_rope(x, cos, sin):
+def apply_rope(x, cos, sin, offset=0):
     """把 q 或 k 依其位置「旋轉」。x: (B, n_head, T, head_dim)。
 
     把每相鄰兩維 (x1, x2) 當成平面上一個點，旋轉角度 θ：
       x1' = x1·cosθ − x2·sinθ
       x2' = x1·sinθ + x2·cosθ
     旋轉不改變向量長度，只改方向 → q·k 點積會自然變成「相對位置」的函數。
+    offset：KV-cache 增量生成時，新 token 的絕對位置不是從 0 起，要用 offset 對齊。
     """
     T = x.shape[2]
-    cos = cos[:T].view(1, 1, T, -1)
-    sin = sin[:T].view(1, 1, T, -1)
+    cos = cos[offset:offset + T].view(1, 1, T, -1)
+    sin = sin[offset:offset + T].view(1, 1, T, -1)
     x1, x2 = x[..., ::2], x[..., 1::2]        # 偶數維 / 奇數維
     rx1 = x1 * cos - x2 * sin
     rx2 = x1 * sin + x2 * cos
@@ -102,8 +103,9 @@ class CausalSelfAttention(nn.Module):
             cos, sin = build_rope_cache(cfg.n_embd // cfg.n_head, cfg.block_size)
             self.register_buffer("rope_cos", cos)
             self.register_buffer("rope_sin", sin)
+        self.cache_k = self.cache_v = None   # KV-cache：增量生成時存過去的 k/v
 
-    def forward(self, x):
+    def forward(self, x, pos_offset=0, use_cache=False):
         B, T, C = x.shape  # batch, time(序列長), channels(n_embd)
         hd = self.head_dim
         # q 有 n_head 個頭、k/v 只有 n_kv_head 個頭
@@ -111,14 +113,33 @@ class CausalSelfAttention(nn.Module):
         q = q.view(B, T, self.n_head, hd).transpose(1, 2)
         k = k.view(B, T, self.n_kv_head, hd).transpose(1, 2)
         v = v.view(B, T, self.n_kv_head, hd).transpose(1, 2)
-        if self.use_rope:                 # 依位置旋轉 q、k（v 不轉）
-            q = apply_rope(q, self.rope_cos, self.rope_sin)
-            k = apply_rope(k, self.rope_cos, self.rope_sin)
+        if self.use_rope:                 # 依位置旋轉 q、k（v 不轉），offset 給快取對位
+            q = apply_rope(q, self.rope_cos, self.rope_sin, pos_offset)
+            k = apply_rope(k, self.rope_cos, self.rope_sin, pos_offset)
+        if use_cache:                     # KV-cache：把新 k/v 接到快取後面（存 GQA 前的小份）
+            if self.cache_k is not None:
+                k = torch.cat([self.cache_k, k], dim=2)
+                v = torch.cat([self.cache_v, v], dim=2)
+            self.cache_k, self.cache_v = k, v
         if self.n_kv_head != self.n_head:  # GQA：把每組 k/v 複製給該組的 query 頭共用
             rep = self.n_head // self.n_kv_head
             k = k.repeat_interleave(rep, dim=1)
             v = v.repeat_interleave(rep, dim=1)
-        if self.use_flash:
+
+        if use_cache:
+            # 快取路徑：query 在絕對位置 [pos_offset, pos_offset+T)，key 在 [0, T_kv)
+            # 顯式因果遮罩（一般化版本，prefill 與單 token 增量都對）
+            T_kv = k.shape[2]
+            qpos = torch.arange(pos_offset, pos_offset + T, device=x.device)
+            allow = (torch.arange(T_kv, device=x.device)[None, :] <= qpos[:, None])
+            allow = allow.view(1, 1, T, T_kv)
+            if self.use_flash:
+                y = F.scaled_dot_product_attention(q, k, v, attn_mask=allow)
+            else:
+                att = (q @ k.transpose(-2, -1)) / math.sqrt(hd)
+                att = att.masked_fill(~allow, float("-inf"))
+                y = F.softmax(att, dim=-1) @ v
+        elif self.use_flash:
             # FlashAttention：torch 內建、不攤開 T×T 矩陣 → 記憶體 O(T²)→O(T)。
             # 結果跟下面樸素版「數學上完全一樣」，只是算法更省。is_causal 幫忙做因果遮罩。
             y = F.scaled_dot_product_attention(
@@ -180,8 +201,8 @@ class Block(nn.Module):
         self.ln_2 = make_norm(cfg)
         self.mlp = SwiGLU(cfg) if cfg.use_swiglu else MLP(cfg)
 
-    def forward(self, x):
-        x = x + self.attn(self.ln_1(x))   # residual：x = x + f(x)
+    def forward(self, x, pos_offset=0, use_cache=False):
+        x = x + self.attn(self.ln_1(x), pos_offset, use_cache)   # residual：x = x + f(x)
         x = x + self.mlp(self.ln_2(x))
         return x
 
@@ -213,15 +234,20 @@ class GPT(nn.Module):
     def num_params(self) -> int:
         return sum(p.numel() for p in self.parameters())
 
-    def forward(self, idx, targets=None):
+    def reset_cache(self):
+        """清空所有層的 KV-cache（每次重新生成前呼叫）。"""
+        for block in self.blocks:
+            block.attn.cache_k = block.attn.cache_v = None
+
+    def forward(self, idx, targets=None, pos_offset=0, use_cache=False):
         B, T = idx.shape
-        assert T <= self.cfg.block_size, "輸入超過 block_size"
+        assert pos_offset + T <= self.cfg.block_size, "位置超過 block_size"
         x = self.token_emb(idx)
         if self.pos_emb is not None:       # RoPE 模式下位置在 attention 處理，這裡不加
-            x = x + self.pos_emb(torch.arange(T, device=idx.device))
+            x = x + self.pos_emb(torch.arange(pos_offset, pos_offset + T, device=idx.device))
         x = self.drop(x)
         for block in self.blocks:
-            x = block(x)
+            x = block(x, pos_offset, use_cache)
         x = self.ln_f(x)
         logits = self.head(x)             # (B, T, vocab_size)
 
@@ -233,35 +259,48 @@ class GPT(nn.Module):
             )
         return logits, loss
 
+    def _sample(self, logits, temperature, top_k, top_p, min_p):
+        """從最後一個位置的 logits 砍候選後抽一個 token。"""
+        logits = logits[:, -1, :] / temperature
+        if top_k is not None:
+            v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+            logits[logits < v[:, [-1]]] = float("-inf")
+        if top_p is not None:                      # nucleus：累積機率截斷
+            s_logits, s_idx = torch.sort(logits, descending=True, dim=-1)
+            cum = torch.cumsum(F.softmax(s_logits, dim=-1), dim=-1)
+            remove = cum > top_p
+            remove[..., 1:] = remove[..., :-1].clone()   # 保留剛跨過門檻的那個
+            remove[..., 0] = False
+            logits[remove.scatter(1, s_idx, remove)] = float("-inf")
+        if min_p is not None:                      # 相對於峰值的門檻
+            probs = F.softmax(logits, dim=-1)
+            logits[probs < min_p * probs.max(dim=-1, keepdim=True).values] = float("-inf")
+        return torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0,
-                 top_k=None, top_p=None, min_p=None):
+                 top_k=None, top_p=None, min_p=None, use_kv_cache=False):
         """自回歸生成：吐一個 token、接回輸入、再吐下一個。
 
-        三種「砍候選」法（擇一或合用）：
-          top_k：留機率最高的 K 個（固定數量）
-          top_p：留「累積機率達 p」的最小集合（nucleus，會隨分布自適應）
-          min_p：留「機率 >= p × 最大機率」的 token（相對於峰值，較新、2024）
-        top_p / min_p 同一類（自適應截斷），差在截斷規則；top_k 是固定數量。
+        砍候選法：top_k=固定數量；top_p=nucleus 累積；min_p=相對峰值（2024）。
+        use_kv_cache=True：快取過去 token 的 k/v，每步只算「新 token」→ O(T²)→O(T)，
+        生成更快（結果與不快取「完全一樣」，只是算法更省）。
         """
+        if use_kv_cache:
+            self.reset_cache()
+            logits, _ = self(idx, use_cache=True)          # prefill 整段 prompt
+            pos = idx.shape[1]
+            for _ in range(max_new_tokens):
+                next_id = self._sample(logits, temperature, top_k, top_p, min_p)
+                idx = torch.cat((idx, next_id), dim=1)
+                logits, _ = self(next_id, pos_offset=pos, use_cache=True)  # 只餵新 token
+                pos += 1
+            self.reset_cache()
+            return idx
+
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.cfg.block_size:]   # context 超過 block_size 裁掉最舊
             logits, _ = self(idx_cond)
-            logits = logits[:, -1, :] / temperature    # 只看最後一個位置
-            if top_k is not None:
-                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
-                logits[logits < v[:, [-1]]] = float("-inf")
-            if top_p is not None:                      # nucleus：累積機率截斷
-                s_logits, s_idx = torch.sort(logits, descending=True, dim=-1)
-                cum = torch.cumsum(F.softmax(s_logits, dim=-1), dim=-1)
-                remove = cum > top_p
-                remove[..., 1:] = remove[..., :-1].clone()   # 保留剛跨過門檻的那個
-                remove[..., 0] = False
-                logits[remove.scatter(1, s_idx, remove)] = float("-inf")
-            if min_p is not None:                      # 相對於峰值的門檻
-                probs = F.softmax(logits, dim=-1)
-                logits[probs < min_p * probs.max(dim=-1, keepdim=True).values] = float("-inf")
-            probs = F.softmax(logits, dim=-1)
-            next_id = torch.multinomial(probs, num_samples=1)
+            next_id = self._sample(logits, temperature, top_k, top_p, min_p)
             idx = torch.cat((idx, next_id), dim=1)
         return idx
