@@ -38,3 +38,16 @@ class CharTokenizer:
     def load(cls, path: str | Path) -> "CharTokenizer":
         chars = json.loads(Path(path).read_text())
         return cls(chars)
+
+
+def load_tokenizer(path: str | Path):
+    """自動辨識存檔是 char 還是 bpe，回傳對應的 tokenizer。
+
+    下游階段（eval / generate / viz）統一用這個載入，就不必管當初用哪種。
+    判斷依據：char 存的是 list、bpe 存的是 dict（含 type:"bpe"）。
+    """
+    data = json.loads(Path(path).read_text())
+    if isinstance(data, dict) and data.get("type") == "bpe":
+        from src.bpe import BPETokenizer
+        return BPETokenizer.load(path)
+    return CharTokenizer(data)

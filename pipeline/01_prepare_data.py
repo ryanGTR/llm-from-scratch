@@ -38,6 +38,10 @@ def main():
     ap.add_argument("--artifacts", default="artifacts")
     ap.add_argument("--val_frac", type=float, default=0.1)
     ap.add_argument("--no_dedup", action="store_true", help="關閉去重（對照用）")
+    ap.add_argument("--tokenizer", choices=["char", "bpe"], default="char",
+                    help="char=字元級；bpe=子詞級")
+    ap.add_argument("--merges", type=int, default=500,
+                    help="bpe 才用：合併幾次（vocab ≈ 字元數 + merges）")
     args = ap.parse_args()
 
     report: dict = {"stages": []}
@@ -91,11 +95,18 @@ def main():
         step("near_dedup", before, len(docs), threshold=ncfg.threshold)
 
     # 6) Concat -> tokenize -------------------------------------------------
-    print("[6] tokenize")
+    print(f"[6] tokenize（{args.tokenizer}）")
     full = "\n\n".join(d.text for d in docs)
-    tok = CharTokenizer.from_text(full)
-    ids = tok.encode(full)
-    print(f"  合併後 {len(full):,} 字元，vocab_size = {tok.vocab_size}")
+    if args.tokenizer == "bpe":
+        # 直接用 train_bpe 的輸出 ids（避免再 encode 整段大語料，省時間）
+        from src.bpe import train_bpe, BPETokenizer
+        res = train_bpe(full, args.merges)
+        ids = res["ids"]
+        tok = BPETokenizer(sorted(set(full)), res["merges"])
+    else:
+        tok = CharTokenizer.from_text(full)
+        ids = tok.encode(full)
+    print(f"  {len(full):,} 字元 -> {len(ids):,} token，vocab_size = {tok.vocab_size}")
 
     # 7) Split + pack（純 Python 寫 uint16，x86 little-endian 與 numpy 相容） -
     print("[7] split + pack")
@@ -111,11 +122,13 @@ def main():
 
     meta = {
         "vocab_size": tok.vocab_size,
+        "tokenizer": args.tokenizer,
         "docs_in": n0,
         "docs_out": len(docs),
         "total_chars": len(full),
         "train_tokens": len(train_ids),
         "val_tokens": len(val_ids),
+        "chars_per_token": round(len(full) / len(ids), 3),
     }
     (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
     report["meta"] = meta

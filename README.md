@@ -4,120 +4,195 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
 
-從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成」做成一條可重跑的
-pipeline。目標是**搞懂 LLM 原理**（A），同時練習**模型生產流水線的工程化**（C）。
-從本機（FW16 + NVIDIA 5070）起步，結構保留得很乾淨，之後可平滑搬上雲端 GPU。
+從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成」做成一條可重跑、
+可驗收、可監控的 pipeline。目標是**搞懂 LLM 原理**，同時練習**模型生產流水線的
+工程化**。從本機（Framework 16 + RTX 5070）起步，結構乾淨到可平滑搬上雲端 GPU。
 
-> 這不是要做 ChatGPT。這裡的模型是 ~0.1–10M 參數的 char-level GPT，
-> 小到能在你自己機器上一個下午訓完，但麻雀雖小五臟俱全——
-> attention、residual、自回歸生成、訓練迴圈，全都是真的。
+> 這不是要做 ChatGPT。這裡的模型是 ~0.1–1M 參數的 GPT，小到能在自己機器上
+> 幾十秒訓完，但麻雀雖小五臟俱全——self-attention、multi-head、residual、
+> causal mask、自回歸生成、BPE tokenizer、訓練迴圈，全都是真的、可跑、可改。
+
+## 這個專案涵蓋什麼
+
+- **資料工程**：collect → clean → 去重（MinHash）→ tokenize → pack，附驗收 playbook 與品質指標
+- **模型**：decoder-only Transformer（`src/model.py`），跟 GPT-2/3 同一張架構藍圖
+- **訓練/評估/生成**：完整自回歸 pipeline，GPU 上跑
+- **監控**：loss 曲線、過擬合偵測、attention 熱圖、tokenizer 對比，全部在 Jupyter 統一面板
+- **tokenizer**：char-level 與自刻 BPE 兩種，可一鍵切換對比
+- **可驗證**：18 個單元測試 + 驗收 playbook（`make verify`）
+
+## 關鍵數據與發現
+
+全部在 RTX 5070 Laptop（8.1 GB VRAM）+ torch 2.11.0+cu128 上實測，語料為
+tiny-shakespeare（1,115,394 字元）。每個發現都是「先預測、再實測、看曲線」得來的。
+
+### 1. 第一個從零訓練的模型
+
+| 項目 | 數值 |
+|---|---|
+| 參數量 | 0.81 M |
+| 訓練資料 | 1M token（char-level）|
+| 訓練步數 / 時間 | 3000 步 / **35 秒（GPU）** |
+| val loss | 4.20 → **1.77**（亂猜基準 ln(65)=4.17）|
+
+生成（prompt `ROMEO:`）已長出莎士比亞的「形狀」：劇本對白格式、真實英文字的
+拼寫節奏——它從 1 MB 文字、35 秒，自己學會了英文正字法與劇本結構。
+
+### 2. Context window：放大不一定有用（容量受限）
+
+block_size 128 vs 256，其餘相同：
+
+| block_size | best val loss |
+|---|---|
+| 128 | 1.771 |
+| 256 | 1.745（≈ 平手）|
+
+**發現**：把記憶窗加倍只換來微幅進步。因為 0.81M 的小模型「用不到」更長的
+context——長 context 要有相應的模型容量與資料才吃得到。這也是真實 LLM
+「參數、資料、context 一起放大」的原因。
+
+### 3. Residual connection 是「承重牆」不是裝飾
+
+拿掉 `model.py` 每個 block 的 `x +`（殘差連接）重訓：
+
+| 設定 | best val loss |
+|---|---|
+| 有 residual | **1.77**（順利下降）|
+| 無 residual | 3.35（**卡死**，≈ 亂猜）|
+
+**發現**：少一個加法，4 層模型就因梯度消失而幾乎學不動。residual 給梯度一條
+「原封不動傳回前層」的高速公路，是能訓練深層網路的關鍵（ResNet 2015）。
+
+### 4. Tokenizer：char vs BPE，以及「別被 raw loss 騙」
+
+同 config 各訓一個（BPE 用 300 merges）：
+
+| tokenizer | vocab | token 總數 | 每 token 字元 | val loss | **BPC（bits/char）** |
+|---|---|---|---|---|---|
+| char | 65 | 1.12 M | 1.00 | 1.77 | 2.56 |
+| bpe | 365 | 0.55 M | 2.03 | 3.34 | **2.37** |
+
+**關鍵發現**：BPE 的 raw val loss（3.34）看起來比 char（1.77）差很多——但這是
+**陷阱**。兩者 vocab 不同（從 65 類 vs 365 類裡猜），raw loss 不可直接比。換成
+tokenizer 無關的 **BPC（每字元幾 bit）**，BPE 反而**更好**（2.37 < 2.56），而且
+只用**一半的序列長度**。教訓：跨 tokenizer 比較一定要用 BPC，別被表面數字騙。
+
+### 5. 這台機器能跑多大 context（naive vs FlashAttention）
+
+| attention 實作 | 最大 block_size（batch 32, 8GB）|
+|---|---|
+| 樸素（攤開 T×T，O(T²)）| ~1024 |
+| FlashAttention（O(T)）| ~4096 |
+
+**發現**：同一台機器、只換 attention 算法，context 上限 4 倍。樸素 attention
+記憶體隨 context 平方成長，FlashAttention 改成線性——這就是真實 LLM 達到
+128k context 的關鍵，不是靠顯存大 1000 倍。
 
 ## 心智模型（Java 類比）
 
 | 這個專案 | Java 世界 |
 |---|---|
-| `src/model.py` 的訓練/前向邏輯 | 你的 business logic（一支 `main()`）|
-| `Makefile` 串四個階段 | Spring Batch job：step1→step2→… |
+| `src/model.py` 前向/訓練邏輯 | 你的 business logic |
+| `Makefile` 串各階段 | Spring Batch job：step1→step2→… |
 | `artifacts/ckpt.pt` 權重檔 | 編譯產物 `.jar` |
-| `src/tokenizer.py` | serializer，String ↔ int[] |
-| `pipeline/03_eval.py` | CI 的測試 gate（品質夠才放行）|
+| tokenizer（char / BPE）| serializer，String ↔ int[] |
+| self-attention | 模糊版 `HashMap.get()`：對所有 key 算相似度、回傳加權平均 |
+| `make verify` / `tests/` | JUnit + 驗收測試 |
+| `uv` | SDKMAN!（管 Python 版本）+ Maven（管依賴）合體 |
 
 ## 結構
 
 ```
 llm-from-scratch/
-├── src/                  # 核心：模型 + tokenizer + config
-│   ├── config.py         #   所有超參數（= application.yml）
-│   ├── tokenizer.py      #   char-level tokenizer
-│   └── model.py          #   minimal GPT（decoder-only Transformer）
-├── src/data/             # 資料子系統（純 Python、零依賴）
-│   ├── sources.py        #   collect：來源 -> Document 清單
-│   ├── clean.py          #   normalize + 品質過濾
-│   └── dedup.py          #   exact + near-dup（MinHash）
-├── pipeline/             # 四個階段，每個是一支可獨立跑的腳本
-│   ├── 01_prepare_data.py  # collect→clean→dedup→tokenize→pack，含報表
-│   ├── 02_train.py
-│   ├── 03_eval.py
-│   └── 04_generate.py
-├── scripts/get_data.sh   # 下載樣本語料
-├── Makefile              # pipeline orchestrator
-├── data/raw/             # 原始 .txt 放這
-└── artifacts/            # 產物：tokenizer / *.bin / ckpt.pt / 報告
+├── src/
+│   ├── config.py          # 所有超參數（= application.yml）
+│   ├── tokenizer.py       # char tokenizer + load_tokenizer() 自動辨識
+│   ├── bpe.py             # 自刻 BPE：train_bpe + BPETokenizer
+│   ├── model.py           # minimal GPT（decoder-only Transformer）
+│   ├── viz.py             # 用 forward hook 抓 attention 權重
+│   ├── data/              # 資料子系統（純 Python、零依賴）
+│   │   ├── sources.py     #   collect：來源 → Document
+│   │   ├── clean.py       #   normalize + 品質過濾
+│   │   ├── dedup.py       #   exact + near-dup（MinHash）
+│   │   └── stats.py       #   資料品質指標（量/熵/壓縮比/重複率）
+├── pipeline/
+│   ├── 01_prepare_data.py # collect→clean→dedup→tokenize→pack（--tokenizer char/bpe）
+│   ├── 02_train.py        # 訓練（loss 記到 runs/，自動偵測 GPU）
+│   ├── 03_eval.py         # val loss / perplexity
+│   ├── 04_generate.py     # 自回歸生成
+│   ├── plot_loss.py       # loss 曲線（多 run 疊圖）
+│   └── viz_attention.py   # attention 熱圖（單張 / --grid 全部 head）
+├── scripts/
+│   ├── get_data.sh        # 下載樣本語料
+│   ├── make_messy_corpus.py # 產髒語料示範清洗/去重
+│   ├── train_bpe.py       # 跑 BPE + 可審核監控（合併 log / report）
+│   └── verify.py          # 驗收 playbook 執行器
+├── notebooks/
+│   ├── 01_explore_data.ipynb # 資料探索
+│   └── 02_monitor.ipynb      # 統一監控面板（BPE / 訓練 / 資料品質）
+├── tests/test_data.py     # 18 個單元測試
+├── docs/                  # 延伸文件（見 See Also）
+├── Makefile               # pipeline orchestrator（make help 看全部）
+└── matplotlibrc           # 讓圖表中文正常
 ```
 
-## 環境需求
+## 環境
 
-- Python（建議 **3.12**，見下方「踩雷」）
-- PyTorch（CUDA 版才吃得到 NVIDIA 5070）、NumPy
-- FW16：跑 GPU 要用 `prime-run` 包起來
-
-### 環境隔離：用 uv（已採用）
-
-系統 Python 是 3.14，PyTorch 官方 wheel 還沒支援，所以本專案用 **uv** 釘一個
-獨立的 **Python 3.12** 環境（不碰系統 Python）。uv = 「管 Python 版本 + 管套件」
-一把抓，類比 Java 的 SDKMAN!（管 JDK 版本）+ Maven（管依賴）合體。
+系統 Python 是 3.14（PyTorch 還沒支援），所以用 **uv** 釘一個獨立的
+**Python 3.12** 環境。CUDA 運算不需要 `prime-run`（那只用於顯示 offload）。
 
 ```bash
 cd ~/Documents/llm-from-scratch
-uv venv --python 3.12 .venv     # 建立隔離環境（uv 自動抓一份 3.12）
-source .venv/bin/activate       # 進入環境；提示字首會出現 (.venv)
-uv pip install numpy jupyterlab # 資料/探索用；torch 下面單獨裝
-
-# 之後要訓練再裝 CUDA 版 torch（~2GB+，對應機器 CUDA，cu124 常見）：
-uv pip install torch --index-url https://download.pytorch.org/whl/cu124
+uv venv --python 3.12 .venv && source .venv/bin/activate
+uv pip install numpy matplotlib jupyterlab pandas tiktoken
+# 訓練要 GPU 版 torch（RTX 5070 = Blackwell sm_120，需 cu128）：
+uv pip install torch --index-url https://download.pytorch.org/whl/cu128
 ```
 
-> 每次要跑都先 `source .venv/bin/activate`。離開用 `deactivate`。
-> 純資料 pipeline（make test / verify / data-demo）只需 stdlib，免裝也能跑。
+> 純資料 pipeline（`make test / verify / data-demo / stats / bpe`）只需 stdlib，免裝套件也能跑。
 
 ## 跑跑看
 
 ```bash
-# 資料這塊（不需要 torch，現在就能跑）：看清洗/去重各砍了什麼
-make data-demo
-cat artifacts/data_report.json      # 完整報表
-make stats                          # 資料品質：量/熵/壓縮比/重複率 + 健康判讀
-make verify                         # 驗收 playbook：逐項 PASS/FAIL
-# 細節見 docs/data-pipeline.md
+make help          # 列出所有指令
 
-# 探索資料（A 學原理線，需 source .venv）：互動算指標 + 畫圖
-make lab                            # 開 Jupyter Lab -> notebooks/01_explore_data.ipynb
+# 資料（不需 torch）
+make data-demo     # 產髒語料，看清洗/去重各砍多少
+make stats         # 資料品質指標 + 健康判讀
+make verify        # 驗收 playbook：逐項 PASS/FAIL
+make bpe           # 跑 BPE，輸出可審核的合併 log
 
-# 0) 先確認整條鏈沒壞（極小設定，CPU 幾分鐘）
-make smoke
+# 訓練 / 評估 / 生成（需 GPU 版 torch）
+make smoke         # 極小設定快速跑通整條鏈
+make data          # 下載莎士比亞 + tokenize（char）
+make train         # 訓練（device 自動偵測 cuda）
+make eval          # val loss / perplexity
+make gen           # 讓模型續寫
+make plot-loss     # loss 曲線（多 run 疊圖）
+make attn          # attention 熱圖
 
-# 監控（B）：把 loss 存 CSV 畫成曲線，比較不同設定
-python pipeline/02_train.py --max_iters 3000 --run_name big        # 命名這次訓練
-python pipeline/02_train.py --max_iters 3000 --n_embd 64 --run_name small
-make plot-loss                      # 疊圖比較 -> artifacts/loss_curve.png
+# 換 BPE 重跑對比
+python pipeline/01_prepare_data.py --tokenizer bpe --merges 300
+python pipeline/02_train.py --run_name bpe_tok
 
-# 1) 正式流程
-make data                  # 下載語料 + tokenize
-prime-run make train       # 用 NVIDIA GPU 訓練
-make eval                  # 看 val loss / perplexity
-make gen                   # 讓模型續寫
-
-# 想換自己的文本：把任意 .txt 覆蓋到 data/raw/input.txt 再 make data
+# 統一監控面板
+make lab           # Jupyter → notebooks/02_monitor.ipynb → Restart & Run All
 ```
 
-訓練初期 loss 從 ~4.x（= ln(vocab)，等於亂猜）往下掉就對了；
-char-level shakespeare 訓到 val loss ~1.5 左右，生成的文字會開始有英文的「形狀」。
+## 學習弧線（本專案的設計脈絡）
 
-## Roadmap（學習路線）
+B 監控 → D 原理 → A 調參 → C tokenizer，口訣「B 給眼睛、D 給腦、A 動手、C 升級」：
 
-- **階段 0｜先跑通**：`make smoke` 跑完整條 pipeline，確認環境 OK。
-- **階段 1｜懂原理**：讀 `src/model.py`，對照 Karpathy「Let's build GPT」影片，
-  逐行搞懂 attention / mask / loss。改 `config.py` 參數觀察 loss 變化。
-- **階段 2｜工程化**：把超參數抽成 `configs/*.yaml`；用 DVC 追蹤資料與模型版本；
-  把 `03_eval` 變成有門檻的 gate（loss 沒過就不算 pass）。
-- **階段 3｜換 tokenizer**：char-level → BPE（`tiktoken` 或自己刻），體會 subword。
-- **階段 4｜上雲**：把同一條 pipeline 跑到雲端 GPU（runpod / Lambda / vast.ai），
-  程式碼不用改，只換 device 與資料路徑——這就是 pipeline 化的回報。
-- **階段 5｜轉 B 路線**：拿開源權重（Qwen/Llama）做 LoRA 微調，做出能用的模型。
+- **B 監控**：loss 曲線、過擬合 gap、統一監控面板（先有儀表才好做實驗）
+- **D 原理**：self-attention（Q/K/V/熱圖）、causal mask、multi-head、residual
+- **A 調參**：context window、模型大小，邊改邊看曲線（見上方關鍵數據）
+- **C 升級**：char → BPE subword tokenizer，並學會用 BPC 公平比較
 
 ## See Also
 
-- `docs/theory-map.md` — 程式碼 ↔ 聖經本章節 / 論文 對照地圖
-- `docs/data-pipeline.md`、`docs/verification-playbook.md`
-- Karpathy, *Let's build GPT: from scratch*（YouTube）
-- Karpathy, **nanoGPT**（本專案的精神來源）
+- `docs/theory-map.md` — 程式碼 ↔《Deep Learning》聖經本章節 / 論文 對照地圖
+- `docs/learning-plan.md` — 即時深挖學習清單（哪些深挖、哪些知道即可）
+- `docs/data-pipeline.md` — 資料這塊各階段在做什麼
+- `docs/verification-playbook.md` — 驗收 runbook
+- Karpathy, *Let's build GPT: from scratch* / **nanoGPT**（本專案精神來源）
+- Vaswani et al. 2017, *Attention Is All You Need*；Sennrich et al. 2016（BPE）

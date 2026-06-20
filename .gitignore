@@ -12,3 +12,4 @@ data/raw/*.txt
 # Jupyter checkpoints / 生成的示範資料
 .ipynb_checkpoints/
 data/raw/demo/
+artifacts/*.csv

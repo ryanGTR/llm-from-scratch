@@ -21,7 +21,7 @@ import torch                       # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.config import GPTConfig   # noqa: E402
 from src.model import GPT          # noqa: E402
-from src.tokenizer import CharTokenizer  # noqa: E402
+from src.tokenizer import load_tokenizer  # noqa: E402
 from src.viz import get_attention  # noqa: E402
 
 
@@ -37,7 +37,7 @@ def main():
 
     art = Path(args.artifacts)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tok = CharTokenizer.load(art / "tokenizer.json")
+    tok = load_tokenizer(art / "tokenizer.json")
     ckpt = torch.load(art / "ckpt.pt", map_location=device)
     gcfg = GPTConfig(**ckpt["gpt_config"])
     model = GPT(gcfg).to(device)

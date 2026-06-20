@@ -79,6 +79,16 @@ def main():
     # 監控：把每次 eval 的 loss 記成 CSV，之後 plot_loss.py 畫成曲線、比較不同 run
     runs_dir = art / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
+    # 每個 run 存一份 meta（跨 tokenizer 比較要用 chars_per_token 算 BPC）
+    (runs_dir / f"{args.run_name}.meta.json").write_text(json.dumps({
+        "run_name": args.run_name,
+        "tokenizer": meta.get("tokenizer", "char"),
+        "vocab_size": gcfg.vocab_size,
+        "chars_per_token": meta.get("chars_per_token", 1.0),
+        "block_size": gcfg.block_size,
+        "n_layer": gcfg.n_layer,
+        "n_embd": gcfg.n_embd,
+    }, indent=2))
     log_path = runs_dir / f"{args.run_name}.csv"
     log_file = open(log_path, "w", newline="")
     logger = csv.writer(log_file)

@@ -100,6 +100,39 @@ class TestPackRoundTrip(unittest.TestCase):
         self.assertEqual(tok.decode(list(back)), text)
 
 
+class TestBPE(unittest.TestCase):
+    def test_merge_replaces_pair(self):
+        from src.bpe import merge
+        # [1,2,1,2,3] 把 (1,2) 換成 99 -> [99,99,3]
+        self.assertEqual(merge([1, 2, 1, 2, 3], (1, 2), 99), [99, 99, 3])
+
+    def test_train_learns_frequent_pair(self):
+        from src.bpe import train_bpe
+        # "ababab" 裡 (a,b) 最常見，第一步就該合併它，序列變短
+        res = train_bpe("abababab", num_merges=1)
+        self.assertEqual(len(res["log"]), 1)
+        self.assertEqual(res["log"][0]["pair"], ["a", "b"])
+        self.assertEqual(res["log"][0]["merged"], "ab")
+        self.assertLess(res["log"][0]["seq_len"], 8)   # 8 -> 4
+
+    def test_tokenizer_roundtrip_and_saveload(self):
+        import os
+        import tempfile
+        from src.bpe import BPETokenizer
+        text = "the cat sat on the mat. the cat ran. the mat is flat."
+        tok = BPETokenizer.from_text(text, num_merges=20)
+        self.assertGreater(tok.vocab_size, len(set(text)))   # 有長出新 token
+        ids = tok.encode(text)
+        self.assertEqual(tok.decode(ids), text)              # 無損還原
+        self.assertLess(len(ids), len(text))                 # 比 char 短
+        p = tempfile.mktemp(suffix=".json")
+        tok.save(p)
+        tok2 = BPETokenizer.load(p)
+        os.remove(p)
+        self.assertEqual(tok2.decode(tok2.encode(text)), text)
+        self.assertEqual(tok2.vocab_size, tok.vocab_size)
+
+
 class TestLossLog(unittest.TestCase):
     def test_load_run_parses_csv(self):
         import tempfile, os
