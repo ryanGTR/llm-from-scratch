@@ -15,7 +15,8 @@
 ## 這個專案涵蓋什麼
 
 - **資料工程**：collect → clean → 去重（MinHash）→ tokenize → pack，附驗收 playbook 與品質指標
-- **模型**：decoder-only Transformer（`src/model.py`），跟 GPT-2/3 同一張架構藍圖
+- **模型**：decoder-only Transformer（`src/model.py`），跟 GPT-2/3 同一張架構藍圖，
+  並可一鍵切換現代零件（RMSNorm / SwiGLU / RoPE，LLaMA/Mistral 同款）
 - **訓練/評估/生成**：完整自回歸 pipeline，GPU 上跑
 - **監控**：loss 曲線、過擬合偵測、attention 熱圖、tokenizer 對比，全部在 Jupyter 統一面板
 - **tokenizer**：char-level 與自刻 BPE 兩種，可一鍵切換對比
@@ -88,6 +89,25 @@ tokenizer 無關的 **BPC（每字元幾 bit）**，BPE 反而**更好**（2.37 
 記憶體隨 context 平方成長，FlashAttention 改成線性——這就是真實 LLM 達到
 128k context 的關鍵，不是靠顯存大 1000 倍。
 
+### 6. 現代架構零件（LLaMA/Mistral 同款）升級
+
+把 2017 原版 Transformer 零件換成 2023+ 主流（皆可用 config 開關切換對比）：
+
+| 零件升級 | best val loss | 改善 | 口味 |
+|---|---|---|---|
+| LayerNorm → **RMSNorm** | 1.7712 → 1.7724 | ≈ 平手 | 更省（少計算）|
+| GELU MLP → **SwiGLU** | 1.7712 → 1.6810 | **−0.09** | 更準（gating 表達力）|
+| 學習式位置 → **RoPE** | 1.7712 → 1.6248 | **−0.146**（且參數更少）| 更準 + 外推 |
+
+**發現一**：不是每個「現代技巧」都降 loss——RMSNorm 優化的是「成本」（同準、更省），
+SwiGLU / RoPE 優化的是「準度」。評估新技巧前要先問「它優化的是準還是省」。
+
+**發現二（RoPE 外推）**：兩個模型都只用長度 64 訓練，測試餵到 256——學習式位置
+loss 從 1.93 爆到 2.79（沒訓過的位置就垮），RoPE 只從 1.82 緩升到 2.11（優雅外推）。
+這就是長 context LLM 能「用比訓練更長的序列」的關鍵。見 `scripts/rope_extrapolation.py`。
+
+> 註：以上為單次跑的趨勢；嚴謹結論需多 seed 重跑（見 `TODO.md`）。
+
 ## 心智模型（Java 類比）
 
 | 這個專案 | Java 世界 |
@@ -108,7 +128,7 @@ llm-from-scratch/
 │   ├── config.py          # 所有超參數（= application.yml）
 │   ├── tokenizer.py       # char tokenizer + load_tokenizer() 自動辨識
 │   ├── bpe.py             # 自刻 BPE：train_bpe + BPETokenizer
-│   ├── model.py           # minimal GPT（decoder-only Transformer）
+│   ├── model.py           # GPT + 可切換現代零件（RMSNorm/SwiGLU/RoPE）
 │   ├── viz.py             # 用 forward hook 抓 attention 權重
 │   ├── data/              # 資料子系統（純 Python、零依賴）
 │   │   ├── sources.py     #   collect：來源 → Document
@@ -126,6 +146,7 @@ llm-from-scratch/
 │   ├── get_data.sh        # 下載樣本語料
 │   ├── make_messy_corpus.py # 產髒語料示範清洗/去重
 │   ├── train_bpe.py       # 跑 BPE + 可審核監控（合併 log / report）
+│   ├── rope_extrapolation.py # RoPE 外推 demo（train@64, eval→256）
 │   └── verify.py          # 驗收 playbook 執行器
 ├── notebooks/
 │   ├── 01_explore_data.ipynb # 資料探索
@@ -175,7 +196,11 @@ make attn          # attention 熱圖
 python pipeline/01_prepare_data.py --tokenizer bpe --merges 300
 python pipeline/02_train.py --run_name bpe_tok
 
-# 統一監控面板
+# 現代架構零件（LLaMA 同款，可單獨或合併開）
+python pipeline/02_train.py --run_name modern --use_rmsnorm --use_swiglu --use_rope
+python scripts/rope_extrapolation.py   # RoPE 外推 demo（train@64, eval→256）
+
+# 統一監控面板（含資料/BPE/訓練/tokenizer 對比/單元測試五大區塊）
 make lab           # Jupyter → notebooks/02_monitor.ipynb → Restart & Run All
 ```
 
