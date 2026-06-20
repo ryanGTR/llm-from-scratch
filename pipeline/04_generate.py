@@ -23,6 +23,8 @@ def main():
     ap.add_argument("--max_new_tokens", type=int, default=300)
     ap.add_argument("--temperature", type=float, default=0.8)
     ap.add_argument("--top_k", type=int, default=50)
+    ap.add_argument("--top_p", type=float, default=None, help="nucleus 取樣（如 0.9）")
+    ap.add_argument("--min_p", type=float, default=None, help="min-p 取樣（如 0.05）")
     args = ap.parse_args()
 
     art = Path(args.artifacts)
@@ -39,8 +41,8 @@ def main():
         [tok.encode(args.prompt)], dtype=torch.long, device=device
     )
     out = model.generate(
-        start, args.max_new_tokens,
-        temperature=args.temperature, top_k=args.top_k,
+        start, args.max_new_tokens, temperature=args.temperature,
+        top_k=args.top_k, top_p=args.top_p, min_p=args.min_p,
     )
     print(tok.decode(out[0].tolist()))
 

@@ -234,16 +234,33 @@ class GPT(nn.Module):
         return logits, loss
 
     @torch.no_grad()
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
-        """自回歸生成：吐一個 token、接回輸入、再吐下一個。"""
+    def generate(self, idx, max_new_tokens, temperature=1.0,
+                 top_k=None, top_p=None, min_p=None):
+        """自回歸生成：吐一個 token、接回輸入、再吐下一個。
+
+        三種「砍候選」法（擇一或合用）：
+          top_k：留機率最高的 K 個（固定數量）
+          top_p：留「累積機率達 p」的最小集合（nucleus，會隨分布自適應）
+          min_p：留「機率 >= p × 最大機率」的 token（相對於峰值，較新、2024）
+        top_p / min_p 同一類（自適應截斷），差在截斷規則；top_k 是固定數量。
+        """
         for _ in range(max_new_tokens):
-            # context 超過 block_size 就裁掉最舊的部分
-            idx_cond = idx[:, -self.cfg.block_size:]
+            idx_cond = idx[:, -self.cfg.block_size:]   # context 超過 block_size 裁掉最舊
             logits, _ = self(idx_cond)
-            logits = logits[:, -1, :] / temperature   # 只看最後一個位置
+            logits = logits[:, -1, :] / temperature    # 只看最後一個位置
             if top_k is not None:
                 v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
                 logits[logits < v[:, [-1]]] = float("-inf")
+            if top_p is not None:                      # nucleus：累積機率截斷
+                s_logits, s_idx = torch.sort(logits, descending=True, dim=-1)
+                cum = torch.cumsum(F.softmax(s_logits, dim=-1), dim=-1)
+                remove = cum > top_p
+                remove[..., 1:] = remove[..., :-1].clone()   # 保留剛跨過門檻的那個
+                remove[..., 0] = False
+                logits[remove.scatter(1, s_idx, remove)] = float("-inf")
+            if min_p is not None:                      # 相對於峰值的門檻
+                probs = F.softmax(logits, dim=-1)
+                logits[probs < min_p * probs.max(dim=-1, keepdim=True).values] = float("-inf")
             probs = F.softmax(logits, dim=-1)
             next_id = torch.multinomial(probs, num_samples=1)
             idx = torch.cat((idx, next_id), dim=1)

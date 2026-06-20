@@ -268,6 +268,23 @@ class TestAttention(unittest.TestCase):
         self.assertTrue(torch.allclose(atts[0][:, 0, 1:], torch.zeros(cfg.n_head, 4)))
 
 
+class TestSampling(unittest.TestCase):
+    def test_topk_topp_minp_all_produce_valid_ids(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+        m = GPT(GPTConfig(vocab_size=30, n_layer=2, n_head=2, n_embd=32,
+                          block_size=16)).eval()
+        start = torch.zeros((1, 1), dtype=torch.long)
+        for kw in (dict(top_k=5), dict(top_p=0.9), dict(min_p=0.05)):
+            out = m.generate(start, 12, **kw)
+            self.assertEqual(tuple(out.shape), (1, 13))
+            self.assertTrue(0 <= out.min() and out.max() < 30)
+
+
 class TestStats(unittest.TestCase):
     def test_entropy_single_char_is_zero(self):
         self.assertEqual(S.char_entropy("aaaa"), 0.0)
