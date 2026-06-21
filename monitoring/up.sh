@@ -10,8 +10,15 @@ podman pod rm -f "$POD" 2>/dev/null || true
 podman pod create --name "$POD" -p 8000:8000 -p 9090:9090 -p 3000:3000
 
 # 1) 推論 API（GPU + 模型 mount）
+# 進階功能（e）開關：放一顆 artifacts/candidate.pt 就自動開金絲雀+shadow；BATCH_MAX 可由環境帶
+EXTRA="-e BATCH_MAX=${BATCH_MAX:-1}"
+if [ -f artifacts/candidate.pt ]; then
+  EXTRA="$EXTRA -e CANDIDATE_CKPT=/app/artifacts/candidate.pt"
+  EXTRA="$EXTRA -e CANARY_PCT=${CANARY_PCT:-20} -e SHADOW_PCT=${SHADOW_PCT:-50}"
+  echo "偵測到 artifacts/candidate.pt → 開啟金絲雀 ${CANARY_PCT:-20}% + shadow ${SHADOW_PCT:-50}%"
+fi
 podman run -d --pod "$POD" --name llm-api --device nvidia.com/gpu=all \
-  -v ./artifacts:/app/artifacts:ro,Z llm-from-scratch:latest
+  $EXTRA -v ./artifacts:/app/artifacts:ro,Z llm-from-scratch:latest
 
 # 2) Prometheus（抓 API 的 /metrics）
 podman run -d --pod "$POD" --name llm-prometheus \
