@@ -14,6 +14,8 @@
 > 幾十秒訓完，但麻雀雖小五臟俱全——self-attention、multi-head、residual、
 > causal mask、自回歸生成、BPE tokenizer、訓練迴圈，全都是真的、可跑、可改。
 
+> 📖 想看「給人讀的完整旅程敘事」（適合當作品集入口）：[docs/case-study.md](docs/case-study.md)
+
 ## 這個專案涵蓋什麼
 
 - **資料工程**：collect → clean → 去重 → tokenize → pack，附驗收 playbook、品質指標與**偵測器報表**
