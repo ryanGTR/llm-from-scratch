@@ -10,6 +10,7 @@
 Java 類比：lifespan 載入 = Spring 的 @PostConstruct 單例 Bean；@app.post = @RestController。
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -35,6 +36,8 @@ ART = Path(os.environ.get("ARTIFACTS", "artifacts"))
 # 金絲雀：設了 CANDIDATE_CKPT 就同時載入候選模型，CANARY_PCT% 的流量導去它
 CANDIDATE_CKPT = os.environ.get("CANDIDATE_CKPT")
 CANARY_PCT = float(os.environ.get("CANARY_PCT", "0"))
+BATCH_MAX = int(os.environ.get("BATCH_MAX", "1"))        # >1 開動態批次
+BATCH_WAIT_MS = float(os.environ.get("BATCH_WAIT_MS", "8"))
 STATE: dict = {}
 
 # ---- 可觀測性：Prometheus metrics（k8s/Grafana 同款標準）----------------------
@@ -86,7 +89,15 @@ def _load_model():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _load_model()        # 服務起來前先把模型載好
-    yield
+    if BATCH_MAX > 1:    # 開動態批次：背景跑批次器
+        from serve.batcher import DynamicBatcher
+        STATE["batcher"] = DynamicBatcher(BATCH_MAX, BATCH_WAIT_MS)
+        task = asyncio.create_task(STATE["batcher"].run())
+        yield
+        task.cancel()
+    else:
+        STATE["batcher"] = None
+        yield
 
 
 app = FastAPI(title="llm-from-scratch 推論 API", version="0.1.0", lifespan=lifespan)
@@ -160,17 +171,21 @@ class GenResponse(BaseModel):
 def health():
     """就緒探針：模型載好沒、跑在哪、多大。給 k8s readiness probe 用。"""
     ok = "model" in STATE
+    b = STATE.get("batcher")
     return {
         "status": "ok" if ok else "loading",
         "model_loaded": ok,
         "device": STATE.get("device"),
         "params_M": STATE.get("params_M"),
         "vocab_size": STATE["cfg"].vocab_size if ok else None,
+        "batching": (None if b is None else
+                     {"batches": b.batches_run, "reqs": b.reqs_served,
+                      "avg_batch": round(b.reqs_served / b.batches_run, 2) if b.batches_run else 0}),
     }
 
 
 @app.post("/generate", response_model=GenResponse)
-def generate(req: GenRequest):
+async def generate(req: GenRequest):
     """自回歸生成。回傳生成文字 + 延遲/吞吐（線上服務要看得到效能）。"""
     tok, device = STATE["tok"], STATE["device"]
     drift = STATE["drift"]
@@ -186,21 +201,31 @@ def generate(req: GenRequest):
     VARIANT.labels(variant).inc()
 
     ids = tok.encode(req.prompt) or [0]      # 空/全生字 → 用一個起始 token 兜底
-    idx = torch.tensor([ids], dtype=torch.long, device=device)
+    params = {"max_new_tokens": req.max_new_tokens, "temperature": req.temperature,
+              "top_k": req.top_k, "top_p": req.top_p, "min_p": req.min_p,
+              "use_kv_cache": req.use_kv_cache}
 
     t0 = time.perf_counter()
-    with torch.no_grad():
-        out = model.generate(
-            idx, req.max_new_tokens, temperature=req.temperature,
-            top_k=req.top_k, top_p=req.top_p, min_p=req.min_p,
-            use_kv_cache=req.use_kv_cache,
-        )
-    if device == "cuda":
-        torch.cuda.synchronize()             # 等 GPU 真的算完再計時
+    batcher = STATE.get("batcher")
+    if batcher is not None:                  # 動態批次：丟進佇列、等批次器合批算完
+        job = {"model": model, "ids": ids, "device": device, "params": params,
+               "key": (id(model), len(ids), req.max_new_tokens, req.temperature,
+                       req.top_k, req.top_p, req.min_p, req.use_kv_cache)}
+        full = await batcher.submit(job)
+    else:                                    # 直跑：丟到 thread 不擋 event loop
+        def _run():
+            idx = torch.tensor([ids], dtype=torch.long, device=device)
+            with torch.no_grad():
+                out = model.generate(idx, req.max_new_tokens, temperature=req.temperature,
+                                     top_k=req.top_k, top_p=req.top_p, min_p=req.min_p,
+                                     use_kv_cache=req.use_kv_cache)
+            if device == "cuda":
+                torch.cuda.synchronize()
+            return out[0].tolist()
+        full = await asyncio.to_thread(_run)
     dt = time.perf_counter() - t0
     VARIANT_LAT.labels(variant).observe(dt)  # 各版本延遲分開記 → 才能 A/B 比較
 
-    full = out[0].tolist()
     n_gen = len(full) - len(ids)
     TOKENS.inc(n_gen)                        # 累計生成 token（Prometheus）
     log_event(event="generate", variant=variant, prompt_len=len(ids), tokens=n_gen,

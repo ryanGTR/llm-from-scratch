@@ -369,6 +369,38 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(gate_reasons(better, prod), [])   # 比現行好 → 放行
 
 
+class TestBatcher(unittest.TestCase):
+    """動態批次：同 key 的請求合批、結果正確、greedy 一致。"""
+
+    def test_batches_and_returns_correct(self):
+        try:
+            import torch  # noqa: F401
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        import asyncio
+        from src.config import GPTConfig
+        from src.model import GPT
+        from serve.batcher import DynamicBatcher
+        m = GPT(GPTConfig(vocab_size=40, n_layer=2, n_head=4, n_embd=64, block_size=64)).eval()
+        params = {"max_new_tokens": 3, "temperature": 1.0, "top_k": 1,
+                  "top_p": None, "min_p": None, "use_kv_cache": False}
+
+        async def go():
+            b = DynamicBatcher(max_batch=4, max_wait_ms=5)
+            task = asyncio.create_task(b.run())
+            jobs = [{"model": m, "ids": [1, 2, 3], "device": "cpu",
+                     "params": params, "key": ("k", 3)} for _ in range(4)]
+            outs = await asyncio.gather(*[b.submit(j) for j in jobs])
+            task.cancel()
+            return outs, b.reqs_served
+
+        outs, served = asyncio.run(go())
+        self.assertEqual(len(outs), 4)
+        self.assertTrue(all(len(o) == 6 for o in outs))   # 3 prompt + 3 生成
+        self.assertEqual(outs[0], outs[1])                 # 同 key greedy → 一致
+        self.assertEqual(served, 4)
+
+
 class TestServe(unittest.TestCase):
     """推論 API 冒煙測試（無 ckpt / 無 fastapi 就跳過，CI 不會紅）。"""
 
