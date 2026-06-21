@@ -108,7 +108,7 @@ def pipeline_metrics(artifacts_dir: str | Path = "artifacts") -> dict:
 
     metrics = {
         "total_chars": len(corpus),
-        "total_tokens": meta["train_tokens"] + meta["val_tokens"],
+        "total_tokens": meta["train_tokens"] + meta["val_tokens"] + meta.get("test_tokens", 0),
         "vocab_size": meta["vocab_size"],
         "char_entropy": round(H, 3),
         "entropy_efficiency": round(H / math.log2(meta["vocab_size"]), 3) if meta["vocab_size"] > 1 else 0,
@@ -123,8 +123,8 @@ def pipeline_metrics(artifacts_dir: str | Path = "artifacts") -> dict:
     verdicts = [
         _band(metrics["total_chars"], 1_000_000, 1e12, "資料量(字元)",
               fmt="{:.0f}", note="小型 LM 建議 ≥ 1M 字元；太少只會過擬合背答案"),
-        _band(metrics["char_entropy"], 3.5, 6.0, "字元熵(bits/char)",
-              note="英文約 4–4.5；太低代表重複/退化"),
+        _band(metrics["entropy_efficiency"], 0.55, 0.97, "熵效率(熵/log2 vocab)",
+              note="跨語言指標：用字多不多元。英文≈0.78、中文≈0.70；太低=重複/退化"),
         _band(metrics["compression_ratio"], 0.30, 0.70, "壓縮比",
               note="越小越重複；自然語言約 0.3–0.45"),
         _band(metrics["dup_rate"], 0.0, 0.30, "重複率",
