@@ -2,11 +2,14 @@
 title: 理論地圖 — 程式碼 ↔ 聖經本章節 / 論文
 type: map
 created: 2026-06-19
-updated: 2026-06-19
+updated: 2026-06-21
 tags: [llm, transformer, gpt, deep-learning-book, papers, learning-map]
 sources:
   - src/model.py
+  - src/reward_model.py
   - pipeline/02_train.py
+  - pipeline/06_dpo.py
+  - pipeline/08_grpo.py
   - "Goodfellow, Bengio, Courville — Deep Learning (2016)"
   - "Vaswani et al. — Attention Is All You Need (2017)"
 ---
@@ -22,13 +25,17 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 ```
 2015  ResNet（residual）
 2016  ← 聖經本出版。LayerNorm、GELU、BPE 也都這年的論文
-2017  Transformer（Attention Is All You Need）← self-attention 當主架構
-2018  GPT-1 / 2019 GPT-2（decoder-only 自回歸 LM）
-2022  FlashAttention（O(T) 記憶體的 attention）
+2017  Transformer（Attention Is All You Need）；PPO；RLHF from preferences（Christiano）
+2018  GPT-1 / 2019 GPT-2（decoder-only 自回歸 LM）；RMSNorm 2019；nucleus sampling 2019
+2019  Fine-tuning LM from human feedback（KL 錨用到 LM）
+2020  SwiGLU；2021 RoPE
+2022  FlashAttention（O(T) attention）；InstructGPT（RLHF 配方）
+2023  GQA；DPO；reward model 過度優化
+2024  GRPO（DeepSeekMath）；min-p sampling → 2025 DeepSeek-R1
 ```
 
-聖經本是 2016 年的「地基教科書」，Transformer 晚它一年、FlashAttention 晚六年。
-所以本專案的「訓練機器」幾乎都在書裡，「架構與效率」幾乎都在書之後的論文。
+聖經本是 2016 年的「地基教科書」。本專案的「訓練機器」幾乎都在書裡，「現代架構 / 效率 /
+取樣 / 後訓練對齊」幾乎都在書之後的論文（2017–2025）——下面三層逐塊釘到出處。
 
 ## 第一層：在聖經本裡（訓練地基）
 
@@ -62,9 +69,29 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 | GELU 激活 | `src/model.py:66` (F.gelu) | Hendrycks & Gimpel 2016（書裡用 ReLU）|
 | Residual connection | `src/model.py:80-81` | ResNet (He et al. 2015)（書只略提）|
 | Weight tying | `src/model.py:97` | Press & Wolf 2017 / Inan 2016 |
-| FlashAttention (O(T) 記憶體) | 實測對照，尚未進 model.py | Tri Dao 2022 |
-| BPE subword tokenizer | 尚未做（學習弧線的 C）| Sennrich et al. 2016 |
-| MinHash 近似去重 | `src/data/dedup.py` | Broder 1997（非深度學習，是資料工程）|
+| BPE subword tokenizer | `src/bpe.py`（train_bpe / BPETokenizer）✅ | Sennrich et al. 2016 |
+| MinHash + LSH 近似去重 | `src/data/dedup.py` | Broder 1997（MinHash）；Indyk & Motwani 1998（LSH）|
+
+### 現代零件（LLaMA / Mistral 同款，路線 A 全配齊 ✅）
+
+書沒有、2017 Transformer 也沒有；這是把骨架升級成 2023+ 主流的那批。
+
+| 程式碼 | 位置 | 出處論文 |
+|---|---|---|
+| RMSNorm | `src/model.py` (RMSNorm class, `use_rmsnorm`) | Zhang & Sennrich 2019 |
+| SwiGLU（gated MLP）| `src/model.py` (SwiGLU class, `use_swiglu`) | Shazeer 2020「GLU Variants」|
+| RoPE（旋轉位置編碼）| `src/model.py` (build_rope_cache/apply_rope, `use_rope`) | Su et al. 2021「RoFormer」|
+| GQA / MQA（共用 KV 頭）| `src/model.py` (`n_kv_head`) | Ainslie et al. 2023（GQA）；Shazeer 2019（MQA）|
+
+### 效率與取樣 ✅
+
+| 程式碼 | 位置 | 出處論文 |
+|---|---|---|
+| FlashAttention（O(T) 記憶體）| `src/model.py` (`use_flash`, F.SDPA) | Tri Dao 2022 |
+| KV-cache（增量生成）| `src/model.py` (cache_k/v, `use_kv_cache`) | 標準推論優化（無單篇定論；見 nanoGPT/推論系統）|
+| top-p / nucleus 取樣 | `src/model.py` (_sample, `top_p`) | Holtzman et al. 2019「Neural Text Degeneration」|
+| min-p 取樣 | `src/model.py` (_sample, `min_p`) | Nguyen et al. 2024「Min-p Sampling」|
+| Deep ensemble（機率平均）| `scripts/deep_ensemble.py` | Lakshminarayanan et al. 2017 |
 
 ## 第三層：後訓練（對齊）論文 — SFT → DPO → RLHF
 
@@ -85,16 +112,21 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 
 ## 一句話：我們在哪
 
-> 手刻的是 **2017 Transformer 架構 + 2018 GPT 設定**，跑在 **聖經本 Ch5-8 的
-> 訓練地基** 上；剛還摸到 **2022 系統層（FlashAttention）**。
+> 從 **聖經本 Ch5-8 訓練地基** 起步，手刻 **2017 Transformer + 2018 GPT 骨架**，再把它
+> 升級成 **2019–2023 現代零件（RMSNorm/SwiGLU/RoPE/GQA、LLaMA 同款）+ 效率/取樣
+> （FlashAttention/KV-cache/top-p/min-p）**，最後走完 **2022–2025 後訓練對齊（SFT→DPO→
+> RLHF/GRPO）**。
 
-學習路徑＝聖經本 Ch5-8 給地基 → **現在站在 2017 Transformer 這篇論文上**
-（`src/model.py` 就是它的精簡實作）→ 前一步 2018 GPT → 再前一步 2022 效率工程。
+學習路徑＝聖經本 Ch5-8 地基 → 2017 Transformer（`src/model.py`）→ 2018 GPT → 2019–2023
+現代化零件 → 2022 效率工程 → **2023–2025 後訓練前沿（站在 DPO/GRPO 這條最新線上）**。
 
 ## 延伸閱讀
 
 - **架構**：Vaswani 2017 "Attention Is All You Need"；Jay Alammar "The Illustrated
   Transformer"（圖解，最好入門）；Karpathy "Let's build GPT"（本專案精神來源）
+- **現代零件**：Zhang & Sennrich 2019（RMSNorm）；Shazeer 2020（SwiGLU）；Su 2021（RoPE）；
+  Ainslie 2023（GQA）——合起來就是 LLaMA/Mistral 的配方
+- **取樣**：Holtzman 2019（nucleus/top-p）；Nguyen 2024（min-p）
 - **系統**：Dao 2022 "FlashAttention"；Karpathy nanoGPT repo
 - **後訓練/對齊**：Ziegler 2019（KL 錨）；Ouyang 2022（InstructGPT/RLHF 配方）；
   Rafailov 2023（DPO）；Shao 2024（DeepSeekMath/GRPO）+ DeepSeek-R1 2025；
