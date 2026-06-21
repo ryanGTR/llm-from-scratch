@@ -18,13 +18,35 @@ _MANY_SPACES = re.compile(r"[ \t]+")
 _MANY_NEWLINES = re.compile(r"\n{3,}")
 # 控制字元（除了 \n \t）——這些常是亂碼來源
 _CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+# MediaWiki 繁簡/語言轉換語法 -{flag:文字;flag:文字}- 或 -{純文字}-
+_WIKI_CONVERT = re.compile(r"-\{(.*?)\}-", re.DOTALL)
+
+
+def _resolve_wiki_convert(m) -> str:
+    """把 -{…}- 解析成單一文字：有變體就挑一版（偏繁體），純文字就保留，空的丟掉。"""
+    inner = m.group(1)
+    if ":" not in inner:                       # -{純文字}- 沒有變體標記 → 保留內容
+        return inner
+    variants = {}
+    for part in inner.split(";"):
+        if ":" in part:
+            flag, text = part.split(":", 1)
+            variants[flag.strip()] = text.strip()
+    for pref in ("zh-tw", "zh-hant", "zh-hk"):  # 偏好繁體
+        if variants.get(pref):
+            return variants[pref]
+    for t in variants.values():                # 否則第一個非空變體
+        if t:
+            return t
+    return ""                                   # 全空 → 丟掉整段標記
 
 
 def normalize_text(s: str, strip_html: bool = True) -> str:
-    """把單篇文字洗乾淨：unicode 正規化、去 HTML、去控制字元、收斂空白。"""
+    """把單篇文字洗乾淨：unicode 正規化、去 HTML、去維基轉換語法、去控制字元、收斂空白。"""
     s = unicodedata.normalize("NFC", s)        # 全形/組合字統一表示法
     if strip_html:
         s = _HTML_TAG.sub(" ", s)
+    s = _WIKI_CONVERT.sub(_resolve_wiki_convert, s)   # -{…}- 繁簡轉換語法
     s = _CTRL.sub("", s)                        # 砍掉控制字元
     s = s.replace("\r\n", "\n").replace("\r", "\n")
     s = _MANY_SPACES.sub(" ", s)               # 多個空白 -> 一個
