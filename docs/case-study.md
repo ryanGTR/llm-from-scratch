@@ -7,8 +7,9 @@ tags: [llm, mlops, data-engineering, model-governance, case-study]
 
 # 從零打造一個 LLM，並把它一路推到「能上線、能治理」
 
-> 一句話：我手刻了一個 decoder-only GPT，然後把它走完一遍真實 MLOps——
-> 資料工程、現代架構、訓練評估、線上服務、可觀測性、容器化、監控儀表板、模型治理。
+> 一句話：我手刻了一個 decoder-only GPT，然後把它走完整個 **LLM ＋ MLOps 生命週期**——
+> 資料工程、現代架構、訓練評估、線上服務/可觀測性/容器化/治理，一直到**後訓練對齊**
+> （SFT → DPO/IPO → RLHF: GRPO/PPO），還把關鍵演算法的**數學推導**親手寫出來。
 > 重點不是「做出一個小模型」，而是**過程中的工程判斷與方法論**：每個技巧都「先預測再實測」，
 > 每個指標都「先講判準再驗證」，每個假設都「量過才信」。
 
@@ -27,7 +28,7 @@ tags: [llm, mlops, data-engineering, model-governance, case-study]
 ## 整條旅程
 
 ```
-搞懂原理 → 工程化 → 真實規模資料 → 訓練+嚴謹評估 → 部署 → 治理
+搞懂原理 → 工程化 → 真實規模資料 → 訓練+嚴謹評估 → 部署 → 治理 → 後訓練對齊 → 數學推導
 ```
 
 | 階段 | 做了什麼 | 帶走的能力 |
@@ -38,10 +39,12 @@ tags: [llm, mlops, data-engineering, model-governance, case-study]
 | 訓練/評估 | 現代架構訓練 → 對「事先講好的判準」逐項驗證 | 嚴謹、不移動球門的評估紀律 |
 | 部署 | FastAPI 推論服務 + Prometheus/Grafana 可觀測性 + Podman GPU 容器 | 把模型變成線上服務 |
 | 治理 | digest 身份 + registry + lineage + model card + promotion gate | 模型上線的稽核與控制 |
+| 後訓練對齊 | SFT → DPO/IPO（偏好優化）→ GRPO/PPO（RL 對齊），四種都有對照實驗 | 對齊機制與它們的坑（reward hacking、死背、過度優化）|
+| 數學推導 | RLHF→DPO 封閉式、margin≈1/β、policy gradient、RoPE 相對位置… | 不只會用，能把式子推出來（[derivations.md](derivations.md)）|
 
 ---
 
-## 三個讓我印象最深的「假設被打破」
+## 四個讓我印象最深的「假設被打破」
 
 真正學到東西的地方，往往是「以為對、結果錯」的瞬間。
 
@@ -60,6 +63,13 @@ KV-cache 在 CPU 長生成快 2.2×，但在我的 **GPU + 小模型 + 短生成
 抓到 **21.6% 的文件**殘留維基的繁簡轉換語法 `-{zh-tw:..;zh-cn:..}-`——這是任何聚合指標都
 看不到、只有「真的去看樣本 + 把問題寫成偵測器」才現形的。修一條清洗規則，21.6% → 0.05%，
 我用監控面板的 before/after 對照圖留下視覺證據。
+
+### 4. 「reward model 給高分就是好答案」——錯，指標會被鑽（這條最接我的本行）
+RLHF 用一個學來的 reward model 當分數，我拿掉 KL 錨、讓 RL 用力去最大化它——結果 policy
+把 RM 分數從 3.7 衝到 13.2，輸出卻 collapse 成「不管問什麼都吐同一串高分垃圾」。那串垃圾落在
+RM 的**訓練分布外**、被它誤判高分，policy 鑽了這個漏洞。**這就是 Goodhart's law：指標一旦變成
+目標，就不再是好指標**——和稽核裡「KPI 被優化就失真」是同一件事。防法＝KL 錨把 policy 綁在
+可信的舊模型附近，不准它跑去鑽漏洞。
 
 ---
 
@@ -149,10 +159,17 @@ KV-cache 在 CPU 長生成快 2.2×，但在我的 **GPU + 小模型 + 短生成
 
 ## 技術棧
 
-Python · PyTorch（自刻模型）· NumPy（向量化 MinHash/LSH）· FastAPI · Prometheus · Grafana ·
-Podman（GPU via CDI）· uv（鎖依賴）· GitHub Actions（CI）· Jupyter（監控面板）
+Python · PyTorch（自刻模型 + reward model + GRPO/PPO/DPO/IPO）· NumPy（向量化 MinHash/LSH）·
+FastAPI · Prometheus · Grafana · Podman（GPU via CDI）· uv（鎖依賴）· GitHub Actions（CI）· Jupyter
+
+## 延伸
+
+- 📐 [derivations.md](derivations.md) — 關鍵演算法的數學推導/證明（RLHF→DPO、margin≈1/β、RoPE…）
+- 📊 [reading-the-charts.md](reading-the-charts.md) — 每張實驗圖「在說什麼」怎麼看
+- 🗺️ [theory-map.md](theory-map.md) — 每塊程式碼出自哪篇論文（附年份、標新舊）
+- 📓 [lessons-learned.md](lessons-learned.md) — 所有「假設被打破」的時刻
 
 ## 一句話總結
 
-> 我沒有「用」一個 LLM，我把一個 LLM **從零養大、送上線、再管起來**——
-> 而且每一步都先預測、先講判準、先量測，再下結論。
+> 我沒有「用」一個 LLM，我把一個 LLM **從零養大、送上線、管起來、再對齊**——
+> 而且每一步都先預測、先講判準、先量測，再下結論。**模型小，但方法論是真的。**

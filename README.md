@@ -5,16 +5,23 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
 
-從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成 → **部署 → 治理**」做成一條
-可重跑、可驗收、可監控的 pipeline。目標是**搞懂 LLM 原理**，同時走完一遍**真實 MLOps**：
-從資料工程、現代架構、訓練評估，一路到線上服務、可觀測性、容器化、監控儀表板、模型治理。
-從本機（Framework 16 + RTX 5070）起步，結構乾淨到可平滑搬上雲端 GPU。
+從零手刻一個小型 GPT，並把它一路推完整個 **LLM ＋ MLOps 生命週期**：
+**資料工程 → 現代架構 → 訓練評估 → 部署/治理 → 後訓練對齊（SFT→DPO/IPO→RLHF: GRPO/PPO）**，
+全做成可重跑、可驗收、可監控的 pipeline。目標是**真正搞懂原理**（含關鍵演算法的數學推導），
+同時用企業 IT 的治理視角走完一遍**真實 MLOps**。從本機（Framework 16 + RTX 5070）起步、可搬上雲。
 
-> 這不是要做 ChatGPT。這裡的模型是 ~0.1–1M 參數的 GPT，小到能在自己機器上
-> 幾十秒訓完，但麻雀雖小五臟俱全——self-attention、multi-head、residual、
-> causal mask、自回歸生成、BPE tokenizer、訓練迴圈，全都是真的、可跑、可改。
+> 這不是要做 ChatGPT。模型小（demo ~0.1M、實戰中文模型 ~8M、char-level），小到自己機器幾十秒～幾分鐘
+> 訓完——但**麻雀雖小五臟俱全**：self-attention、RMSNorm/SwiGLU/RoPE/GQA（LLaMA 同款）、FlashAttention、
+> KV-cache、BPE、reward model、GRPO/PPO/DPO/IPO，全都是親手刻的、可跑、可改、有對照實驗。
 
-> 📖 想看「給人讀的完整旅程敘事」（適合當作品集入口）：[docs/case-study.md](docs/case-study.md)
+**最有代表性的幾個發現**（每個都「先預測 → 實測 → 被打臉 → 想懂為什麼」）：
+
+- 🎯 **reward hacking 活體**：RLHF 拿掉 KL 錨，RM 分數衝 3.7→13.2，輸出卻 collapse 成「不管問什麼都吐同一串垃圾」（發現 10）
+- 🧠 **死背 vs 真學**：DPO 兩種偏好軸 train-acc 都 100%，held-out 一個 97% 一個 9%——train 會騙你（發現 9）
+- 🔬 **聚合指標的盲點**：熵/壓縮全說「資料健康」，偵測器卻抓到 21.6% 文件殘留維基語法（發現 7）
+- ⚙️ **沒有「一定更快」**：KV-cache 在 GPU+小模型+短生成反而慢 18%——省的技巧要量你的 workload（發現 8）
+
+> 📖 給人讀的完整旅程敘事（作品集入口）：[docs/case-study.md](docs/case-study.md)　·　📐 數學推導：[docs/derivations.md](docs/derivations.md)　·　📊 讀圖指南：[docs/reading-the-charts.md](docs/reading-the-charts.md)
 
 ## 這個專案涵蓋什麼
 
