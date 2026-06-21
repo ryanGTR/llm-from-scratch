@@ -5,9 +5,10 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
 
-從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成」做成一條可重跑、
-可驗收、可監控的 pipeline。目標是**搞懂 LLM 原理**，同時練習**模型生產流水線的
-工程化**。從本機（Framework 16 + RTX 5070）起步，結構乾淨到可平滑搬上雲端 GPU。
+從零手刻一個小型 GPT，並把「資料 → 訓練 → 評估 → 生成 → **部署 → 治理**」做成一條
+可重跑、可驗收、可監控的 pipeline。目標是**搞懂 LLM 原理**，同時走完一遍**真實 MLOps**：
+從資料工程、現代架構、訓練評估，一路到線上服務、可觀測性、容器化、監控儀表板、模型治理。
+從本機（Framework 16 + RTX 5070）起步，結構乾淨到可平滑搬上雲端 GPU。
 
 > 這不是要做 ChatGPT。這裡的模型是 ~0.1–1M 參數的 GPT，小到能在自己機器上
 > 幾十秒訓完，但麻雀雖小五臟俱全——self-attention、multi-head、residual、
@@ -15,13 +16,17 @@
 
 ## 這個專案涵蓋什麼
 
-- **資料工程**：collect → clean → 去重（MinHash）→ tokenize → pack，附驗收 playbook 與品質指標
+- **資料工程**：collect → clean → 去重 → tokenize → pack，附驗收 playbook、品質指標與**偵測器報表**
+- **真實規模資料**：105 MB 中文維基實戰——字元 n-gram + **MinHash LSH** 去重（O(n²)→近 O(n)）、
+  資料品質報表抓出聚合指標漏掉的問題（見發現 7）
 - **模型**：decoder-only Transformer（`src/model.py`），跟 GPT-2/3 同一張架構藍圖，
-  並可一鍵切換現代零件（RMSNorm / SwiGLU / RoPE，LLaMA/Mistral 同款）
-- **訓練/評估/生成**：完整自回歸 pipeline，GPU 上跑
-- **監控**：loss 曲線、過擬合偵測、attention 熱圖、tokenizer 對比，全部在 Jupyter 統一面板
+  並可一鍵切換現代零件（RMSNorm / SwiGLU / RoPE / GQA / FlashAttention / KV-cache，LLaMA/Mistral 同款）
+- **訓練/評估/生成**：完整自回歸 pipeline，GPU 上跑，附「先講判準再驗證」的嚴謹評估
+- **部署與治理（MLOps）**：FastAPI 推論服務、Prometheus + Grafana 可觀測性、Podman GPU 容器化、
+  模型 registry + lineage + model card + promotion gate（見發現 8）
+- **監控**：loss 曲線、過擬合偵測、attention 熱圖、資料品質 before/after，全部在 Jupyter 統一面板
 - **tokenizer**：char-level 與自刻 BPE 兩種，可一鍵切換對比
-- **可驗證**：18 個單元測試 + 驗收 playbook（`make verify`）
+- **可驗證**：單元測試 + 驗收 playbook（`make verify`）+ CI（GitHub Actions）
 
 ## 關鍵數據與發現
 
@@ -145,6 +150,34 @@ gate。第一跑就抓到**聚合指標漏掉的問題**——維基 `-{zh-tw:..
 **主線一句話**：抓資料 → 改去重 → 品質報表 → 接面板 → 修清洗（前後對照）→ 重備 → 訓練 →
 四判準評估。每步「先講評估方式、再做、如實對結論」= 真實 MLOps 資料品質迴圈。
 
+### 8. 部署下半場：把模型變成可治理的線上服務（MLOps serving）
+
+訓練是「離線、一次性、看 loss」；服務是「線上、持續、面對真實流量」——要快、要被呼叫、
+要看得到、要可重現、要可治理。下半場把訓練好的模型一路推到「能上線、能稽核」。
+
+| 階段 | 做了什麼 | 關鍵檔案 / 指令 |
+|---|---|---|
+| a. 推論 API | FastAPI 包模型：`/health`(就緒探針) `/generate`(回延遲+吞吐) `/model`(治理) | `serve/app.py`、`make serve` |
+| b. 可觀測性 | Prometheus `/metrics`(請求數/延遲 histogram/token) + 結構化 JSON 日誌 | middleware 自動量每請求 |
+| c. 容器化 | Podman + GPU（CDI passthrough）+ 模型 runtime mount（與映像解耦） | `Containerfile`、`make image`/`run-container` |
+| d. 監控儀表板 | Prometheus + Grafana（podman pod，dashboard 自動 provisioning） | `monitoring/`、`make dashboard` |
+| e. 模型治理 | digest 身份 + registry 台帳 + lineage + model card + promotion gate | `src/registry.py`、`make register`/`models` |
+
+**效能實測（服務第一課：量你的 workload，別假設）**：KV-cache 在 CPU 長生成快 2.2×，
+但在「GPU + 小模型 + 短生成」反而慢 ~18%（一次算一個 token 浪費 GPU 平行度，per-step 開銷 >
+省下的 O(T²) 重算）。「省」的技巧是否真省，看 regime。可觀測性也立刻抓到**冷啟動**：第一個
+請求 ~354ms、暖機後 ~50ms（首次 CUDA kernel 編譯）。
+
+**模型治理 = 對「線上的模型」答得出四個稽核問題**：
+1. 哪一個？→ 模型身份用 **ckpt 的 sha256 digest**（像 container image digest / cosign，不靠檔名）
+2. 吃什麼訓的？→ **lineage**：每筆綁 資料 digest + 資料品質 gate + config + git commit
+3. 表現如何？→ **model card**（`registry/cards/<digest>.md`，人讀單據）
+4. 憑什麼上線？→ **promotion gate**：沒過資料品質 gate + test 評估就「擋下」，上線是被 enforce 的
+   。服務端 `/model` 回報自己的 digest + registry 狀態 → 確認線上是不是被批准那顆（`UNREGISTERED`=紅旗）。
+
+> 多容器（API+Prometheus+Grafana）用 **podman pod** 一起跑、共享 localhost——正是 k8s「Pod」
+> 概念的微縮版。單機這樣剛好；要多副本/跨機/自動擴縮才需要 k8s。
+
 ## 心智模型（Java 類比）
 
 | 這個專案 | Java 世界 |
@@ -186,10 +219,19 @@ llm-from-scratch/
 │   ├── rope_extrapolation.py # RoPE 外推 demo（train@64, eval→256）
 │   ├── multi_seed.py      # B④ 多 seed 嚴謹：mean±std + 誤差線 + 真差異判定
 │   └── verify.py          # 驗收 playbook 執行器
+├── serve/app.py           # 推論 API（FastAPI）：/health /generate /model /metrics
+├── monitoring/            # Prometheus + Grafana stack（podman pod）
+│   ├── prometheus.yml     #   抓 API /metrics
+│   ├── grafana/           #   datasource + dashboard 自動 provisioning
+│   └── up.sh / down.sh    #   一鍵起/收監控 stack
+├── registry/              # 模型治理（審計軌跡，進 git）
+│   ├── registry.json      #   模型台帳（digest / lineage / 狀態）
+│   └── cards/<digest>.md  #   每顆模型的 model card
 ├── notebooks/
 │   ├── 01_explore_data.ipynb # 資料探索
-│   └── 02_monitor.ipynb      # 統一監控面板（BPE / 訓練 / 資料品質）
-├── tests/test_data.py     # 18 個單元測試
+│   └── 02_monitor.ipynb      # 統一監控面板（BPE / 訓練 / 資料品質 / before-after）
+├── tests/test_data.py     # 單元測試（資料 / 現代零件 / 取樣 / KV-cache / 治理 gate / API）
+├── Containerfile          # 推論服務容器（GPU via CDI，模型 mount）
 ├── docs/                  # 延伸文件（見 See Also）
 ├── Makefile               # pipeline orchestrator（make help 看全部）
 └── matplotlibrc           # 讓圖表中文正常
@@ -246,6 +288,18 @@ python scripts/rope_extrapolation.py   # RoPE 外推 demo（train@64, eval→256
 
 # 統一監控面板（含資料/BPE/訓練/tokenizer 對比/單元測試五大區塊）
 make lab           # Jupyter → notebooks/02_monitor.ipynb → Restart & Run All
+
+# 資料品質報表（偵測器掃全語料 → 命中%/門檻/問題樣本）
+make quality       # 輸出 data_quality_report.json + 印表格
+
+# 部署下半場（MLOps serving）
+make serve         # 起推論 API（http://127.0.0.1:8000/docs）
+make image         # podman build 推論服務 image（GPU）
+make run-container # GPU 跑容器（模型 mount 進去）
+make dashboard     # 起 Prometheus+Grafana 監控 stack（http://127.0.0.1:3000）
+make register      # 把目前模型註冊進 registry（產 model card）
+make models        # 看 model registry 台帳
+python scripts/registry_cli.py promote <digest前綴>   # 升 production（要過 gate）
 ```
 
 ## 學習弧線（本專案的設計脈絡）
