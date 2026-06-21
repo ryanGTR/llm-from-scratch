@@ -136,6 +136,7 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 ## See Also
 
 - [[derivations]] — 關鍵演算法的**數學推導/證明**（本頁給「出處」，那頁給「為什麼成立」）
+- [[reading-the-charts]] — 讀圖指南：實驗圖表「在說什麼」怎麼看
 - `README.md` — 專案總覽與 roadmap
 - [[data-pipeline]] — 資料這塊在做什麼
 - [[verification-playbook]] — 怎麼驗收
