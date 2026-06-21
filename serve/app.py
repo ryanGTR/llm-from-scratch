@@ -26,6 +26,7 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.config import GPTConfig          # noqa: E402
 from src.model import GPT                  # noqa: E402
+from src.registry import load_registry, sha256_file   # noqa: E402
 from src.tokenizer import load_tokenizer   # noqa: E402
 
 ART = Path(os.environ.get("ARTIFACTS", "artifacts"))
@@ -49,7 +50,8 @@ def log_event(**kw):
 def _load_model():
     """啟動時載入一次：ckpt + tokenizer 常駐記憶體。"""
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    ckpt = torch.load(ART / "ckpt.pt", map_location=device)
+    ckpt_path = ART / "ckpt.pt"
+    ckpt = torch.load(ckpt_path, map_location=device)
     cfg = GPTConfig(**ckpt["gpt_config"])
     model = GPT(cfg).to(device)
     model.load_state_dict(ckpt["model"])
@@ -58,6 +60,7 @@ def _load_model():
         model=model, cfg=cfg, device=device,
         tok=load_tokenizer(ART / "tokenizer.json"),
         params_M=round(model.num_params() / 1e6, 3),
+        digest=f"sha256:{sha256_file(ckpt_path)}",   # 服務的模型身份（治理用）
     )
 
 
@@ -80,6 +83,24 @@ async def observe(request: Request, call_next):
     REQS.labels(ep, response.status_code).inc()
     LATENCY.labels(ep).observe(dt)
     return response
+
+
+@app.get("/model")
+def model_info():
+    """治理閉環：回報「我正在服務哪個 digest」+ 它在 registry 的狀態。
+
+    審計用：問 live API → 拿 digest → 對台帳 → 確認線上是不是被批准的 production 那顆。
+    若 status=UNREGISTERED，代表上線了一顆「沒登記」的模型 = 紅旗。
+    """
+    digest = STATE.get("digest")
+    match = next((e for e in load_registry() if e["model_digest"] == digest), None)
+    return {
+        "serving_digest": digest,
+        "in_registry": match is not None,
+        "status": match["status"] if match else "UNREGISTERED",
+        "metrics": match["metrics"] if match else None,
+        "data_quality_gate": match["lineage"].get("data_quality_gate") if match else None,
+    }
 
 
 @app.get("/metrics")

@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -99,3 +99,9 @@ dashboard:  ## 起 Prometheus+Grafana 監控 stack（http://127.0.0.1:3000）
 
 dashboard-down:  ## 收掉監控 stack
 	bash monitoring/down.sh
+
+register:  ## 把目前 artifacts 的模型註冊進 registry
+	$(PY) scripts/registry_cli.py register
+
+models:  ## 看 model registry 台帳
+	$(PY) scripts/registry_cli.py list

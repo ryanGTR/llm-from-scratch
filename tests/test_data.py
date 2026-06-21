@@ -334,6 +334,17 @@ class TestStats(unittest.TestCase):
         self.assertLess(repetitive, diverse)   # 越重複壓縮比越小
 
 
+class TestRegistry(unittest.TestCase):
+    """模型治理：promotion gate 規則（純函式，零依賴）。"""
+
+    def test_gate_blocks_noncompliant_allows_compliant(self):
+        from src.registry import gate_reasons
+        bad = {"lineage": {"data_quality_gate": False}, "metrics": {}}
+        good = {"lineage": {"data_quality_gate": True}, "metrics": {"test_loss": 3.7}}
+        self.assertEqual(len(gate_reasons(bad)), 2)     # 品質沒過 + 缺 test → 兩個理由擋下
+        self.assertEqual(gate_reasons(good), [])         # 合規 → 放行
+
+
 class TestServe(unittest.TestCase):
     """推論 API 冒煙測試（無 ckpt / 無 fastapi 就跳過，CI 不會紅）。"""
 
