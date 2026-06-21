@@ -27,6 +27,8 @@ def main():
     ap.add_argument("--input", default="data/raw/zhwiki.txt")
     ap.add_argument("--doc_sep", default="<|doc|>")
     ap.add_argument("--out", default="artifacts/sft.jsonl")
+    ap.add_argument("--heldout", default="artifacts/sft_heldout.jsonl")
+    ap.add_argument("--heldout_frac", type=float, default=0.1)
     ap.add_argument("--max", type=int, default=6000)
     args = ap.parse_args()
 
@@ -45,13 +47,21 @@ def main():
         if len(pairs) >= args.max:
             break
 
-    out = Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        for p in pairs:
-            f.write(json.dumps(p, ensure_ascii=False) + "\n")
-    print(f"產出 {len(pairs)} 筆 SFT 配對 -> {out}")
-    for p in pairs[:3]:
+    # 切 train / held-out（held-out 拿來「正規評估」——SFT 沒看過的指令才公平）
+    n_held = int(len(pairs) * args.heldout_frac)
+    held, train = pairs[:n_held], pairs[n_held:]
+
+    def dump(path, rows):
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            for r in rows:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    dump(args.out, train)
+    dump(args.heldout, held)
+    print(f"產出 {len(pairs)} 筆：train {len(train)} -> {args.out}、held-out {len(held)} -> {args.heldout}")
+    for p in train[:3]:
         print(f"  問：{p['q']}  答：{p['a'][:40]}…")
 
 
