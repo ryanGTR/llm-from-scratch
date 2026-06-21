@@ -2,12 +2,13 @@ project:
   type: book
   output-dir: _book
 
+lang: zh-Hant
+
 book:
   title: "從零打造並對齊一個 LLM"
   subtitle: "一個銀行 IT 工程師的 MLOps 視角：原理、工程、對齊與數學"
   author: "Ryan Chen"
   date: today
-  lang: zh-Hant
   repo-url: https://github.com/ryanGTR/llm-from-scratch
   repo-actions: [source, issue]
   search: true
