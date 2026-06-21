@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -123,3 +123,17 @@ sft:  ## SFT 指令微調（後訓練里程碑1）：base → 會聽話的對話
 
 eval-sft:  ## SFT 專用評估（held-out：回答段 perplexity + 應答行為率）
 	$(PY) scripts/eval_sft.py
+
+dpo-data:  ## 自抽 DPO 偏好對（兩種軸：topic=張冠李戴難、format=連貫vs退化易）
+	$(PY) scripts/make_dpo_data.py --mode topic
+	$(PY) scripts/make_dpo_data.py --mode format \
+		--out artifacts/dpo_format.jsonl --heldout artifacts/dpo_format_heldout.jsonl
+
+dpo:  ## DPO 偏好對齊（後訓練里程碑2）：SFT → 偏好較好回答；--beta 控 KL 約束
+	$(PY) pipeline/06_dpo.py --iters 600 --beta 0.1 \
+		--dpo_data artifacts/dpo_format.jsonl --heldout artifacts/dpo_format_heldout.jsonl \
+		--out artifacts/dpo_format_ckpt.pt --log_csv artifacts/runs/dpo_format.csv
+	$(PY) pipeline/06_dpo.py --iters 600 --beta 0.1
+
+eval-dpo:  ## DPO 評估（held-out 偏好類推率：format 會類推 vs topic 只死背 + 曲線圖）
+	$(PY) scripts/eval_dpo.py

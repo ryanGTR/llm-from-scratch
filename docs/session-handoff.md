@@ -4,6 +4,16 @@ type: handoff
 updated: 2026-06-21
 ---
 
+> **最新（2026-06-21 下午）**：完成**後訓練里程碑2＝DPO 偏好對齊**（`pipeline/06_dpo.py`、
+> `make dpo`/`eval-dpo`、`tests/test_dpo.py` 5 條，全套 `make test` 39 條綠）。核心發現：
+> 兩種偏好軸對照 → format（連貫 vs 退化）held-out **69%→97% 真類推**；topic（對題 vs 張冠李戴）
+> 8M **學不動只背 train**（held-out ~9%）。圖 `artifacts/dpo_generalization.png`。
+> ⚠️ **已知雷（與 DPO 無關、待修）**：`make verify` 會用 demo 資料**覆寫 `artifacts/tokenizer.json`**
+> （81 字），之後若有真實中文 ckpt 在場，serve 單元測試會因 tokenizer/ckpt vocab 不匹配而 KeyError。
+> 解法擇一：① 中文 tokenizer 重建＝`python pipeline/01_prepare_data.py --input data/raw/zhwiki.txt
+> --doc_sep '<|doc|>' --tokenizer char --test_frac 0.1`（確定性、回到 vocab 14210 匹配 ckpt）；
+> ② 之後修 serve 測試在 vocab 不匹配時 skipTest。**CI 閘門用 `make test`（不碰 demo、39 綠）不是 verify。**
+
 # Session 接續點
 
 斷 session 後，接續者（人或 Claude）先讀：本檔 → `README.md` → `CLAUDE.md` → `docs/lessons-learned.md`。
@@ -24,20 +34,23 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 5. **進階 e1–e5**：漂移監控、重訓迴圈(回歸 gate)、金絲雀/A-B、動態批次、量化壓縮
 6. **真候選上線**：8000 步候選 test_loss 3.46 < 舊 3.70，過 gate→promote→**production = digest `4d694be9342d`**，舊 `00b47fc84755` archived
 7. **後訓練 SFT**：`pipeline/05_sft.py`，base→會應答格式；正規評估(`scripts/eval_sft.py`)暴露兩個評估陷阱（見 lessons-learned）
+8. **後訓練 DPO**：`pipeline/06_dpo.py`，SFT→偏好對齊（policy+凍結 reference，免 reward model）。兩軸對照證明「容量內類推 vs 超出只背」；`eval_dpo` 出 `dpo_generalization.png`
 
 ## 目前狀態（具體）
 
 - **production 模型** = `artifacts/ckpt.pt`（digest `4d694be9342d`，8000 步，test_loss ~3.46）。registry 台帳：`make models`
 - **SFT 模型** = `artifacts/sft_ckpt.pt`（chat 版，沒 promote；評估方式不同）
+- **DPO 模型** = `artifacts/dpo_format_ckpt.pt`（會類推那顆）、`artifacts/dpo_ckpt.pt`（topic 對照、只背）；都沒 promote（對齊版，評估尺＝偏好類推率）
 - **registry/**（進 git，審計軌跡）：production + archived 兩顆 + cards
-- artifacts/（gitignored）：ckpt、bin、語料、sft.jsonl、sft_heldout.jsonl 等
+- artifacts/（gitignored）：ckpt、bin、語料、sft/dpo 的 jsonl + dpo_*_ckpt.pt + dpo_generalization.png 等
 - 監控 stack 可能還開著：`make dashboard-down` 收
 
 ## 下一步選項（未拍板，Ryan 挑）
 
-- **後訓練往下**：① 把 SFT 做「正規」（mask 指令只算回答段 loss、加結束標記、乾淨停止）② RL/DPO（偏好對齊；DPO 比 PPO/GRPO 簡單，是「會思考」那條的入門）
-- **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力）
+- **後訓練再往下**：① DPO 精修（mask-prompt / 多模板 / 調 β 看 KL-reward 取捨）② RLHF（PPO/GRPO，「會思考」入門，比 DPO 重）
+- **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力；DPO topic 軸學不動就是規模牆）
 - **k8s**：把容器真部上 k8s-lab（/health→probe、/metrics→ServiceMonitor）——偏 k8s 練習
+- **清理**：修 `make verify` 覆寫 tokenizer 的測試隔離問題（見頂部已知雷）
 - 或就此收尾沉澱
 
 ## 怎麼接續（關鍵指令）
@@ -50,6 +63,7 @@ make models          # 看 registry 台帳（誰是 production）
 make serve           # 起推論 API（/docs 試）
 make dashboard       # Prometheus+Grafana（放 artifacts/candidate.pt 自動開金絲雀+shadow）
 make sft / eval-sft  # 後訓練 SFT + 正規評估
+make dpo / eval-dpo  # 後訓練 DPO 偏好對齊 + 類推 vs 死背曲線圖
 make compare A= B=   # 比兩模型 test_loss + 一致率
 ```
 
