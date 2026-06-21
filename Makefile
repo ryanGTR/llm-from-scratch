@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -111,3 +111,6 @@ retrain:  ## 重訓迴圈（資料→訓練→評估→註冊→gate）；--auto
 
 compress:  ## 量化壓縮對比（fp32 vs fp16 vs int8：大小 vs 品質）
 	$(PY) scripts/compress.py
+
+compare:  ## 比較兩個模型的產出（test_loss + greedy 一致率）：make compare A=ckpt1 B=ckpt2
+	$(PY) scripts/compare_models.py $(A) $(B)

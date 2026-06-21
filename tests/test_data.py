@@ -308,6 +308,24 @@ class TestSampling(unittest.TestCase):
         b = m.generate(start, 30, top_k=1, use_kv_cache=True)
         self.assertTrue(torch.equal(a, b))   # 快取版必須逐 token 完全相同
 
+    def test_batched_generation_matches_single(self):
+        """批次正確性：合批生成的每一列，必須等於該 prompt 單獨生成（greedy）。
+
+        e4 動態批次的正確性不變量——合批只該「更快」、不該「改變輸出」。
+        """
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch 未安裝")
+        from src.config import GPTConfig
+        from src.model import GPT
+        m = GPT(GPTConfig(vocab_size=50, n_layer=3, n_head=4, n_embd=64,
+                          block_size=64, use_rope=True, n_kv_head=2, use_flash=True)).eval()
+        prompts = torch.tensor([[3, 7, 1, 9, 2], [5, 2, 8, 1, 4], [9, 9, 1, 2, 3]])
+        singles = [m.generate(prompts[i:i + 1], 15, top_k=1)[0].tolist() for i in range(3)]
+        batched = m.generate(prompts, 15, top_k=1).tolist()
+        self.assertEqual(singles, batched)      # 合批每列 == 單獨
+
 
 class TestQualityReport(unittest.TestCase):
     def test_detects_wiki_markup_and_gate_fails(self):
