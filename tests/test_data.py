@@ -334,6 +334,22 @@ class TestStats(unittest.TestCase):
         self.assertLess(repetitive, diverse)   # 越重複壓縮比越小
 
 
+class TestDrift(unittest.TestCase):
+    """漂移監控：同分布 PSI 低、異分布 PSI 高 + 抓到生字。"""
+
+    def test_psi_and_oov(self):
+        from src.drift import DriftMonitor
+        base = "abcabc aabbcc abc abcabc " * 50
+        same = DriftMonitor.from_corpus(base)
+        for _ in range(30):
+            same.observe("abc abc aabbcc abc")
+        diff = DriftMonitor.from_corpus(base)
+        for _ in range(30):
+            diff.observe("xyz xyz zzzyyy 999")
+        self.assertLess(same.psi(), diff.psi())            # 同分布偏移較小
+        self.assertGreater(diff.report()["oov_rate"], 0)   # 生字(x/y/z/9)被抓到
+
+
 class TestRegistry(unittest.TestCase):
     """模型治理：promotion gate 規則（純函式，零依賴）。"""
 

@@ -20,11 +20,12 @@ from pathlib import Path
 
 import torch
 from fastapi import FastAPI, Request, Response
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.config import GPTConfig          # noqa: E402
+from src.drift import DriftMonitor         # noqa: E402
 from src.model import GPT                  # noqa: E402
 from src.registry import load_registry, sha256_file   # noqa: E402
 from src.tokenizer import load_tokenizer   # noqa: E402
@@ -37,6 +38,8 @@ STATE: dict = {}
 REQS = Counter("llm_requests_total", "請求總數", ["endpoint", "status"])
 LATENCY = Histogram("llm_request_latency_seconds", "請求延遲(秒)", ["endpoint"])
 TOKENS = Counter("llm_generated_tokens_total", "累計生成 token 數")
+DRIFT_PSI = Gauge("llm_drift_psi", "請求字元分布 vs 訓練分布的 PSI（>0.25 顯著漂移）")
+DRIFT_OOV = Gauge("llm_drift_oov_rate", "請求用到訓練外字元的比例")
 
 # 結構化日誌（每請求一行 JSON → 生產環境送到 log 聚合器）
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -61,6 +64,7 @@ def _load_model():
         tok=load_tokenizer(ART / "tokenizer.json"),
         params_M=round(model.num_params() / 1e6, 3),
         digest=f"sha256:{sha256_file(ckpt_path)}",   # 服務的模型身份（治理用）
+        drift=DriftMonitor.from_artifacts(ART),       # 以訓練語料為基準的漂移監控
     )
 
 
@@ -83,6 +87,12 @@ async def observe(request: Request, call_next):
     REQS.labels(ep, response.status_code).inc()
     LATENCY.labels(ep).observe(dt)
     return response
+
+
+@app.get("/drift")
+def drift_info():
+    """漂移報告：線上請求 vs 訓練分布偏離多少。retrain_suggested=True → 該重訓了。"""
+    return STATE["drift"].report()
 
 
 @app.get("/model")
@@ -144,6 +154,10 @@ def health():
 def generate(req: GenRequest):
     """自回歸生成。回傳生成文字 + 延遲/吞吐（線上服務要看得到效能）。"""
     model, tok, device = STATE["model"], STATE["tok"], STATE["device"]
+    drift = STATE["drift"]
+    drift.observe(req.prompt)                # 餵給漂移監控（累計線上分布）
+    DRIFT_PSI.set(drift.psi())
+    DRIFT_OOV.set(drift.oov_rate())
     ids = tok.encode(req.prompt) or [0]      # 空/全生字 → 用一個起始 token 兜底
     idx = torch.tensor([ids], dtype=torch.long, device=device)
 
