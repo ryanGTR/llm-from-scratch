@@ -360,6 +360,14 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(len(gate_reasons(bad)), 2)     # 品質沒過 + 缺 test → 兩個理由擋下
         self.assertEqual(gate_reasons(good), [])         # 合規 → 放行
 
+    def test_gate_regression_blocks_worse_model(self):
+        from src.registry import gate_reasons
+        prod = {"lineage": {"data_quality_gate": True}, "metrics": {"test_loss": 3.7}}
+        worse = {"lineage": {"data_quality_gate": True}, "metrics": {"test_loss": 4.8}}
+        better = {"lineage": {"data_quality_gate": True}, "metrics": {"test_loss": 3.5}}
+        self.assertTrue(gate_reasons(worse, prod))        # 比現行差 → 回歸，擋下
+        self.assertEqual(gate_reasons(better, prod), [])   # 比現行好 → 放行
+
 
 class TestServe(unittest.TestCase):
     """推論 API 冒煙測試（無 ckpt / 無 fastapi 就跳過，CI 不會紅）。"""

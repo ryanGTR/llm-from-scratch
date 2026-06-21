@@ -96,13 +96,23 @@ def register(art="artifacts") -> dict:
     return entry
 
 
-def gate_reasons(entry: dict) -> list[str]:
-    """promotion gate 規則（純函式 → 可測）：回傳「擋下的理由」，空 list = 可上線。"""
+def gate_reasons(entry: dict, current_prod: dict | None = None,
+                 tol: float = 0.05) -> list[str]:
+    """promotion gate 規則（純函式 → 可測）：回傳「擋下的理由」，空 list = 可上線。
+
+    current_prod 有給的話多一道「回歸檢查」：新模型 test_loss 不能比現行 production 差太多
+    （超過 tol）。自動重訓必備——免得迴圈把一顆更爛的模型推上線。
+    """
     reasons = []
     if entry.get("lineage", {}).get("data_quality_gate") is not True:
         reasons.append("資料品質 gate 未通過")
-    if entry.get("metrics", {}).get("test_loss") is None:
+    new_loss = entry.get("metrics", {}).get("test_loss")
+    if new_loss is None:
         reasons.append("缺 test 評估")
+    if current_prod and new_loss is not None:
+        prod_loss = current_prod.get("metrics", {}).get("test_loss")
+        if prod_loss is not None and new_loss > prod_loss + tol:
+            reasons.append(f"回歸：test_loss {new_loss} 比現行 production {prod_loss} 差")
     return reasons
 
 
@@ -113,7 +123,9 @@ def promote(short: str) -> tuple[bool, str]:
     if not match:
         return False, f"找不到 {short}"
     entry = match[0]
-    gate = gate_reasons(entry)
+    current_prod = next((e for e in reg if e.get("status") == "production"
+                         and e["model_digest"] != entry["model_digest"]), None)
+    gate = gate_reasons(entry, current_prod)
     if gate:
         return False, "promotion gate 擋下：" + "、".join(gate)
     for e in reg:
