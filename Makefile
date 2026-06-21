@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -114,3 +114,9 @@ compress:  ## 量化壓縮對比（fp32 vs fp16 vs int8：大小 vs 品質）
 
 compare:  ## 比較兩個模型的產出（test_loss + greedy 一致率）：make compare A=ckpt1 B=ckpt2
 	$(PY) scripts/compare_models.py $(A) $(B)
+
+sft-data:  ## 從語料自抽 SFT 指令資料（問答 JSONL）
+	$(PY) scripts/make_sft_data.py
+
+sft:  ## SFT 指令微調（後訓練里程碑1）：base → 會聽話的對話格式
+	$(PY) pipeline/05_sft.py --iters 1500
