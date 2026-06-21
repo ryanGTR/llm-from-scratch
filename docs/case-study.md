@@ -109,9 +109,9 @@ KV-cache 在 CPU 長生成快 2.2×，但在我的 **GPU + 小模型 + 短生成
 
 ---
 
-## 後訓練：把「接龍機器」對齊成「會聽話、有偏好」（SFT → DPO → RLHF）
+## 後訓練：把「接龍機器」對齊成「會聽話、有偏好」（SFT → DPO/IPO → RLHF: GRPO/PPO）
 
-預訓練只會「猜下一字」。後訓練把它對齊成助理，我把三條路線都走過一遍——重點不是模型變強
+預訓練只會「猜下一字」。後訓練把它對齊成助理，我把幾條路線都走過一遍——重點不是模型變強
 （8M 撐不起），而是**親手拆解每個方法的機制與它的坑**：
 
 - **SFT**（指令微調）：在「問：…答：…」格式上續訓，行為從「續寫維基」變「應答」。評估時踩到
@@ -119,14 +119,22 @@ KV-cache 在 CPU 長生成快 2.2×，但在我的 **GPU + 小模型 + 短生成
 - **DPO**（偏好對齊）：免 reward model 的捷徑。我設「容量內 vs 超出容量」兩種偏好軸，量出
   **train-acc 都衝 100%、held-out 一個 97% 一個 9%**——死背 vs 真學的乾淨對照。精修 β 旋鈕時還
   發現「固定步數下 β 越小漂移越大」翻掉教科書直覺。
-- **RLHF**（reward model + GRPO）：把 DPO 收合的零件拆開。最有價值的是親眼看到 **reward hacking**
+- **IPO**（防過度優化）：把 DPO 的「margin 推到無窮」改成「回歸固定目標 1/(2β)」。實測 margin 從爆衝
+  200+ 變成釘在 5；但 clean 偏好上反而較保守（held-out 78% < DPO 97%）——**防過度優化的工具不是無腦更好**。
+- **RLHF 兩條 RL**（reward model + GRPO + PPO）：把 DPO 收合的零件拆開，RL 家族兩種都做。
+  - **GRPO**：最有價值的是親眼看到 **reward hacking**
   ——拿掉 KL 錨，policy 把 RM 分數從 3.7 衝到 13.2，但輸出 collapse 成「不管問什麼都吐同一串高分
   垃圾」。那串垃圾落在 reward model 的訓練分布外、被它誤判高分，policy 鑽了這個漏洞。
 
 ![RLHF reward hacking：拿掉 KL 錨，RM 分數（代理）暴漲、輸出多樣性（真實品質）崩潰](grpo_reward_hacking.png)
 
-> 這三步是同一個方法論的延伸：**永遠質疑你的指標有沒有被汙染、被鑽**。SFT 的尺被汙染、DPO 的
-> train-acc 會騙人、RLHF 的 reward model 會被 hack——三次都是「換把尺、結論就翻」。這比模型本身重要。
+  - **PPO**：補完 RL 家族（InstructGPT 用的經典），親手做出 GRPO 簡化掉的兩塊——**critic（value 網路）**
+    與 **clipped surrogate**。實測拿掉 clip → 某一步把 policy 推太遠直接走崩（多樣性 100%→6%、RM 7.5→0.2），
+    clip 把更新夾住就穩——這就是 PPO 名字裡「Proximal（近端）」的意義。
+
+> 後訓練我把兩個家族都走齊了：**偏好優化 DPO→IPO、RL 對齊 GRPO→PPO**，每個都有對照實驗。
+> 而它們是同一個方法論的延伸：**永遠質疑你的指標有沒有被汙染、被鑽**。SFT 的尺被汙染、DPO 的
+> train-acc 會騙人、RLHF 的 reward model 會被 hack——每次都是「換把尺、結論就翻」。這比模型本身重要。
 
 ---
 

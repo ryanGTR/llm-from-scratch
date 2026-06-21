@@ -79,6 +79,7 @@ SFT 真正學到的「會應答」這個行為，這把尺才照得出來。
 | β 大＝KL 罰得重＝緊貼 reference | 固定步數下 β 越小漂移越大（margin≈1/β）| 小 β 不是更保守是更激進；連我畫圖的標題都先寫反、被資料打臉 |
 | RM 分數高＝回答好 | RLHF 無 KL 錨：RM 衝 3.7→13.2，輸出卻 collapse 成「方言，的方言…」三題一樣 | RM 是學來的代理、會被鑽分布外盲點；優化過頭＝reward hacking（Goodhart）；KL 錨防之 |
 | 防過度優化的 IPO 一定比 DPO 好 | clean 偏好上 IPO held-out 78% < DPO 97%（IPO margin 釘在 5、DPO 爆到 204）| IPO 拿穩定換準度；它的勝場在「過度優化會傷」（偏好含雜訊）時，不是無腦更好 |
+| PPO 拿掉 clip 只是慢一點 | 無 clip 一步走太遠→policy 走崩（RM 7.5→0.2、多樣性 100%→6%）；clip 穩定爬 | clip＝防破壞性更新（Proximal）；隔離它要先關 KL 罰(β=0)、不然 KL 罰會蓋過 clip 的作用 |
 | 現代技巧一定更好 | RMSNorm 換上去 loss 沒變 | 先問它優化「準」還是「省」（RMSNorm 是省、SwiGLU/RoPE 是準）|
 | KV-cache 一定更快 | GPU + 小模型 + 短生成反而慢 18% | 「省」的技巧是否真省看 regime，量你自己的 workload |
 | 聚合指標說健康就健康 | 熵/壓縮都 ✅，卻 21.6% 文件有維基語法 | 聚合指標必要但不夠，一定要看樣本；把問題寫成偵測器 |

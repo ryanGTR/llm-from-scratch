@@ -57,6 +57,13 @@ sources:
 > 🚗 開車類比（適用 2 與 4）：margin/優化力道＝油門。DPO 沒有轉速限制器、直接紅線；IPO 把限制器設在 1/(2β)。
 > 左圖看限制器有沒有作用，右圖看這條路需不需要它。
 
+## 5. `ppo_clip_vs_noclip.png` — clip 防止「一步走太遠把 policy 走壞」
+
+- **軸**：X=PPO 步數；左圖 Y=RM 分數、右圖 Y=生成多樣性。綠=clip ε=0.2、紅=無 clip（β=0 隔離 clip）。
+- **怎麼讀**：紅線（無 clip）在左圖**衝一下(7.5)就崩到 0.2**、右圖多樣性**崩到 6%**；綠線（clip）左圖穩定爬升、右圖維持 100%。
+- **在說什麼**：同一批 rollout 訓多個 epoch 時，無 clip 會讓某一步把 policy 推太遠 → **mode collapse、policy 走壞**。
+  clip 把 importance ratio 夾住、限制單次更新幅度（PPO 的「Proximal」）→ 穩定改進。**這是 GRPO 用「一批訓一次」省掉的那塊。**
+
 ---
 
 ## See Also

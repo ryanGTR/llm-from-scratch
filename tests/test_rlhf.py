@@ -17,6 +17,7 @@ from src.config import GPTConfig
 from src.reward_model import RewardModel, bt_loss
 
 grpo = importlib.import_module("pipeline.08_grpo")
+ppo = importlib.import_module("pipeline.09_ppo")
 
 TINY = dict(block_size=16, n_layer=1, n_head=2, n_embd=16, vocab_size=32, dropout=0.0)
 
@@ -65,6 +66,35 @@ class TestGRPO(unittest.TestCase):
         adv = (r - r.mean()) / (r.std() + 1e-6)
         self.assertAlmostEqual(adv.mean().item(), 0.0, places=4)
         self.assertAlmostEqual(adv.std().item(), 1.0, places=2)
+
+
+class TestPPOClip(unittest.TestCase):
+    def test_clip_caps_gain_for_positive_advantage(self):
+        # adv>0、ratio 衝過 1+ε：clip 應該夾住 → loss 比不夾時「大」（gain 較少）
+        ratio = torch.tensor([[2.0, 2.0]])         # 遠超 1+ε
+        adv = torch.tensor([1.0])                  # 正 advantage
+        mask = torch.ones(1, 2)
+        loss_clip, cf = ppo.ppo_policy_loss(ratio, adv, mask, clip_eps=0.2)
+        loss_noclip, cf0 = ppo.ppo_policy_loss(ratio, adv, mask, clip_eps=0.0)
+        self.assertGreater(loss_clip.item(), loss_noclip.item())   # 夾住 → 限制了 policy gain
+        self.assertAlmostEqual(cf, 1.0)            # 兩個 token 都被夾
+        self.assertAlmostEqual(cf0, 0.0)           # 不夾時 clip_frac=0
+
+    def test_no_clip_when_ratio_in_range(self):
+        ratio = torch.tensor([[1.05, 0.97]])       # 都在 [1-ε,1+ε] 內
+        adv = torch.tensor([1.0])
+        mask = torch.ones(1, 2)
+        _, cf = ppo.ppo_policy_loss(ratio, adv, mask, clip_eps=0.2)
+        self.assertAlmostEqual(cf, 0.0)            # 沒有 token 被夾
+
+    def test_token_logp_shape(self):
+        from src.model import GPT
+        torch.manual_seed(0)
+        m = GPT(GPTConfig(**TINY)).eval()
+        X = torch.randint(0, TINY["vocab_size"], (3, 9))
+        lp = ppo.token_logp(m, X)
+        self.assertEqual(lp.shape, (3, 8))         # 每個被預測位置一個 logπ
+        self.assertTrue((lp <= 0).all())
 
 
 if __name__ == "__main__":

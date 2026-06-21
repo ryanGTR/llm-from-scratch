@@ -162,6 +162,16 @@ $$A_i=\frac{r_i-\operatorname{mean}(r_{1..K})}{\operatorname{std}(r_{1..K})}$$
 > 對應程式碼：`pipeline/08_grpo.py`，`adv = (r - r.mean())/(r.std()+eps)`；`resp_logp()` 提供 $\log\pi_\theta(y)$，
 > 損失 $-A\cdot\log\pi_\theta$ 就是 PG。`tests/test_rlhf.py` 驗 advantage 的 mean≈0、std≈1。
 
+**對照 PPO（GRPO 簡化掉的兩塊）.** PPO 不用組內平均、而是學一顆 **critic** $V_\phi(x)$ 當 baseline
+（$A=R-V_\phi(x)$），並用 **clipped surrogate** 限制更新幅度：
+
+$$\mathcal{L}^{\text{clip}}=-\,\mathbb{E}\Big[\min\big(\rho\,A,\ \operatorname{clip}(\rho,1-\epsilon,1+\epsilon)\,A\big)\Big],\quad \rho=\frac{\pi_\theta(y|x)}{\pi_{\theta_\text{old}}(y|x)}.$$
+
+$\rho$ 是 importance ratio（讓同一批 rollout 能重用多個 epoch）。當 $A>0$、$\rho$ 衝過 $1+\epsilon$，
+min 選到被夾住的項 → 這步拿不到更多 gain → **逼新 policy 待在舊的附近**（Proximal）。GRPO 把
+critic 換成組內平均、一批只訓一次，就不需要 $\rho$/clip——這就是它「輕」的地方。
+對應程式碼：`pipeline/09_ppo.py` 的 `ppo_policy_loss()`；實測拿掉 clip → policy 一步走崩（見 [[reading-the-charts]]）。
+
 ---
 
 ### 5. softmax + cross-entropy 的梯度 = 「預測機率 − one-hot」

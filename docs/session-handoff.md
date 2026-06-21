@@ -17,7 +17,10 @@ updated: 2026-06-21
 > 的方言…」鑽 RM 分布外盲點）＝Goodhart；KL 錨(β>0) 防之。圖 `grpo_reward_hacking.png`。
 > **IPO 精修**（`pipeline/06_dpo.py --loss ipo`、`make dpo-ipo`、`scripts/dpo_vs_ipo.py`）：平方損失把 margin
 > 回歸到目標 1/(2β) 不爆（vs DPO 衝 204）；clean 偏好下 DPO held-out 97% > IPO 78%（IPO 拿穩定換準度）。圖
-> `dpo_vs_ipo.png`。`make test` 46 綠。
+> `dpo_vs_ipo.png`。
+> **PPO 補完 RL 家族**（`pipeline/09_ppo.py`、`make ppo`、`scripts/eval_ppo.py`）：critic value 網路 + clipped
+> surrogate（GRPO 簡化掉的兩塊）。clip vs 無 clip 對照（β=0 隔離）：無 clip 一步走太遠 → policy 走崩（RM
+> 7.5→0.2、多樣性 100%→6%），clip 穩定爬＝Proximal。圖 `ppo_clip_vs_noclip.png`。`make test` 49 綠。
 > ✅ **已修（測試隔離）**：`make verify` 以前用 demo 資料覆寫 `artifacts/tokenizer.json`（81 字），
 > 害有真實中文 ckpt 在場時 serve 單元測試 KeyError。現在 verify 把 demo 產物導到 `artifacts/_verify/`
 > （`--artifacts` flag、gitignored），絕不碰真 `artifacts/`；serve 測試 prompt 也改成從 tokenizer 自己
@@ -34,7 +37,7 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 
 從零手刻的小型中文 GPT，已走完**整個 LLM + MLOps 生命週期**：原理 → 現代架構 → 真實中文資料工程
 → 訓練評估 → 部署/可觀測/GPU 容器/Grafana/治理 → 進階 MLOps(e1–e5) → 真候選上線 → **後訓練全弧
-（SFT → DPO → RLHF → IPO）**。公開於 GitHub（CI 綠、46 測試、全可重跑）。
+（SFT → DPO → IPO → RLHF：GRPO + PPO）**。公開於 GitHub（CI 綠、49 測試、全可重跑）。
 
 ## 已完成（大圖）
 
@@ -60,8 +63,7 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 
 ## 下一步選項（未拍板，Ryan 挑）
 
-- **後訓練再往下**：① PPO（補完 RL 家族，比 GRPO 重、有 critic + clipping + GAE）② DPO 多模板 / mask-prompt 精修
-  （IPO 已完成）
+- **後訓練再往下**：DPO 多模板 / mask-prompt 精修 / GAE（PPO 的多步優勢估計）——但對齊家族（DPO/IPO/GRPO/PPO）核心已收齊
 - **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力；DPO topic 軸學不動就是規模牆）
 - **k8s**：把容器真部上 k8s-lab（/health→probe、/metrics→ServiceMonitor）——偏 k8s 練習
 - 或就此收尾沉澱

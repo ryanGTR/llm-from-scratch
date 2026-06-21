@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta dpo-ipo reward grpo eval-grpo lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta dpo-ipo reward grpo eval-grpo ppo eval-ppo lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -150,6 +150,13 @@ grpo:  ## RLHF②：GRPO 用 RM 分數做 RL（有 KL 錨 + 無 KL 錨對照，�
 
 eval-grpo:  ## RLHF 評估：代理(RM)漲 vs 真實(多樣性)崩 = reward hacking 對照圖
 	$(PY) scripts/eval_grpo.py
+
+ppo:  ## RLHF（PPO 版）：critic + clipped 目標；clip vs 無 clip 對照（β=0 隔離 clip 的作用）
+	$(PY) pipeline/09_ppo.py --iters 120 --clip_eps 0.2 --beta 0 --lr 1e-4 --epochs 8 --out artifacts/ppo_ckpt.pt --log_csv artifacts/runs/ppo_clip.csv
+	$(PY) pipeline/09_ppo.py --iters 120 --clip_eps 0 --beta 0 --lr 1e-4 --epochs 8 --out artifacts/ppo_noclip_ckpt.pt --log_csv artifacts/runs/ppo_noclip.csv
+
+eval-ppo:  ## PPO 評估：clip→KL 受控 vs 無 clip→失控 + critic value_loss 下降，出圖
+	$(PY) scripts/eval_ppo.py
 
 dpo-ipo:  ## IPO 對照：DPO（margin 爆衝）vs IPO（釘在目標 1/2β、防過度優化）+ 圖
 	$(PY) pipeline/06_dpo.py --loss dpo --iters 600 --dpo_data artifacts/dpo_format.jsonl --heldout artifacts/dpo_format_heldout.jsonl --out artifacts/dpo_format_ckpt.pt --log_csv artifacts/runs/cmp_dpo.csv
