@@ -1,0 +1,13 @@
+# 別把這些塞進 build context（image 只需 src/ + serve/）
+.venv/
+artifacts/
+data/
+notebooks/
+docs/
+tests/
+scripts/
+pipeline/
+.git/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
