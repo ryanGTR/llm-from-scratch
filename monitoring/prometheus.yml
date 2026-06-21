@@ -1,0 +1,9 @@
+# Prometheus 抓取設定：每 5 秒去抓推論 API 的 /metrics。
+# pod 內三個容器共享 localhost，所以 API 在 localhost:8000。
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: llm-api
+    static_configs:
+      - targets: ['localhost:8000']

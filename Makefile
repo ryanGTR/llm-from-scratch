@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -93,3 +93,9 @@ image:  ## podman 建推論服務 image
 run-container:  ## GPU 跑容器，模型 mount 進去（需先設好 CDI）
 	podman run --rm --device nvidia.com/gpu=all -p 8000:8000 \
 	  -v ./artifacts:/app/artifacts:ro,Z llm-from-scratch:latest
+
+dashboard:  ## 起 Prometheus+Grafana 監控 stack（http://127.0.0.1:3000）
+	bash monitoring/up.sh
+
+dashboard-down:  ## 收掉監控 stack
+	bash monitoring/down.sh

@@ -1,0 +1,7 @@
+# 告訴 Grafana 從這個資料夾自動載入 dashboard JSON（開箱即用，不用手動匯入）。
+apiVersion: 1
+providers:
+  - name: llm-serving
+    type: file
+    options:
+      path: /etc/grafana/dashboards
