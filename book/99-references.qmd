@@ -1,0 +1,33 @@
+# 參考文獻 {#sec-references .unnumbered}
+
+每塊程式碼出自哪篇論文、哪一年、新還是舊，在 repo 的 `docs/theory-map.md` 有完整三層對照。
+下面按主題列出本書用到的關鍵文獻。
+
+**架構**
+：@vaswani2017attention（Transformer）、@radford2018gpt（GPT）、@zhang2019rmsnorm（RMSNorm）、
+@shazeer2020glu（SwiGLU）、@su2021roformer（RoPE）、@ainslie2023gqa（GQA）。
+
+**效率與取樣**
+：@dao2022flashattention（FlashAttention）、@holtzman2020nucleus（nucleus/top-p）。
+
+**資料**
+：@sennrich2016bpe（BPE）、@broder1997minhash（MinHash）。
+
+**對齊（注意新舊：RLHF 骨架與 KL 錨是 2017–2022，DPO 2023，GRPO 2024–25）**
+：@christiano2017rlhf、@ziegler2019finetuning（KL 錨）、@ouyang2022instructgpt（InstructGPT）、
+@schulman2017ppo（PPO）、@rafailov2023dpo（DPO）、@azar2023ipo（IPO）、@shao2024grpo（GRPO）、
+@gao2023overopt（reward model 過度優化）。
+
+**其他**
+：@lakshminarayanan2017ensembles（deep ensemble）。
+
+::: {.content-visible when-format="html"}
+## 完整書目
+
+::: {#refs}
+:::
+:::
+
+```{=html}
+<!-- nocite 讓所有文獻都列進 #refs，即使正文沒逐一 @cite -->
+```

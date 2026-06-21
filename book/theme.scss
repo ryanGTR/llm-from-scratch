@@ -1,0 +1,38 @@
+/*-- scss:defaults --*/
+// O'Reilly 風：serif 內文、紅色強調、乾淨標題
+$font-family-serif: "Noto Serif CJK TC", Georgia, "Times New Roman", serif;
+$font-family-sans-serif: "Noto Sans CJK TC", -apple-system, "Helvetica Neue", sans-serif;
+$font-family-monospace: "Noto Sans Mono CJK TC", "JetBrains Mono", "Fira Mono", monospace;
+
+$body-color: #1a1a1a;
+$link-color: #a6093d;        // O'Reilly 紅
+$oreilly-red: #d40000;
+$headings-font-family: $font-family-sans-serif;
+$font-size-root: 17px;
+
+/*-- scss:rules --*/
+body { font-family: $font-family-serif; line-height: 1.65; }
+
+h1, h2, h3, h4 { font-family: $font-family-sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+h1 { border-bottom: 3px solid $oreilly-red; padding-bottom: .3rem; }
+h2 { color: #222; border-bottom: 1px solid #e0e0e0; padding-bottom: .2rem; }
+
+// 章節編號的紅色
+.header-section-number { color: $oreilly-red; }
+
+// 程式碼區塊：O'Reilly 灰底窄邊
+pre.sourceCode { border-left: 3px solid $oreilly-red; background: #f7f7f7; }
+code { font-family: $font-family-monospace; }
+
+// callout 旁註做成 O'Reilly「動物筆記」那種側邊條
+div.callout { border-left-width: 4px; }
+div.callout-note { border-left-color: #1f6feb; }
+div.callout-tip { border-left-color: #1a7f37; }
+div.callout-warning { border-left-color: #d29922; }
+div.callout-important { border-left-color: $oreilly-red; }
+
+// 圖說
+figcaption { font-size: .9em; color: #555; font-style: italic; }
+
+// 區塊引言當「金句」
+blockquote { border-left: 4px solid $oreilly-red; color: #333; font-style: italic; }

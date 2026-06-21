@@ -1,0 +1,43 @@
+# 上線與治理：把稽核接到 ML {#sec-governance}
+
+> **一句話**：訓練是「離線、一次性、看 loss」；服務是「線上、持續、面對真實流量」。
+> 這一章把企業 IT 的治理視角接到模型上——這是我最想經營的位置。
+
+## 從訓練到服務
+
+- **推論 API**：FastAPI 包模型，`/health`（就緒探針）、`/generate`（回延遲+吞吐）、`/metrics`、`/model`（治理）。
+- **可觀測性**：Prometheus metrics（請求率 / 延遲 histogram / token）+ 結構化 JSON 日誌。一裝上就抓到
+  **冷啟動**：首個請求 354 ms、暖機後 50 ms（首次 CUDA kernel 編譯）。
+- **容器化**：Podman + GPU（CDI passthrough），模型 runtime mount 與映像解耦。
+- **監控儀表板**：Prometheus + Grafana，用一個 podman pod 把三個容器放一起共享網路——正是 k8s「Pod」的微縮版。
+
+## 模型治理＝對「線上的模型」答得出四個稽核問題
+
+::: {.callout-important}
+## 治理的四問
+1. **哪一個？** 模型身份用 ckpt 的 **sha256 digest**（像 container image digest / cosign，不靠檔名）。
+2. **吃什麼訓的？** **lineage**：每筆綁資料 digest + 資料品質 gate + config + git commit。
+3. **表現如何？** **model card**（人讀單據）。
+4. **憑什麼上線？** **promotion gate**：沒過資料品質 + 評估就擋下——上線是被 enforce 的。
+   服務端 `/model` 回報自己的 digest，確認線上跑的是不是被批准那顆（`UNREGISTERED` = 紅旗）。
+:::
+
+這四問跟銀行稽核「這個變更是誰、改了什麼、測過沒、誰批准」是同一套骨架——只是對象從應用程式
+換成模型。**這是我從治理進 ML 的最大優勢：我的本能就是要可審計軌跡、要 gate、要能回答稽核。**
+
+## 進階 MLOps（會腐壞的系統要持續顧）
+
+模型會因 data drift 腐壞，所以永遠不算「做完」。我做了嬰兒版的完整迴圈：漂移監控（PSI）、
+重訓迴圈（含回歸 gate：更爛的擋下）、金絲雀/A-B、動態批次、量化壓縮、shadow 比對。
+
+## 帶走什麼
+
+- 服務要快、可觀測、可重現、可治理——訓練只是其中一段。
+- 模型治理＝對線上模型答得出稽核四問（哪一個/吃什麼訓的/表現如何/憑什麼上線）。
+- 治理/稽核背景在 MLOps 是優勢，不是包袱。
+
+::: {.callout-note}
+## 草稿標記
+本章可再展開：每個 e1–e5 進階項的細節、dashboard 截圖、shadow agreement 的決策邏輯。
+素材在 repo `README.md` 發現 8。
+:::

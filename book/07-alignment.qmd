@@ -1,0 +1,108 @@
+# 對齊：把「接龍機器」教成「會聽話、有偏好」 {#sec-alignment}
+
+> **一句話**：預訓練只會「猜下一字」。後訓練把它對齊成助理——而每一種對齊方法，都有一個
+> 漂亮的機制和一個會咬人的坑。
+
+我把對齊的兩個家族都親手走過：**偏好優化**（DPO → IPO）和 **RL 對齊**（GRPO → PPO），
+每個都有對照實驗。這一章是整本書的皇冠。
+
+## SFT：從「會接話」到「會聽話」
+
+第一步 SFT（指令微調）很單純：在「問：…答：…」的對話格式上續訓，模型的行為就從「續寫維基」
+變成「在『答：』的位置產生回應」。
+
+但**評估**它馬上踩到第 5 章那個坑的進階版：用維基 perplexity 量，SFT 看起來變爛了。真相是
+尺被汙染（alignment tax + gold 答案洩漏進預訓練）。改量「應答行為率」，base 29% → SFT 72%——
+**選對指標，結論才對。**
+
+## DPO：免 reward model 的捷徑，與它的封閉式
+
+DPO（直接偏好優化）給一組「同一個問題、一好一壞」的回答，用一條封閉式損失直接優化偏好，
+不需要訓練 reward model、也不需要 RL：
+
+```python
+def dpo_loss(policy_lp, ref_lp, beta):
+    margin = _margin(policy_lp, ref_lp)         # <1>
+    loss = -F.logsigmoid(beta * margin).mean()  # <2>
+    acc = (margin > 0).float().mean()
+    return loss, margin.mean().item(), acc.item()
+```
+1. `margin` = chosen 與 rejected 各自「policy 相對 reference 的對數機率比」之差。
+2. 損失把這個 margin 推大——拉高 chosen、壓低 rejected。
+
+這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」
+（完整證明見 @sec-dpo-math）。
+
+### 死背 vs 真學：train-acc 會騙你
+
+我設了兩種偏好軸——一種模型容量內、一種超出容量——然後看它們類推得如何：
+
+![兩種偏好軸：train-acc 都衝 100%，held-out 才說真話。](images/dpo_generalization.png){#fig-dpo-gen width=85%}
+
+::: {.callout-warning}
+## 看 held-out，不要看 train
+@fig-dpo-gen 裡兩條 train 線（虛線）都衝到 100%——只看 train 你會說「兩個都學會了」。但 held-out
+（實線）一個 97%、一個只有 9%。後者需要「標題↔內容」的語義綁定，8M 模型學不動、只能把訓練題
+**背起來**。**這是 MLOps 鐵則：看 held-out、別看 train。**
+:::
+
+### 精修 β：一個被資料打臉的直覺
+
+DPO 唯一的旋鈕是 β。教科書直覺是「β 大＝KL 罰得重＝貼緊 reference」。我掃了 β，結果**固定步數下
+剛好相反**——β 越小，policy 漂移越大（為什麼見 @sec-margin-math）。
+
+![β 旋鈕：小 β 反而更激進（漂移更大）。](images/dpo_beta_sweep.png){#fig-beta width=85%}
+
+## IPO：把「margin 推到無窮」改成「回歸固定目標」
+
+DPO 的 logistic 損失飽和後梯度雖小卻永不歸零 → margin 被一路推爆 → 過度優化。IPO 改用平方損失
+$(m-\frac{1}{2\beta})^2$，給 margin 一個**有限目標**，到了就停。
+
+![DPO vs IPO：DPO margin 爆衝、IPO 釘在目標；但 clean 偏好上 DPO 反而較準。](images/dpo_vs_ipo.png){#fig-ipo width=85%}
+
+::: {.callout-tip}
+## 防過度優化的工具不是「無腦更好」
+@fig-ipo 右圖：clean 偏好上 IPO held-out 78% < DPO 97%。IPO 拿準度換穩定，它的勝場在「過度優化
+會傷」的場景（偏好含雜訊時 DPO 會死記）。**煞車是保險，不是免費的。**
+:::
+
+## RLHF 之一 — GRPO，與招牌坑 reward hacking
+
+DPO 把 reward 隱含在 policy 裡；RLHF 把它做成一顆**獨立的 reward model**，再用 RL 去最大化它。
+我用 GRPO（DeepSeek，不需 critic）做，並刻意演示對齊最有名的坑：
+
+![reward hacking：拿掉 KL 錨，RM 分數（代理）暴漲、輸出多樣性（真實）崩潰。](images/grpo_reward_hacking.png){#fig-hack width=85%}
+
+::: {.callout-important}
+## Goodhart：指標一旦變成目標，就不再是好指標
+@fig-hack：拿掉 KL 錨，policy 把 RM 分數從 3.7 衝到 **13.2**，輸出卻 collapse 成「不管問什麼都吐
+同一串高分垃圾」（多樣性 100%→6%）。那串垃圾落在 RM 訓練分布外、被誤判高分——policy 鑽了漏洞。
+這和稽核裡「KPI 被優化就造假」是同一回事。防法＝**KL 錨**把 policy 綁在可信舊模型附近。
+:::
+
+## RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊
+
+把 GRPO 的精簡還原回 PPO（InstructGPT 用的經典），就看得到 GRPO 丟掉了什麼：
+
+| 零件 | PPO 有 | GRPO 怎麼省 |
+|---|---|---|
+| Critic（value 網路）| 學一個基準 $A=R-V(x)$ | 用「同組 K 個回答的平均」當基準 |
+| Clipped surrogate | ratio 夾在 $[1\pm\epsilon]$、可重用 rollout 多 epoch | 一批只訓一次，不需要 |
+
+![PPO clip：拿掉 clip，一步走太遠把 policy 走崩；clip 把更新夾住就穩。](images/ppo_clip_vs_noclip.png){#fig-ppo width=85%}
+
+@fig-ppo（為了隔離 clip，刻意關掉 KL 罰）：無 clip 時某一步把 policy 推太遠 → 直接走崩
+（多樣性 100%→6%、RM 7.5→0.2）；clip 把 importance ratio 夾住 → 穩定改進。這就是 PPO 名字裡
+**Proximal（近端）** 的意義：逼新 policy 待在舊的附近。
+
+## 帶走什麼：一條貫穿四種方法的主線
+
+| 方法 | 漂亮的機制 | 會咬人的坑 |
+|---|---|---|
+| SFT | 學會應答格式 | 評估的尺被汙染 |
+| DPO | 配分函數相消、免 RL | train-acc 騙你（死背 vs 真學）|
+| IPO | margin 有限目標、防過度優化 | 不是無腦更好（拿準度換穩定）|
+| GRPO | 不需 critic | reward model 被 hack（Goodhart）|
+| PPO | clip 防破壞性更新 | 要隔離一個機制得先關掉會蓋過它的另一個 |
+
+> 五個方法，五次「換把尺、結論就翻」。**永遠質疑你的指標有沒有被汙染或被鑽**——這比任何單一方法都重要。

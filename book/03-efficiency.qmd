@@ -1,0 +1,40 @@
+# 跑多快：FlashAttention、KV-cache、取樣 {#sec-efficiency}
+
+> **一句話**：效率技巧能省記憶體、加速生成——但「省」不等於「一定更快」，得量你自己的 workload。
+
+## FlashAttention：同樣的數學，更省的算法
+
+樸素 attention 會把整個 $T\times T$ 的分數矩陣攤出來，記憶體是 $O(T^2)$。FlashAttention
+（用 `F.scaled_dot_product_attention`）**數學上完全一樣**，但不攤開矩陣，記憶體降到 $O(T)$。
+我實測同一台機器，context 上限從約 1024 拉到約 4096——同樣的卡，4 倍。
+
+## KV-cache：一個「不一定更快」的反例 {#sec-kvcache}
+
+生成時每吐一個 token 都要重算前面所有 token 的 key/value，是 $O(T^2)$ 的浪費。KV-cache 把它們
+快取起來、每步只算新 token，理論上 $O(T^2)\to O(T)$。
+
+::: {.callout-warning}
+## 「省」不等於「快」——要看 regime
+我實測 KV-cache 在 **CPU 長生成**快 2.2×，但在我的 **GPU + 小模型（8M）+ 短生成** 反而**慢約 18%**。
+原因：一次只算一個 token 浪費了 GPU 的平行度，per-step 的固定開銷超過省下的重算。
+**結論：一個技巧是否真的省/快，看你的 regime，別照搬論文結論——量你自己的 workload。**
+:::
+
+這個反例是整本書方法論的縮影：**先預測（KV-cache 一定更快）→ 量（GPU 上反而慢）→ 想懂為什麼
+（平行度 vs per-step 開銷）。**
+
+## 取樣：top-k、top-p、min-p
+
+生成時怎麼從機率分布裡抽下一個字，決定了輸出的「創意 vs 正確」：
+
+- **top-k**：固定取機率最高的 k 個。
+- **top-p（nucleus）**：取累積機率到 p 為止——候選數量會自適應。
+- **min-p**：相對於峰值的門檻，2024 年提出，高溫下更穩。
+
+選哪個由**任務**決定，而且要用「人讀」來選，不是用 loss：冷/低溫適合要正確的答案，暖/min-p 適合創意。
+
+## 帶走什麼
+
+- FlashAttention：數學等價、記憶體 $O(T^2)\to O(T)$，同卡 context ×4。
+- KV-cache 不一定更快——小模型短生成的 GPU 上反而慢；省的技巧要量自己的 workload。
+- 取樣方法的選擇由任務決定，用人讀來判斷，不是 loss。

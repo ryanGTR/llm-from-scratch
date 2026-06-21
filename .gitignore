@@ -17,3 +17,7 @@ artifacts/*.csv
 
 # verify 的隔離產物（不碰真 artifacts）
 artifacts/_verify/
+
+# Quarto book rendered output
+book/_book/
+book/.quarto/

@@ -1,0 +1,72 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "從零打造並對齊一個 LLM"
+  subtitle: "一個銀行 IT 工程師的 MLOps 視角：原理、工程、對齊與數學"
+  author: "Ryan Chen"
+  date: today
+  lang: zh-Hant
+  repo-url: https://github.com/ryanGTR/llm-from-scratch
+  repo-actions: [source, issue]
+  search: true
+  sidebar:
+    style: docked
+    collapse-level: 1
+  chapters:
+    - index.qmd
+    - part: "第一部　原理"
+      chapters:
+        - 01-minimal-gpt.qmd
+        - 02-modern-components.qmd
+        - 03-efficiency.qmd
+    - part: "第二部　工程"
+      chapters:
+        - 04-real-data.qmd
+        - 05-evaluation.qmd
+        - 06-deploy-governance.qmd
+    - part: "第三部　對齊"
+      chapters:
+        - 07-alignment.qmd
+    - part: "附錄"
+      chapters:
+        - 08-math-appendix.qmd
+        - 99-references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - theme.scss          # O'Reilly 風：serif 內文 + 紅色強調
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-tools: true        # 右上角「看原始碼」
+    code-line-numbers: true
+    code-overflow: scroll
+    fig-cap-location: bottom
+    callout-appearance: simple
+    html-math-method: katex
+  pdf:
+    documentclass: scrbook  # KOMA-Script，接近書本排版
+    papersize: a4
+    geometry:
+      - top=2.5cm
+      - bottom=2.5cm
+      - inner=3cm
+      - outer=2.5cm
+    number-sections: true
+    colorlinks: true
+    code-block-bg: "#f7f7f7"
+    # CJK：用 xelatex + Noto CJK（Ryan 機器已有）
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage{fontspec}
+        \usepackage{xeCJK}
+        \setCJKmainfont{Noto Serif CJK TC}
+        \setCJKsansfont{Noto Sans CJK TC}
+        \setCJKmonofont{Noto Sans Mono CJK TC}

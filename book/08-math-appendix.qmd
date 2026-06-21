@@ -1,0 +1,74 @@
+# 附錄：數學推導 {#sec-math .unnumbered}
+
+> 這個附錄把書裡幾條「推導本身有 aha」的數學寫清楚。每條的格式：**命題 → 推導 → 它在說什麼**。
+
+## RLHF → DPO 封閉式 {#sec-dpo-math}
+
+**命題.** RLHF 的約束最佳化
+
+$$\max_{\pi}\ \mathbb{E}_{y\sim\pi(\cdot|x)}[r(x,y)]-\beta\,D_{\mathrm{KL}}\big(\pi(\cdot|x)\,\|\,\pi_\text{ref}(\cdot|x)\big)$$
+
+其最優解為 $\pi^*(y|x)=\frac{1}{Z(x)}\pi_\text{ref}(y|x)\exp(\frac1\beta r(x,y))$；由此可導出**不需 reward model、
+不需 RL** 的 DPO 損失。
+
+**推導.** 固定 $x$、加歸一化約束寫 Lagrangian，對 $\pi(y)$ 偏微分令為 0（用
+$\frac{\partial}{\partial\pi}\pi\log\frac{\pi}{\pi_\text{ref}}=\log\frac{\pi}{\pi_\text{ref}}+1$）得
+$\pi^*\propto\pi_\text{ref}\exp(r/\beta)$。反解 reward：
+
+$$r(x,y)=\beta\log\frac{\pi^*(y|x)}{\pi_\text{ref}(y|x)}+\beta\log Z(x).$$
+
+把待訓練的 $\pi_\theta$ 當成它自己隱含獎勵的最優 policy，代進 Bradley-Terry
+$P(y_w\succ y_l)=\sigma(r_w-r_l)$。$\beta\log Z(x)$ 對 $y_w,y_l$ 相同，**相減抵消**：
+
+$$\mathcal{L}_\text{DPO}=-\mathbb{E}\Big[\log\sigma\Big(\beta\log\tfrac{\pi_\theta(y_w|x)}{\pi_\text{ref}(y_w|x)}-\beta\log\tfrac{\pi_\theta(y_l|x)}{\pi_\text{ref}(y_l|x)}\Big)\Big].\quad\square$$
+
+**在說什麼.** 那個算不出來的配分函數 $Z(x)$ 被相減消掉了——這就是 DPO 不用跑 RL、不用 reward model
+的根本原因。
+
+## 為什麼 margin 尺度 ≈ $1/\beta$ {#sec-margin-math}
+
+**命題.** DPO 單筆損失 $\ell=-\log\sigma(\beta m)$ 的梯度在 $m\gtrsim 1/\beta$ 後才消失。
+
+**推導.** $\dfrac{\partial\ell}{\partial m}=-\beta\,\sigma(-\beta m)=-\beta(1-\sigma(\beta m))$。
+當 $\beta m\ll1$ 梯度約 $\beta/2$（還在推）；$\beta m\gg1$ 梯度 $\to0$（飽和）。所以 DPO 把 $m$ 推到
+$m\sim1/\beta$ 才鬆手。$\square$
+
+**在說什麼.** β 越**小** → 飽和尺度 $1/\beta$ 越**大** → policy 離 $\pi_\text{ref}$ 越遠（漂移越大）。
+這就是第 7 章 @fig-beta 那個反直覺。誠實標注：$1/\beta$ 是「梯度消失的尺度」、非精確停點（還受 lr/步數
+影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 $\frac{1}{2\beta}$。
+
+## RoPE：旋轉 = 相對位置 {#sec-rope-math}
+
+**命題.** 位置 $m$ 的 query 旋轉 $R_m$、位置 $n$ 的 key 旋轉 $R_n$，內積只跟相對位置 $n-m$ 有關：
+
+$$\langle R_m q,R_n k\rangle=q^\top R_m^\top R_n k=q^\top R_{n-m}k.$$
+
+**推導.** 旋轉矩陣正交可加：$R_a^\top=R_{-a}$、$R_aR_b=R_{a+b}$，故 $R_m^\top R_n=R_{n-m}$。$\square$
+
+**在說什麼.** attention 分數自動變成相對距離的函數，不靠學習式位置向量——所以 RoPE 外推好
+（@fig-rope）、又省參數。
+
+## MinHash 碰撞 = Jaccard；LSH 的 S 曲線 {#sec-minhash-math}
+
+**命題.** 對隨機排列 $\pi$，$\Pr[\min\pi(A)=\min\pi(B)]=\frac{|A\cap B|}{|A\cup B|}=\operatorname{Jaccard}(A,B)$。
+
+**推導.** $A\cup B$ 中哪個元素被排到最小是均勻的；兩集合 minhash 相等 $\iff$ 該「全域最小」元素同時在
+$A,B$（即在 $A\cap B$）。機率 $=|A\cap B|/|A\cup B|$。$\square$
+
+**LSH banding.** 把 $n$ 個 minhash 切成 $b$ 個 band、每 band $r$ 行，兩文件至少共用一個 band 的機率
+$P(s)=1-(1-s^{r})^{b}$（$s$＝Jaccard），是一條 S 曲線、拐點約在 $s\approx(1/b)^{1/r}$。調 $b,r$ 就能把
+「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。
+
+## 政策梯度 + GRPO 的 baseline 為何不偏
+
+**命題.** $\nabla_\theta\mathbb{E}_{y\sim\pi_\theta}[R(y)]=\mathbb{E}[R\,\nabla\log\pi_\theta]$；且減任何與動作無關的
+baseline $b$ 不改變期望（因 $\mathbb{E}[\nabla\log\pi_\theta]=\sum_y\nabla\pi_\theta=\nabla\sum_y\pi_\theta=\nabla1=0$）。
+
+**在說什麼.** 減 baseline 不偏、但降變異數。PPO 用學來的 critic $V(x)$ 當 baseline；GRPO 改用「同組平均
+獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 @fig-ppo）。
+
+::: {.callout-note}
+## 想自己推一遍？
+repo 的 `docs/exercise-dpo-derivation.md` 是一份「換你來推」的練習單：每步給目標+提示、答案摺疊，
+推完你就握住整個後訓練最漂亮那條數學。
+:::
