@@ -2,7 +2,7 @@
   {
     "model_digest": "sha256:00b47fc847555a56c59f09f1a6d3fb385fabdf86354974f787090384afab10d5",
     "short": "00b47fc84755",
-    "status": "production",
+    "status": "archived",
     "created_at": "2026-06-21T05:10:46+00:00",
     "config": {
       "block_size": 256,
@@ -31,6 +31,40 @@
       "tokenizer": "char",
       "data_quality_gate": true,
       "code_commit": "2d4f691"
+    }
+  },
+  {
+    "model_digest": "sha256:4d694be9342d73c08523a93565735334832df90bf4520c814315f96ffba8c835",
+    "short": "4d694be9342d",
+    "status": "production",
+    "created_at": "2026-06-21T10:10:29+00:00",
+    "config": {
+      "block_size": 256,
+      "n_layer": 6,
+      "n_head": 4,
+      "n_embd": 256,
+      "dropout": 0.1,
+      "bias": false,
+      "vocab_size": 14210,
+      "use_rmsnorm": true,
+      "use_swiglu": true,
+      "use_rope": true,
+      "n_kv_head": 2,
+      "use_flash": true
+    },
+    "params_M": 7.954,
+    "metrics": {
+      "test_loss": 3.462,
+      "perplexity": 31.88
+    },
+    "lineage": {
+      "data_digest": "sha256:954ca7a74a4751c8",
+      "corpus_docs": 10953,
+      "vocab_size": 14210,
+      "train_tokens": 31425897,
+      "tokenizer": "char",
+      "data_quality_gate": true,
+      "code_commit": "b34871f"
     }
   }
 ]

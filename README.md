@@ -216,18 +216,25 @@ curl -s 127.0.0.1:8000/generate -H 'content-type: application/json' \
 - **shadow agreement**：候選「在影子裡」跟著算同一輸入、回報與現行的 next-token 一致率（線上、
   `SHADOW_PCT`、不拖延遲）→ dashboard 面板。
 
-**放量決策台**：要決定「新模型能不能加大流量」，不靠感覺，看 dashboard 三條訊號一起亮綠：
+**放量決策**：硬條件是「品質 gate」，dashboard 是「看變化幅度與副作用」——別只看單一數字：
 
-| 看什麼 | 面板 | 綠燈條件 |
+| 看什麼 | 訊號 | 怎麼讀 |
 |---|---|---|
-| 答得夠像？（正確性）| ⑨ 候選一致率 | shadow agreement ≥ 0.95（紅<0.9 別放）|
-| 沒變慢？（效能）| ⑦ 各版本 p95 延遲 | canary 延遲 ≈ production |
-| 輸入正常？（環境）| ⑤ 漂移 PSI | PSI < 0.25 |
+| 品質（能不能上）| promotion gate：test_loss 不比現行差 | **這是 pass/fail 的硬條件** |
+| 變化幅度 | ⑨ shadow agreement | 高=幾乎沒變；**低=改很多（不等於壞）**——配合品質看 |
+| 沒變慢 | ⑦ canary p95 延遲 | canary ≈ production |
+| 輸入正常 | ⑤ 漂移 PSI | < 0.25 |
+
+> ⚠️ 重要 nuance（真實案例教的）：agreement 是「改了多少」不是「好不好」。8000 步候選
+> test_loss 3.46（比現行 3.70 好），但 agreement 只有 **67.5%**——低一致率「不是壞事」，是它
+> 真的學到更好的東西。**更好的模型本來就該跟舊的不一樣**。所以決策靠品質 gate（更好→放行），
+> agreement 只告訴你「爆炸半徑多大、要多謹慎驗」。把 agreement 當硬門檻會擋掉每一次真進步。
+> （合成候選那種 96% 高一致是「幾乎沒改」，反而才該問「那升它幹嘛」。）
 
 ```bash
 cp <候選>.pt artifacts/candidate.pt        # 放一顆候選
 BATCH_MAX=8 make dashboard                  # 自動開金絲雀+shadow，開 127.0.0.1:3000
-# 三盞綠 → 調高 CANARY_PCT 漸進放量；任一轉紅 → CANARY_PCT=0 秒回滾
+# 品質 gate 過 + 延遲沒變糟 + 漂移正常 → 漸進加大 CANARY_PCT；有狀況 → 設 0 秒回滾
 ```
 
 ## 心智模型（Java 類比）
