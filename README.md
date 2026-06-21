@@ -5,6 +5,9 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-cu128-ee4c2c.svg)
 
+> 📖 **線上閱讀本專案的書**（Quarto，O'Reilly 風，含程式碼與數學）：
+> **<https://ryangtr.github.io/llm-from-scratch/>**
+
 從零手刻一個小型 GPT，並把它一路推完整個 **LLM ＋ MLOps 生命週期**：
 **資料工程 → 現代架構 → 訓練評估 → 部署/治理 → 後訓練對齊（SFT→DPO/IPO→RLHF: GRPO/PPO）**，
 全做成可重跑、可驗收、可監控的 pipeline。目標是**真正搞懂原理**（含關鍵演算法的數學推導），

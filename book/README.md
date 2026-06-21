@@ -1,7 +1,22 @@
 # 書：《從零打造並對齊一個 LLM》
 
+📖 **線上閱讀**：<https://ryangtr.github.io/llm-from-scratch/>
+
 用 [Quarto](https://quarto.org) 排版的書（O'Reilly 風：serif 內文、紅色強調、callout 旁註、
-程式碼註解、數學渲染）。輸出 HTML（可推 GitHub Pages）與 PDF。
+程式碼註解、數學渲染）。輸出 HTML（已發佈 GitHub Pages）與 PDF（需 xelatex）。
+
+## 重新部署到 GitHub Pages
+
+```bash
+cd book
+quarto render --to html                          # 只渲染 HTML（PDF 需 TeX）
+# 用 worktree 把 _book/ 推到 gh-pages 分支：
+cd .. && git worktree add /tmp/ghp gh-pages
+find /tmp/ghp -mindepth 1 -not -path '*/.git*' -delete
+cp -r book/_book/. /tmp/ghp/ && touch /tmp/ghp/.nojekyll
+cd /tmp/ghp && git add -A && git commit -m "deploy book" && git push origin gh-pages
+cd - && git worktree remove /tmp/ghp
+```
 
 ## 安裝 Quarto
 
