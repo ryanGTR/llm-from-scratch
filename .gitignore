@@ -4,6 +4,7 @@ __pycache__/
 artifacts/*.bin
 artifacts/*.pt
 artifacts/*.json
+artifacts/*.jsonl
 artifacts/*.png
 artifacts/*.txt
 artifacts/runs/
