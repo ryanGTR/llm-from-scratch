@@ -2,6 +2,9 @@
 
 📖 **線上閱讀**：<https://ryangtr.github.io/llm-from-scratch/>
 
+> 📋 **要繼續改進這本書？** 先讀 [`IMPROVEMENT-PLAN.md`](IMPROVEMENT-PLAN.md)——含現狀評論、
+> 每個缺點的具體補法、「A 級章節」檢查表、各章現況與下一步（斷 session 可接續）。
+
 用 [Quarto](https://quarto.org) 排版的書（O'Reilly 風：serif 內文、紅色強調、callout 旁註、
 程式碼註解、數學渲染）。輸出 HTML（已發佈 GitHub Pages）與 PDF（需 xelatex）。
 

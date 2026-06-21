@@ -21,6 +21,10 @@ updated: 2026-06-21
 > **PPO 補完 RL 家族**（`pipeline/09_ppo.py`、`make ppo`、`scripts/eval_ppo.py`）：critic value 網路 + clipped
 > surrogate（GRPO 簡化掉的兩塊）。clip vs 無 clip 對照（β=0 隔離）：無 clip 一步走太遠 → policy 走崩（RM
 > 7.5→0.2、多樣性 100%→6%），clip 穩定爬＝Proximal。圖 `ppo_clip_vs_noclip.png`。`make test` 49 綠。
+> 📘 **書（Quarto，已發佈 <https://ryangtr.github.io/llm-from-scratch/>）**：8 章+附錄都寫滿可讀。
+> 要繼續**改進/深耕**這本書 → 先讀 `book/IMPROVEMENT-PLAN.md`（評論 B+→A 的具體補法、A 級章節檢查表、
+> 各章現況、建議先把 Ch1 深耕成範本）。Quarto 在 `~/.local/quarto/bin/quarto`（非系統 PATH）。
+>
 > ✅ **已修（測試隔離）**：`make verify` 以前用 demo 資料覆寫 `artifacts/tokenizer.json`（81 字），
 > 害有真實中文 ckpt 在場時 serve 單元測試 KeyError。現在 verify 把 demo 產物導到 `artifacts/_verify/`
 > （`--artifacts` flag、gitignored），絕不碰真 `artifacts/`；serve 測試 prompt 也改成從 tokenizer 自己
