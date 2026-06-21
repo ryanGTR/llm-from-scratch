@@ -49,6 +49,8 @@ DRIFT_PSI = Gauge("llm_drift_psi", "請求字元分布 vs 訓練分布的 PSI（
 DRIFT_OOV = Gauge("llm_drift_oov_rate", "請求用到訓練外字元的比例")
 VARIANT = Counter("llm_variant_requests_total", "各版本接到的請求數", ["variant"])
 VARIANT_LAT = Histogram("llm_variant_latency_seconds", "各版本延遲", ["variant"])
+BATCH_SIZE = Histogram("llm_batch_size", "動態批次的批量大小",
+                       buckets=(1, 2, 4, 8, 16, 32))
 
 # 結構化日誌（每請求一行 JSON → 生產環境送到 log 聚合器）
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -91,7 +93,7 @@ async def lifespan(app: FastAPI):
     _load_model()        # 服務起來前先把模型載好
     if BATCH_MAX > 1:    # 開動態批次：背景跑批次器
         from serve.batcher import DynamicBatcher
-        STATE["batcher"] = DynamicBatcher(BATCH_MAX, BATCH_WAIT_MS)
+        STATE["batcher"] = DynamicBatcher(BATCH_MAX, BATCH_WAIT_MS, on_batch=BATCH_SIZE.observe)
         task = asyncio.create_task(STATE["batcher"].run())
         yield
         task.cancel()

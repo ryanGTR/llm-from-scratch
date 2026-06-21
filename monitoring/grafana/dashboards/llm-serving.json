@@ -4,79 +4,82 @@
   "tags": ["llm", "serving"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "5s",
   "time": { "from": "now-15m", "to": "now" },
   "panels": [
     {
-      "id": 1,
-      "type": "timeseries",
-      "title": "請求率 (req/s by endpoint)",
+      "id": 1, "type": "timeseries", "title": "請求率 (req/s by endpoint)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(llm_requests_total[1m])) by (endpoint)",
-          "legendFormat": "{{endpoint}}",
-          "refId": "A"
-        }
-      ]
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "sum(rate(llm_requests_total[1m])) by (endpoint)", "legendFormat": "{{endpoint}}", "refId": "A" }]
     },
     {
-      "id": 2,
-      "type": "timeseries",
-      "title": "/generate 延遲 (p50 / p95, 秒)",
+      "id": 2, "type": "timeseries", "title": "/generate 延遲 (p50 / p95, 秒)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.5, sum(rate(llm_request_latency_seconds_bucket{endpoint=\"/generate\"}[1m])) by (le))",
-          "legendFormat": "p50",
-          "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(llm_request_latency_seconds_bucket{endpoint=\"/generate\"}[1m])) by (le))",
-          "legendFormat": "p95",
-          "refId": "B"
-        }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.5, sum(rate(llm_request_latency_seconds_bucket{endpoint=\"/generate\"}[1m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(llm_request_latency_seconds_bucket{endpoint=\"/generate\"}[1m])) by (le))", "legendFormat": "p95", "refId": "B" }
       ]
     },
     {
-      "id": 3,
-      "type": "timeseries",
-      "title": "生成吞吐 (tokens/s)",
+      "id": 3, "type": "timeseries", "title": "生成吞吐 (tokens/s)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(llm_generated_tokens_total[1m])",
-          "legendFormat": "tokens/s",
-          "refId": "A"
-        }
-      ]
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "rate(llm_generated_tokens_total[1m])", "legendFormat": "tokens/s", "refId": "A" }]
     },
     {
-      "id": 4,
-      "type": "stat",
-      "title": "累計生成 token",
+      "id": 4, "type": "stat", "title": "累計生成 token",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } }, "overrides": [] },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "llm_generated_tokens_total", "legendFormat": "total", "refId": "A" }]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "e1 漂移：PSI（>0.25 顯著）+ OOV 率",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "short" },
+        "overrides": [{ "matcher": { "id": "byName", "options": "PSI" },
+          "properties": [{ "id": "thresholds", "value": { "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.25 }] } }] }] },
       "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "llm_generated_tokens_total",
-          "legendFormat": "total",
-          "refId": "A"
-        }
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "llm_drift_psi", "legendFormat": "PSI", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "llm_drift_oov_rate", "legendFormat": "OOV率", "refId": "B" }
       ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "e3 金絲雀：各版本請求率",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "sum(rate(llm_variant_requests_total[1m])) by (variant)", "legendFormat": "{{variant}}", "refId": "A" }]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "e3 金絲雀：各版本 p95 延遲",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "histogram_quantile(0.95, sum(rate(llm_variant_latency_seconds_bucket[1m])) by (le, variant))", "legendFormat": "{{variant}}", "refId": "A" }]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "e4 動態批次：平均批量",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "rate(llm_batch_size_sum[1m]) / rate(llm_batch_size_count[1m])", "legendFormat": "平均批量", "refId": "A" }]
     }
   ]
 }

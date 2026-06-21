@@ -14,10 +14,11 @@ import torch
 
 
 class DynamicBatcher:
-    def __init__(self, max_batch: int = 8, max_wait_ms: float = 8.0):
+    def __init__(self, max_batch: int = 8, max_wait_ms: float = 8.0, on_batch=None):
         self.q: asyncio.Queue = asyncio.Queue()
         self.max_batch = max_batch
         self.max_wait = max_wait_ms / 1000.0
+        self.on_batch = on_batch      # callback(batch_size)：給 Prometheus 觀測批量分布
         self.batches_run = 0          # 觀測：跑了幾批
         self.reqs_served = 0          # 觀測：服務幾個請求 → 平均批量 = reqs/batches
 
@@ -45,6 +46,8 @@ class DynamicBatcher:
                         f.set_result(o)
                 self.batches_run += 1
                 self.reqs_served += len(grp)
+                if self.on_batch:
+                    self.on_batch(len(grp))      # 回報這批多大 → Prometheus
 
     def _forward(self, jobs: list[dict]) -> list[list[int]]:
         """同 key 的 job：ids 等長、參數相同 → 直接疊成 (B, T) 批次生成。"""
