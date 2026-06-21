@@ -351,6 +351,9 @@ class TestServe(unittest.TestCase):
             r = c.post("/generate", json={"prompt": "數學", "max_new_tokens": 5}).json()
             self.assertEqual(r["generated_tokens"], 5)     # 生成數量正確
             self.assertIn("latency_ms", r)                  # 有回報延遲（可觀測）
+            m = c.get("/metrics").text                      # Prometheus metrics
+            self.assertIn("llm_requests_total", m)
+            self.assertIn("llm_generated_tokens_total", m)
 
 
 if __name__ == "__main__":

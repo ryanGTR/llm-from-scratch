@@ -14,6 +14,7 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "httpx",
+    "prometheus-client",
 ]
 
 # torch 的 CUDA 版要從 PyTorch 官方 index 抓（RTX 5070 = Blackwell sm_120，需 cu128）

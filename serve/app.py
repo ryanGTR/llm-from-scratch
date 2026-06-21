@@ -10,6 +10,8 @@
 Java 類比：lifespan 載入 = Spring 的 @PostConstruct 單例 Bean；@app.post = @RestController。
 """
 
+import json
+import logging
 import os
 import sys
 import time
@@ -17,7 +19,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -27,6 +30,20 @@ from src.tokenizer import load_tokenizer   # noqa: E402
 
 ART = Path(os.environ.get("ARTIFACTS", "artifacts"))
 STATE: dict = {}
+
+# ---- 可觀測性：Prometheus metrics（k8s/Grafana 同款標準）----------------------
+# Counter 只增（總量）；Histogram 自動分桶（看 p50/p95 延遲分布）。
+REQS = Counter("llm_requests_total", "請求總數", ["endpoint", "status"])
+LATENCY = Histogram("llm_request_latency_seconds", "請求延遲(秒)", ["endpoint"])
+TOKENS = Counter("llm_generated_tokens_total", "累計生成 token 數")
+
+# 結構化日誌（每請求一行 JSON → 生產環境送到 log 聚合器）
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+_log = logging.getLogger("serve")
+
+
+def log_event(**kw):
+    _log.info(json.dumps({"ts": round(time.time(), 3), **kw}, ensure_ascii=False))
 
 
 def _load_model():
@@ -51,6 +68,24 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="llm-from-scratch 推論 API", version="0.1.0", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def observe(request: Request, call_next):
+    """對「每個」請求自動量延遲、計數、記狀態——不用每個 handler 自己寫。"""
+    t0 = time.perf_counter()
+    response = await call_next(request)
+    dt = time.perf_counter() - t0
+    ep = request.url.path
+    REQS.labels(ep, response.status_code).inc()
+    LATENCY.labels(ep).observe(dt)
+    return response
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus 抓取端點：請求數/延遲分布/token 總量。給 Grafana 畫儀表板。"""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 class GenRequest(BaseModel):
@@ -104,6 +139,9 @@ def generate(req: GenRequest):
 
     full = out[0].tolist()
     n_gen = len(full) - len(ids)
+    TOKENS.inc(n_gen)                        # 累計生成 token（Prometheus）
+    log_event(event="generate", prompt_len=len(ids), tokens=n_gen,
+              latency_ms=round(dt * 1000, 1), kv_cache=req.use_kv_cache)  # 結構化日誌
     return GenResponse(
         text=tok.decode(full),
         prompt=req.prompt,
