@@ -180,6 +180,19 @@ gate。第一跑就抓到**聚合指標漏掉的問題**——維基 `-{zh-tw:..
 > 多容器（API+Prometheus+Grafana）用 **podman pod** 一起跑、共享 localhost——正是 k8s「Pod」
 > 概念的微縮版。單機這樣剛好；要多副本/跨機/自動擴縮才需要 k8s。
 
+**進階（e）——治理線 + 效能線**：
+
+| 項 | 做什麼 | 實測 / 開關 |
+|---|---|---|
+| e1 漂移監控 | 線上請求 vs 訓練分布（OOV + 分箱 PSI），偏離就建議重訓 | 中文 PSI 0.07 穩定 / 英文 3.83 漂移；`/drift` |
+| e2 重訓迴圈 | 資料→訓練→評估→註冊→gate→promote 自動外圈 + **回歸 gate**（更爛的擋下） | `make retrain`；demo 較差模型被 gate 擋 |
+| e3 金絲雀/A-B | 同時載兩顆模型、導 N% 流量到候選、按 variant 分標比較 | `CANDIDATE_CKPT` + `CANARY_PCT`；回滾=設 0 |
+| e4 動態批次 | async 佇列把併發請求合批一次算，衝 GPU 吞吐 | `BATCH_MAX`；32 併發 **4.4×**（42 vs 9.5 req/s）|
+| e5 模型壓縮 | fp16 / int8 量化，量「大小 vs 品質」取捨 | `make compress`；fp16 **2.0×** near-lossless |
+
+> e1–e3 是「治理線」（偵測→重訓→漸進放量），e4–e5 是「效能/成本線」。權重量化（e5）跟
+> KV-cache 量化（TurboQuant）是不同軸、可疊加。
+
 ## 心智模型（Java 類比）
 
 | 這個專案 | Java 世界 |
@@ -302,6 +315,12 @@ make dashboard     # 起 Prometheus+Grafana 監控 stack（http://127.0.0.1:3000
 make register      # 把目前模型註冊進 registry（產 model card）
 make models        # 看 model registry 台帳
 python scripts/registry_cli.py promote <digest前綴>   # 升 production（要過 gate）
+
+# 進階（e）
+make retrain       # 重訓迴圈（資料→訓練→評估→註冊→gate）；--auto-promote 自動上線
+make compress      # fp16/int8 量化對比（大小 vs 品質）
+CANDIDATE_CKPT=/path/ckpt.pt CANARY_PCT=20 make serve   # 金絲雀：20% 流量導候選
+BATCH_MAX=8 make serve                                  # 動態批次：衝吞吐
 ```
 
 ## 學習弧線（本專案的設計脈絡）
