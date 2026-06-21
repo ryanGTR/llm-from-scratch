@@ -165,6 +165,23 @@ gate。第一跑就抓到**聚合指標漏掉的問題**——維基 `-{zh-tw:..
 | d. 監控儀表板 | Prometheus + Grafana（podman pod，dashboard 自動 provisioning） | `monitoring/`、`make dashboard` |
 | e. 模型治理 | digest 身份 + registry 台帳 + lineage + model card + promotion gate | `src/registry.py`、`make register`/`models` |
 
+**API 端點**（`make serve` 起，base `http://127.0.0.1:8000`，注意是 127.0.0.1 不是 localhost）：
+
+| 方法 | 路徑 | 用途 |
+|---|---|---|
+| `GET` | `/health` | 就緒探針：模型載好沒 / device / 參數量 / vocab / 批次統計 |
+| `POST` | `/generate` | 生成（主端點）→ 回 text + latency + tokens/s + variant + served_digest |
+| `GET` | `/drift` | e1 漂移：PSI / OOV / level / retrain_suggested |
+| `GET` | `/model` | 治理：服務的 digest + registry 狀態 + 金絲雀資訊 |
+| `GET` | `/metrics` | Prometheus 指標（給 Grafana 抓） |
+| `GET` | `/docs` | Swagger 互動文件（FastAPI 自動產，可直接點測） |
+
+```bash
+# /generate body：欄位都有預設，最少只要 prompt
+curl -s 127.0.0.1:8000/generate -H 'content-type: application/json' \
+     -d '{"prompt":"數學是","max_new_tokens":80,"temperature":0.8,"top_p":0.9}'
+```
+
 **效能實測（服務第一課：量你的 workload，別假設）**：KV-cache 在 CPU 長生成快 2.2×，
 但在「GPU + 小模型 + 短生成」反而慢 ~18%（一次算一個 token 浪費 GPU 平行度，per-step 開銷 >
 省下的 O(T²) 重算）。「省」的技巧是否真省，看 regime。可觀測性也立刻抓到**冷啟動**：第一個
