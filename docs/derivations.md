@@ -234,6 +234,7 @@ $(1-s^{r})^{b}$；至少一個中：取補。$\square$
 
 ## See Also
 
+- [[exercise-dpo-derivation]] — **練習版**：把皇冠那條 DPO 推導改成「你來推、答案摺疊」的自推練習
 - [[theory-map]] — 哪塊程式碼出自哪篇論文（本頁是「為什麼成立」，那頁是「出處」）
 - `pipeline/06_dpo.py` / `pipeline/08_grpo.py` / `src/reward_model.py` — 後訓練實作
 - `src/model.py` — attention / RoPE / softmax-CE 的所在
