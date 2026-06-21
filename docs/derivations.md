@@ -122,6 +122,17 @@ policy 離 $\pi_\text{ref}$ 越遠（**漂移越大**）。這正是 `make dpo-b
 
 > 對應程式碼：`scripts/dpo_beta_sweep.py`。
 
+**延伸：IPO 把這個尺度「釘死」.** 既然 DPO 的痛點是「margin 被推到無窮、過度優化」，IPO
+（Azar 2023）乾脆把上面的尺度 $1/\beta$ 變成**明確的回歸目標**：用平方損失取代 logistic，
+
+$$\mathcal{L}_\text{IPO}=\mathbb{E}\Big[\Big(\underbrace{\log\tfrac{\pi_\theta(y_w)}{\pi_\text{ref}(y_w)}-\log\tfrac{\pi_\theta(y_l)}{\pi_\text{ref}(y_l)}}_{m}-\tfrac{1}{2\beta}\Big)^2\Big].$$
+
+它有**有限最小值**：$m=\tfrac{1}{2\beta}$ 時損失為 0、到了就停（不像 DPO 的 σ 飽和後仍緩慢推爆）。
+實測（`make dpo-ipo`）：DPO 的 margin 衝到 200+，IPO 釘在目標 $1/(2\beta)$ 附近。代價是它較保守——
+clean 偏好上 held-out 較低（DPO 97% vs IPO 78%），把 target 旋大（$\beta$ 變小）可再追回來。
+**IPO 的勝場在「過度優化會傷」的場景**（偏好含雜訊時 DPO 會死記、IPO 的有限目標擋得住）。
+對應程式碼：`pipeline/06_dpo.py` 的 `ipo_loss()`、`scripts/dpo_vs_ipo.py`。
+
 ---
 
 ## 二、地基

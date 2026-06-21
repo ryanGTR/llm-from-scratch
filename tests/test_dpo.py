@@ -43,6 +43,26 @@ class TestDPOLoss(unittest.TestCase):
         self.assertAlmostEqual(acc, 0.5, places=6)
 
 
+class TestIPOLoss(unittest.TestCase):
+    def test_min_at_target_margin(self):
+        # IPO 損失在 margin = 1/(2β) 時為 0（最小）。β=0.1 → target=5
+        beta = 0.1
+        target = 1.0 / (2 * beta)
+        # 造一筆讓 margin 剛好 = target：policy chosen-rejected 差 target、ref 為 0
+        pol = torch.tensor([target, 0.0])     # (chosen, rejected) logπ
+        ref = torch.tensor([0.0, 0.0])
+        loss, margin, _ = dpo.ipo_loss(pol, ref, beta)
+        self.assertAlmostEqual(margin, target, places=5)
+        self.assertAlmostEqual(loss.item(), 0.0, places=6)
+
+    def test_loss_grows_away_from_target(self):
+        beta = 0.1
+        ref = torch.tensor([0.0, 0.0])
+        near = dpo.ipo_loss(torch.tensor([4.0, 0.0]), ref, beta)[0]
+        far = dpo.ipo_loss(torch.tensor([50.0, 0.0]), ref, beta)[0]   # margin 推爆 → 被罰
+        self.assertLess(near.item(), far.item())   # 離目標越遠損失越大（DPO 不會罰這個）
+
+
 class TestRespMask(unittest.TestCase):
     class _Tok:                                       # 假 tokenizer：一字元一 id
         def encode(self, s):

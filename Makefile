@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta reward grpo eval-grpo lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta dpo-ipo reward grpo eval-grpo lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -150,3 +150,8 @@ grpo:  ## RLHF②：GRPO 用 RM 分數做 RL（有 KL 錨 + 無 KL 錨對照，�
 
 eval-grpo:  ## RLHF 評估：代理(RM)漲 vs 真實(多樣性)崩 = reward hacking 對照圖
 	$(PY) scripts/eval_grpo.py
+
+dpo-ipo:  ## IPO 對照：DPO（margin 爆衝）vs IPO（釘在目標 1/2β、防過度優化）+ 圖
+	$(PY) pipeline/06_dpo.py --loss dpo --iters 600 --dpo_data artifacts/dpo_format.jsonl --heldout artifacts/dpo_format_heldout.jsonl --out artifacts/dpo_format_ckpt.pt --log_csv artifacts/runs/cmp_dpo.csv
+	$(PY) pipeline/06_dpo.py --loss ipo --iters 600 --dpo_data artifacts/dpo_format.jsonl --heldout artifacts/dpo_format_heldout.jsonl --out artifacts/ipo_format_ckpt.pt --log_csv artifacts/runs/cmp_ipo.csv
+	$(PY) scripts/dpo_vs_ipo.py

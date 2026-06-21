@@ -106,15 +106,36 @@ def heldout_pref_acc(model, tok, rows, block_size, device):
     return wins / len(rows)
 
 
-def dpo_loss(policy_lp, ref_lp, beta):
-    """DPO 損失 + 診斷量。policy_lp/ref_lp：交錯排好的 (chosen, rejected) logπ。"""
+def _margin(policy_lp, ref_lp):
+    """log-ratio margin = (chosen 的 logπ-ratio) − (rejected 的 logπ-ratio)。兩種損失共用。"""
     pc, pr = policy_lp[0::2], policy_lp[1::2]     # policy: chosen / rejected
     rc, rr = ref_lp[0::2], ref_lp[1::2]           # reference: chosen / rejected
-    # 隱式獎勵 = β·(logπ - logπ_ref)；margin = chosen 獎勵 - rejected 獎勵
-    margin = (pc - rc) - (pr - rr)
+    return (pc - rc) - (pr - rr)
+
+
+def dpo_loss(policy_lp, ref_lp, beta):
+    """DPO 損失 + 診斷量。policy_lp/ref_lp：交錯排好的 (chosen, rejected) logπ。"""
+    margin = _margin(policy_lp, ref_lp)
     loss = -F.logsigmoid(beta * margin).mean()
     acc = (margin > 0).float().mean()             # 有多常「偏好 chosen」
     return loss, margin.mean().item(), acc.item()
+
+
+def ipo_loss(policy_lp, ref_lp, beta):
+    """IPO 損失（Azar et al. 2023）：把 margin「回歸」到固定目標 1/(2β)，而非推到無窮大。
+
+    DPO 用 −logσ(β·margin)，σ 飽和後梯度雖小卻永不歸零 → margin 會被一路推爆（我們實測到
+    122、topic 軸死背）＝過度優化。IPO 改用**平方損失** (margin − 1/(2β))²：有一個有限的最佳點，
+    到了就停 → 天生防過度優化。這正是 derivations §3「margin 尺度≈1/β」的「把它釘死」版本。
+    """
+    margin = _margin(policy_lp, ref_lp)
+    target = 1.0 / (2.0 * beta)
+    loss = ((margin - target) ** 2).mean()
+    acc = (margin > 0).float().mean()
+    return loss, margin.mean().item(), acc.item()
+
+
+LOSSES = {"dpo": dpo_loss, "ipo": ipo_loss}
 
 
 def main():
@@ -126,6 +147,8 @@ def main():
     ap.add_argument("--iters", type=int, default=1500)
     ap.add_argument("--lr", type=float, default=1e-4)         # DPO 用比 SFT 小的 lr
     ap.add_argument("--beta", type=float, default=0.1)        # KL 約束強度
+    ap.add_argument("--loss", choices=["dpo", "ipo"], default="dpo",
+                    help="dpo=−logσ(β·margin)（會把 margin 推爆）；ipo=(margin−1/2β)²（回歸固定目標、防過度優化）")
     ap.add_argument("--batch_size", type=int, default=16)     # 一個 batch 幾組偏好對
     ap.add_argument("--block_size", type=int, default=128)
     ap.add_argument("--seed", type=int, default=1337)
@@ -154,6 +177,9 @@ def main():
         p.requires_grad_(False)
     opt = torch.optim.AdamW(policy.parameters(), lr=args.lr)
 
+    loss_fn = LOSSES[args.loss]
+    target = 1.0 / (2.0 * args.beta) if args.loss == "ipo" else None
+    print(f"損失={args.loss}" + (f"（margin 目標={target:.1f}）" if target else "（margin 無上限）"))
     g = torch.Generator().manual_seed(args.seed)
     Path(args.log_csv).parent.mkdir(parents=True, exist_ok=True)
     hist = ["step,loss,margin,train_acc,held_acc"]
@@ -163,7 +189,7 @@ def main():
         policy_lp = seq_logp(policy, X, M)
         with torch.no_grad():
             ref_lp = seq_logp(ref, X, M)
-        loss, margin, acc = dpo_loss(policy_lp, ref_lp, args.beta)
+        loss, margin, acc = loss_fn(policy_lp, ref_lp, args.beta)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
@@ -176,7 +202,7 @@ def main():
 
     Path(args.log_csv).write_text("\n".join(hist) + "\n")
     torch.save({"model": policy.state_dict(), "gpt_config": ckpt["gpt_config"],
-                "iter": args.iters, "dpo": True, "beta": args.beta}, args.out)
+                "iter": args.iters, "dpo": True, "beta": args.beta, "loss": args.loss}, args.out)
     print(f"完成 → {args.out}（訓練曲線 → {args.log_csv}）")
 
 
