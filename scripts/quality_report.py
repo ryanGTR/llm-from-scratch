@@ -20,6 +20,7 @@ def main():
     ap.add_argument("--input", default="data/raw/zhwiki.txt")
     ap.add_argument("--doc_sep", default=None)
     ap.add_argument("--artifacts", default="artifacts")
+    ap.add_argument("--label", default="run", help="這次的標籤（如 before/after），存進歷史供面板做前後對照")
     args = ap.parse_args()
 
     print(f"載入 {args.input} …")
@@ -32,6 +33,14 @@ def main():
     art.mkdir(parents=True, exist_ok=True)
     (art / "data_quality_report.json").write_text(
         json.dumps(rep, ensure_ascii=False, indent=2))
+
+    # 存進歷史（帶 label）供監控面板做 before/after 對照；同 label 覆蓋、保留最近 10 次
+    hist_path = art / "quality_history.json"
+    hist = json.loads(hist_path.read_text()) if hist_path.exists() else []
+    hist = [h for h in hist if h["label"] != args.label]
+    hist.append({"label": args.label, "all_pass": rep["all_pass"],
+                 "pct": {r["name"]: r["pct"] for r in rep["detectors"]}})
+    hist_path.write_text(json.dumps(hist[-10:], ensure_ascii=False, indent=2))
 
     icon = {True: "✅", False: "❌"}
     print(f"{'偵測項':16s} {'命中':>7} {'佔比':>7} {'門檻':>6}  判定")
