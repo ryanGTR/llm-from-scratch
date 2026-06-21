@@ -66,6 +66,23 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 | BPE subword tokenizer | 尚未做（學習弧線的 C）| Sennrich et al. 2016 |
 | MinHash 近似去重 | `src/data/dedup.py` | Broder 1997（非深度學習，是資料工程）|
 
+## 第三層：後訓練（對齊）論文 — SFT → DPO → RLHF
+
+把「接龍機器」對齊成助理這條線。**注意新舊**：RLHF 骨架與 KL 錨其實是 2017–2022 的成熟
+技術，DPO 是 2023，只有 **GRPO 是 2024–25 真正新的**——別把「對齊」整包當成最新研究。
+
+| 程式碼 | 位置 | 出處論文（年份）|
+|---|---|---|
+| SFT（指令微調）| `pipeline/05_sft.py` | InstructGPT 的第一步 (Ouyang 2022)；概念更早 |
+| 偏好模型 Bradley-Terry | `src/reward_model.py` (bt_loss) | Bradley & Terry **1952**（純統計，超老）|
+| Reward model（學來的評分器）| `src/reward_model.py` | Christiano et al. **2017**；Ziegler et al. 2019 |
+| RLHF + **KL-to-reference 懲罰** | `pipeline/08_grpo.py` (β·KL) | Ziegler **2019**（KL 錨用到 LM）；Ouyang 2022 |
+| PPO（RL 本體，我們用 GRPO 替代）| —（對照）| Schulman et al. 2017 |
+| **DPO**（免 RM、免 RL 的封閉式）| `pipeline/06_dpo.py` | Rafailov et al. **2023**（NeurIPS）|
+| **GRPO**（去掉 critic，組內 baseline）| `pipeline/08_grpo.py` | DeepSeekMath (Shao **2024**)；DeepSeek-R1 (2025) |
+| reward hacking / 過度優化 | `pipeline/08_grpo.py` 對照、`scripts/eval_grpo.py` | Gao et al. **2023**「RM Overoptimization」；Goodhart 1975 |
+| IPO（治 DPO 過度優化，下一步選項）| 尚未做 | Azar et al. 2023/24 |
+
 ## 一句話：我們在哪
 
 > 手刻的是 **2017 Transformer 架構 + 2018 GPT 設定**，跑在 **聖經本 Ch5-8 的
@@ -79,6 +96,9 @@ Bengio, Courville, 2016)** 的章節，或 **後續論文**。用途：回頭看
 - **架構**：Vaswani 2017 "Attention Is All You Need"；Jay Alammar "The Illustrated
   Transformer"（圖解，最好入門）；Karpathy "Let's build GPT"（本專案精神來源）
 - **系統**：Dao 2022 "FlashAttention"；Karpathy nanoGPT repo
+- **後訓練/對齊**：Ziegler 2019（KL 錨）；Ouyang 2022（InstructGPT/RLHF 配方）；
+  Rafailov 2023（DPO）；Shao 2024（DeepSeekMath/GRPO）+ DeepSeek-R1 2025；
+  Gao 2023（reward model 過度優化＝reward hacking）
 - **地基**：Goodfellow et al. 2016《Deep Learning》Ch5-8, Ch12
 
 ## See Also
