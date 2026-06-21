@@ -1,50 +1,123 @@
 # 把它變現代：RMSNorm、SwiGLU、RoPE、GQA {#sec-modern}
 
 > **一句話**：2017 年的原版 Transformer 和今天的 LLaMA 差在幾個可抽換的零件。
-> 換之前先問一個問題：**這個零件優化的是「準」還是「省」？**
+> 換之前先問一個問題——**這個零件優化的是「準」還是「省」？**——你就能事先預測對。
+
+第 1 章我們把一個最小的 GPT 刻出來了。它能跑、能訓、能生成，但用的是 2017 年原版 Transformer
+的零件。過去幾年，主流的開源模型（LLaMA、Mistral）把這些零件一個個換掉了。這一章我們也來換，
+但**不是盲目換**——我把 `src/model.py` 寫成可以用設定開關一鍵切換每個零件，然後一個一個做對照實驗，
+親眼看它到底有沒有用。
 
 ## 一個會幫你預測對的問題：準 vs 省
 
-我把 `model.py` 寫成可以一鍵切換每個現代零件，然後一個一個做對照實驗。最重要的收穫不是哪個更好，
-而是一個能讓你**事先預測對**的分類法：
+做這些對照時我學到最重要的一件事，不是「哪個零件更好」，而是一個能讓你**事先預測對**的分類法：
 
-| 零件 | 優化「準」還是「省」 | 實測（同預算）|
-|---|---|---|
-| RMSNorm（取代 LayerNorm）| 省（同準、更省計算）| loss 幾乎不變 |
-| SwiGLU（取代 GELU MLP）| 準 | val loss 降 ~0.09（雜訊的 11 倍）|
-| RoPE（取代學習式位置）| 準 + 解鎖外推 | 降 ~0.146，且參數更少 |
-| GQA（共用 KV 頭）| 省（砍 KV-cache）| 品質微降、換 KV 砍半 |
+> 每個改進不是讓模型**更準**（降 loss），就是讓它**更省**（同樣準、但少算/少存）。換零件前先問它在哪一軸。
+
+這個問題之所以重要，是因為我自己第一次就猜錯。我以為把 LayerNorm 換成 RMSNorm 會讓 loss 變好——
+結果幾乎沒變。後來才懂：RMSNorm 是「省」，不是「準」。建立這個分類法之後，SwiGLU 和 RoPE（兩個都是
+「準」）我就猜對了。
 
 ::: {.callout-tip}
-## 先問「準 vs 省」，你會少猜錯
-我自己第一次就猜錯：以為 RMSNorm 會讓 loss 變好（它是「省」，所以不會）。建立這個分類法之後，
-SwiGLU/RoPE（準）我就猜對了。**別預期每個現代技巧都降 loss——要問它優化哪一軸。**
+## 別預期每個現代技巧都降 loss
+這是新手最常見的誤會。看到「LLaMA 用了 X」就以為 X 會讓模型更聰明。很多現代零件其實是在**省**
+（記憶體、計算、KV-cache），準度持平。先問「準還是省」，你會少猜錯一半。
 :::
 
-## RoPE：旋轉位置編碼為什麼能「外推」
+下面四節，每節一個零件；最後把它們全部開起來，看會發生什麼有趣的事。
 
-RoPE 把位置資訊編進「對 query/key 做旋轉」，使得 attention 分數變成**相對距離**的函數
-（完整推導見 @sec-rope-math）。一個招牌好處是外推：在短序列上訓練、到長序列仍不崩。
+## RMSNorm：更省的正規化（省）
 
-![在長度 64 上訓練、評估到 256：學習式位置一過 64 就爆，RoPE 幾乎平。](images/rope_extrapolation.png){#fig-rope width=80%}
+LayerNorm 對每個位置的向量做 $(x-\text{均值})/\text{標準差}$，再縮放平移——要算均值和變異數。
+RMSNorm 砍掉「減均值」這一步，只除以均方根（RMS）：
 
-讀 @fig-rope 的三步：① 看軸；② 找虛線（訓練長度 64）；③ 只看過虛線之後兩條線怎麼分岔——
-重點是**相對差距**，不是絕對高度。
+```python
+class RMSNorm(nn.Module):
+    def forward(self, x):
+        rms = torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)  # <1>
+        return x * rms * self.weight                                   # <2>
+```
+1. 只算均方根，不減均值、不要 bias——比 LayerNorm 少一半的統計量。
+2. 縮放回去。就這樣，沒有平移項。
+
+**實驗**：LayerNorm val loss 1.7712 vs RMSNorm 1.7724——**平手**。這正是「省」型零件的標準長相：
+同樣準、但更省、更穩。現代 LLM 幾乎都換成它，不是因為它更準，是因為它一樣準卻更便宜。
+
+## SwiGLU：更準的前饋層（準）
+
+原版 MLP 是 `x → Linear → GELU → Linear`。SwiGLU 多開一條並行投影當「閘門」，用 SiLU 啟動後去乘
+另一條，再投影回去：$\text{down}(\text{SiLU}(\text{gate}(x))\odot \text{up}(x))$。
+
+```python
+class SwiGLU(nn.Module):
+    def forward(self, x):
+        return self.dropout(self.w_down(F.silu(self.w_gate(x)) * self.w_up(x)))  # <1>
+```
+1. `w_gate` 過 SiLU 當閘門、去乘 `w_up`——讓網路能「動態決定讓多少訊號通過」。
+
+為了公平對比，我把 hidden 維度取 $\frac83 n_\text{embd}$（而非 $4n_\text{embd}$），讓參數量跟原版 MLP 幾乎相同。
+
+**實驗**：GELU MLP 1.7712 vs SwiGLU **1.6810**——真降 0.09，遠超雜訊。這次我用了新武器「先問準還是省」，
+SwiGLU 是「準」，所以猜對了它會降 loss。**現代化記分板：RMSNorm 同準更省、SwiGLU 真更準。**
+
+## RoPE：把位置編成「相對距離」（準 + 解鎖外推）
+
+原版 GPT 用一張「學習式位置 embedding」記每個絕對位置。RoPE 改用一個漂亮的點子：把位置資訊編進
+「對 query 和 key 做旋轉」——位置 $m$ 的 query 旋轉 $m\theta$、位置 $n$ 的 key 旋轉 $n\theta$。神奇的是，
+旋轉後的內積只跟**相對位置 $n-m$** 有關（完整證明見 @sec-rope-math）。
+
+```python
+def apply_rope(x, cos, sin, offset=0):
+    x1, x2 = x[..., ::2], x[..., 1::2]      # <1>
+    rx1 = x1 * cos - x2 * sin                # <2>
+    rx2 = x1 * sin + x2 * cos
+    return torch.stack([rx1, rx2], dim=-1).flatten(-2)
+```
+1. 把相鄰兩維當成平面上一個點。
+2. 旋轉它——旋轉不改變長度、只改方向，於是 $q\cdot k$ 自然變成相對位置的函數。
+
+**實驗**：學習式位置 1.7712 vs RoPE **1.6248**——降 0.146（比 SwiGLU 還多），而且**參數更少**
+（不需要學習式位置那張表）。連我都猜錯了——以為固定長度下兩者差不多，結果 RoPE 大勝。為什麼？
+因為「相對距離」是比「絕對位置」更好的 inductive bias。
+
+而 RoPE 真正的招牌好處是**外推**：
+
+![在長度 64 上訓練、評估到 256：學習式位置一過 64 就爆（1.93→2.79），RoPE 幾乎平（1.82→2.11）。](images/rope_extrapolation.png){#fig-rope width=80%}
+
+讀 @fig-rope 的三步：① 看軸；② 找虛線（訓練長度 64）；③ 只看過虛線之後兩條線怎麼分岔——重點是
+**相對差距**，不是絕對高度。學習式位置一旦遇到「訓練時沒見過的長度」就崩，RoPE 因為看的是相對距離、
+幾乎不受影響。
+
+## GQA：共用 KV 頭，砍 KV-cache（省）
+
+標準的 multi-head attention，每個頭都有自己的 query、key、value。GQA（grouped-query attention）讓
+多個 query 頭**共用**少數幾組 key/value——省下生成時要快取的 KV 量。
+
+**實驗**：MHA 1.7712 / GQA(2 組) 1.7974 / MQA(1 組) 1.8126。品質微降，換來 KV-cache 砍半（GQA）或砍到
+四分之一（MQA）。這是個「省」型零件、而且是個甜蜜點——LLaMA-2/3、Mistral 都用 GQA。
 
 ## 全部開起來：一鍵 LLaMA 配方
 
-四個零件全開（`--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2`），val loss 從原版 1.77
-降到 **1.57**（低 11%）且參數更少。更有意思的是：**改善幾乎完全相加**（天真預測 1.561、實際 1.569）
-——四個零件各修不同地方（norm／MLP／位置／KV），互補不重疊。
+四個零件全開（`--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2`），val loss 從原版 1.7712 降到
+**1.5691**——低 11%，而且參數**更少**（0.73M vs 0.81M）。但最有意思的是改善怎麼疊起來的：
+
+::: {.callout-note}
+## 改善幾乎完全相加
+天真地把每個零件的改善加起來，預測 1.561；實際跑出來 1.569，只差 0.008。為什麼這麼接近？因為四個
+零件各修不同的地方——RMSNorm 修 norm、SwiGLU 修 MLP、RoPE 修位置、GQA 修 KV——**互補、不重疊**。
+所以 `model.py` 現在可以一鍵在「GPT-2 配方」和「LLaMA 配方」之間切換。
+:::
 
 ## 帶走什麼
 
-- 評估任何新零件前，先問「它優化準還是省」——這個分類法會幫你預測對。
-- RoPE 把位置編成相對距離，所以外推好、又省參數。
-- 現代零件互補可疊加，`model.py` 一鍵就能在 GPT-2 配方和 LLaMA 配方間切換。
+- 換任何現代零件前，先問「它優化準還是省」——這個分類法會幫你預測對，也讓你不會對「省」型零件
+  失望（它本來就不該降 loss）。
+- 記分板：**RMSNorm 同準更省、SwiGLU +0.09 準、RoPE +0.146 準且省參數且解鎖外推、GQA 微降換 KV 砍半。**
+- RoPE 把位置編成相對距離，所以外推好——這是個用一行旋轉矩陣的代數就能理解的漂亮設計。
+- 互補的零件可以疊加，效果幾乎相加。
 
-::: {.callout-note}
-## 草稿標記
-本章可再展開：RMSNorm 的數學、SwiGLU 的 gating 直覺、GQA 的 KV-cache 帳。素材在 repo 的
-`README.md` 發現 6 與 `docs/theory-map.md`。
+::: {.callout-tip}
+## 動手
+把 repo 的 `make train run_name=modern args="--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2"`
+跑起來，跟原版疊在同一張 loss 曲線上比。再挑一個零件，**先預測它是準還是省**，然後跑去驗證。
 :::
