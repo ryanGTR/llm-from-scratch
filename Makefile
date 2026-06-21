@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -108,3 +108,6 @@ models:  ## 看 model registry 台帳
 
 retrain:  ## 重訓迴圈（資料→訓練→評估→註冊→gate）；--auto-promote 過 gate 自動上線
 	$(PY) scripts/retrain.py --skip-data
+
+compress:  ## 量化壓縮對比（fp32 vs fp16 vs int8：大小 vs 品質）
+	$(PY) scripts/compress.py
