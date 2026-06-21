@@ -1,0 +1,581 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "從零打造並對齊一個 LLM",
+    "section": "",
+    "text": "前言：一個銀行 IT 為什麼從零刻 LLM\n我是銀行 IT 出身，熟治理、合規、平台。但很長一段時間，LLM 對我是個黑盒——我會用 API， 卻不知道裡面在發生什麼。與其再追一個工具，我決定做一件笨但徹底的事：從零把一個 GPT 刻出來， 再用我熟悉的工程與治理視角，把它一路工業化、對齊、上線、管起來。\n這本書記錄的就是這趟旅程。它不是要教你做出 ChatGPT——書裡的模型只有約 8M 參數、字元級、 小到能在一台筆電上幾分鐘訓完。重點從來不是模型，是過程中的工程判斷與方法論。",
+    "crumbs": [
+      "前言：一個銀行 IT 為什麼從零刻 LLM"
+    ]
+  },
+  {
+    "objectID": "index.html#這本書的主線",
+    "href": "index.html#這本書的主線",
+    "title": "從零打造並對齊一個 LLM",
+    "section": "這本書的主線",
+    "text": "這本書的主線\n有一條紀律貫穿每一章，請你邊讀邊抓著它：\n\n先預測 → 親手量 → 被資料打臉 → 想懂為什麼。 以及它的孿生兄弟：永遠質疑你的指標有沒有被汙染、或被鑽。\n\n你會一再看到「我以為 X，量了發現不是」的瞬間——那些才是真正學到東西的地方。例如：\n\n現代技巧不一定更好（要看它優化的是「準」還是「省」）；\nKV-cache 不一定更快（在小模型短生成的 GPU 上反而慢）；\n聚合指標說資料健康，偵測器卻抓到 21.6% 文件有髒東西；\n強化學習把「學來的獎勵分數」衝到天花板，輸出品質卻崩盤（reward hacking）。\n\n\n\n\n\n\n\n注记給讀者的提示\n\n\n\n每一章都會給你可跑的程式碼與推得出來的數學。程式碼來自公開 repo （https://github.com/ryanGTR/llm-from-scratch），你可以一邊讀一邊改、預測、弄壞、再講給自己聽。",
+    "crumbs": [
+      "前言：一個銀行 IT 為什麼從零刻 LLM"
+    ]
+  },
+  {
+    "objectID": "index.html#你會走過的路",
+    "href": "index.html#你會走過的路",
+    "title": "從零打造並對齊一個 LLM",
+    "section": "你會走過的路",
+    "text": "你會走過的路\n\n\n\n\n\n\n\n\n部\n章\n帶走什麼\n\n\n\n\n一、原理\n最小的 GPT → 現代零件 → 效率與取樣\n看得懂 Transformer 內部，不是調 API\n\n\n二、工程\n真實資料 → 嚴謹評估 → 部署與治理\n把模型變成可重現、可驗證、可治理的系統\n\n\n三、對齊\nSFT → DPO/IPO → GRPO/PPO + reward hacking\n對齊的機制與它們的坑\n\n\n附錄\n數學推導\n不只會用，能把式子推出來",
+    "crumbs": [
+      "前言：一個銀行 IT 為什麼從零刻 LLM"
+    ]
+  },
+  {
+    "objectID": "index.html#怎麼讀這本書",
+    "href": "index.html#怎麼讀這本書",
+    "title": "從零打造並對齊一個 LLM",
+    "section": "怎麼讀這本書",
+    "text": "怎麼讀這本書\n\n想速覽：讀每章開頭的「一句話」與結尾的「帶走什麼」，看圖、跳過推導。\n想動手：把 repo clone 下來，每章的程式碼都 make 得動；附錄的數學每條都能自己推一遍。\n想要深度：把每個「假設被打破」當成練習——先遮住結果、自己預測，再往下對答案。\n\n\n\n\n\n\n\n重要誠實的範圍\n\n\n\n這不是 ChatGPT，也不假裝是。8M 的字元級模型學得會中文的字、詞、語法、標點，但寫不出連貫文章。 能力上限受限於規模——這點我從第一章就講清楚，並在每個實驗裡誠實標注「這個結論的邊界在哪」。",
+    "crumbs": [
+      "前言：一個銀行 IT 為什麼從零刻 LLM"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html",
+    "href": "01-minimal-gpt.html",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "",
+    "text": "1.1 self-attention 是「模糊的 HashMap.get()」\nJava 工程師對 HashMap.get(key) 很熟：拿一個 key 去比對、命中就回傳對應的 value。 self-attention 做的是一個模糊版：每個位置產生一個 query，去跟所有位置的 key 算相似度， 不是只取一個，而是用相似度當權重，把所有 value 加權平均回來。\n\\text{Attention}(Q,K,V)=\\operatorname{softmax}\\!\\Big(\\frac{QK^\\top}{\\sqrt{d}}\\Big)V\n對照到程式碼，這幾行就是上面那條式子（取自 src/model.py 的樸素版 attention）：",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html#self-attention-是模糊的-hashmap.get",
+    "href": "01-minimal-gpt.html#self-attention-是模糊的-hashmap.get",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "",
+    "text": "1att = (q @ k.transpose(-2, -1)) / math.sqrt(hd)\n2att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float(\"-inf\"))\n3att = F.softmax(att, dim=-1)\n4y = att @ v\n\n1\n\nquery 對所有 key 算點積相似度，並除以 \\sqrt{d}（見 小节 1.2）。\n\n2\n\n因果遮罩：把「未來位置」設成 -\\infty，softmax 後變 0——只能看左邊。\n\n3\n\nsoftmax 把相似度轉成一組和為 1 的權重。\n\n4\n\n用權重把所有 value 加權平均，得到這個位置的新表示。\n\n\n\n\n\n\n\n\n注记為什麼要「加權平均」而不是「取最像的那一個」\n\n\n\n取最像的一個（hard attention）不可微，沒法用梯度下降訓練。softmax 的加權平均是個可微的 近似——這也是為什麼深度學習裡到處是 softmax：它把「選擇」變成「平滑、可訓練」的版本。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html#sec-sqrt-d",
+    "href": "01-minimal-gpt.html#sec-sqrt-d",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "1.2 為什麼要除以 \\sqrt{d}",
+    "text": "1.2 為什麼要除以 \\sqrt{d}\n這個不起眼的 \\sqrt{d} 有它的道理。假設 q,k\\in\\mathbb{R}^d 各維獨立、零均值單位變異， 那麼點積 q\\cdot k=\\sum_{i=1}^d q_i k_i 的變異數是：\n\n\\operatorname{Var}(q\\cdot k)=\\sum_{i=1}^d \\operatorname{Var}(q_i k_i)=d.\n\n也就是說標準差約 \\sqrt{d}。維度 d 一大，點積的尺度就跟著放大，softmax 會被推進「幾乎 one-hot」 的飽和區，梯度趨近 0、訓練停滯。除以 \\sqrt{d} 把變異數正規化回 1，讓 softmax 不管維度多大都待在 有梯度的區間。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html#親眼看-attention-在看哪裡",
+    "href": "01-minimal-gpt.html#親眼看-attention-在看哪裡",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "1.3 親眼看 attention 在看哪裡",
+    "text": "1.3 親眼看 attention 在看哪裡\n把訓練好的模型某一層某一個 head 的 attention 權重畫成熱圖，因果結構一目了然：\n\n\n\n\n\n\n图 1.1: attention 熱圖：下三角（只能看左邊）、第一個字只能注意自己、對角線附近權重高＝局部注意。\n\n\n\n图 1.1 的下三角形是因果遮罩的直接後果。把所有 head 攤開看（图 1.2）， 會發現不同 head 有不同分工——早層糊而廣、深層尖而準。\n\n\n\n\n\n\n图 1.2: 16 個 head 的 attention：不同 head 學到不同的「看法」。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html#從一個-block-到一個-gpt",
+    "href": "01-minimal-gpt.html#從一個-block-到一個-gpt",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "1.4 從一個 block 到一個 GPT",
+    "text": "1.4 從一個 block 到一個 GPT\n一個 Transformer block 把 attention 和一個小 MLP 疊起來，各自帶一條 residual connection （x = x + f(x)）。residual 不是裝飾，是承重牆：\n\n\n\n\n\n\n警告residual 是承重牆，不是裝飾\n\n\n\n我做過一個實驗：把 model.py 裡的 x + 拿掉、其他不變。結果 val loss 卡在 3.36（≈亂猜）， 有 residual 才掉到 1.77。沒有它，深層網路的梯度會消失、根本訓不動。ResNet 在 2015 年就是用它 解鎖了「疊很深」。\n\n\n把 N 個 block 疊起來、前面接 token embedding、後面接一個線性層輸出每個字的機率，就是一個 decoder-only GPT。訓練目標單純到不可思議——就是「預測下一個 token」的 cross-entropy（見 章节 5）。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "01-minimal-gpt.html#帶走什麼",
+    "href": "01-minimal-gpt.html#帶走什麼",
+    "title": "1  最小的 GPT：從 attention 到自回歸",
+    "section": "1.5 帶走什麼",
+    "text": "1.5 帶走什麼\n\nself-attention = 模糊的 HashMap.get()：query 對所有 key 算相似度 → softmax → 加權平均 value。\n\\sqrt{d} 縮放是為了讓 softmax 不飽和——一個用變異數論證就能推出來的小細節。\nresidual 是讓深層網路訓得動的承重牆，不是可有可無。\n整個 GPT 的訓練目標就一句話：給前文、預測下一字。\n\n\n\n\n\n\n\n提示動手\n\n\n\n把 repo 裡 make attn 跑起來，改 --layer/--head 看不同 head；再試著（在你腦中或紙上） 預測「如果把 \\sqrt{d} 拿掉會怎樣」，然後真的改一行去跑，看 loss 變化。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>最小的 GPT：從 attention 到自回歸</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html",
+    "href": "02-modern-components.html",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "",
+    "text": "2.1 一個會幫你預測對的問題：準 vs 省\n第 1 章我們把一個最小的 GPT 刻出來了。它能跑、能訓、能生成，但用的是 2017 年原版 Transformer 的零件。過去幾年，主流的開源模型（LLaMA、Mistral）把這些零件一個個換掉了。這一章我們也來換， 但不是盲目換——我把 src/model.py 寫成可以用設定開關一鍵切換每個零件，然後一個一個做對照實驗， 親眼看它到底有沒有用。\n做這些對照時我學到最重要的一件事，不是「哪個零件更好」，而是一個能讓你事先預測對的分類法：\n這個問題之所以重要，是因為我自己第一次就猜錯。我以為把 LayerNorm 換成 RMSNorm 會讓 loss 變好—— 結果幾乎沒變。後來才懂：RMSNorm 是「省」，不是「準」。建立這個分類法之後，SwiGLU 和 RoPE（兩個都是 「準」）我就猜對了。\n下面四節，每節一個零件；最後把它們全部開起來，看會發生什麼有趣的事。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#一個會幫你預測對的問題準-vs-省",
+    "href": "02-modern-components.html#一個會幫你預測對的問題準-vs-省",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "",
+    "text": "每個改進不是讓模型更準（降 loss），就是讓它更省（同樣準、但少算/少存）。換零件前先問它在哪一軸。\n\n\n\n\n\n\n\n\n提示別預期每個現代技巧都降 loss\n\n\n\n這是新手最常見的誤會。看到「LLaMA 用了 X」就以為 X 會讓模型更聰明。很多現代零件其實是在省 （記憶體、計算、KV-cache），準度持平。先問「準還是省」，你會少猜錯一半。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#rmsnorm更省的正規化省",
+    "href": "02-modern-components.html#rmsnorm更省的正規化省",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.2 RMSNorm：更省的正規化（省）",
+    "text": "2.2 RMSNorm：更省的正規化（省）\nLayerNorm 對每個位置的向量做 (x-\\text{均值})/\\text{標準差}，再縮放平移——要算均值和變異數。 RMSNorm 砍掉「減均值」這一步，只除以均方根（RMS）：\nclass RMSNorm(nn.Module):\n    def forward(self, x):\n1        rms = torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)\n2        return x * rms * self.weight\n\n1\n\n只算均方根，不減均值、不要 bias——比 LayerNorm 少一半的統計量。\n\n2\n\n縮放回去。就這樣，沒有平移項。\n\n\n實驗：LayerNorm val loss 1.7712 vs RMSNorm 1.7724——平手。這正是「省」型零件的標準長相： 同樣準、但更省、更穩。現代 LLM 幾乎都換成它，不是因為它更準，是因為它一樣準卻更便宜。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#swiglu更準的前饋層準",
+    "href": "02-modern-components.html#swiglu更準的前饋層準",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.3 SwiGLU：更準的前饋層（準）",
+    "text": "2.3 SwiGLU：更準的前饋層（準）\n原版 MLP 是 x → Linear → GELU → Linear。SwiGLU 多開一條並行投影當「閘門」，用 SiLU 啟動後去乘 另一條，再投影回去：\\text{down}(\\text{SiLU}(\\text{gate}(x))\\odot \\text{up}(x))。\nclass SwiGLU(nn.Module):\n    def forward(self, x):\n1        return self.dropout(self.w_down(F.silu(self.w_gate(x)) * self.w_up(x)))\n\n1\n\nw_gate 過 SiLU 當閘門、去乘 w_up——讓網路能「動態決定讓多少訊號通過」。\n\n\n為了公平對比，我把 hidden 維度取 \\frac83 n_\\text{embd}（而非 4n_\\text{embd}），讓參數量跟原版 MLP 幾乎相同。\n實驗：GELU MLP 1.7712 vs SwiGLU 1.6810——真降 0.09，遠超雜訊。這次我用了新武器「先問準還是省」， SwiGLU 是「準」，所以猜對了它會降 loss。現代化記分板：RMSNorm 同準更省、SwiGLU 真更準。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#rope把位置編成相對距離準-解鎖外推",
+    "href": "02-modern-components.html#rope把位置編成相對距離準-解鎖外推",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.4 RoPE：把位置編成「相對距離」（準 + 解鎖外推）",
+    "text": "2.4 RoPE：把位置編成「相對距離」（準 + 解鎖外推）\n原版 GPT 用一張「學習式位置 embedding」記每個絕對位置。RoPE 改用一個漂亮的點子：把位置資訊編進 「對 query 和 key 做旋轉」——位置 m 的 query 旋轉 m\\theta、位置 n 的 key 旋轉 n\\theta。神奇的是， 旋轉後的內積只跟相對位置 n-m 有關（完整證明見 小节 3）。\ndef apply_rope(x, cos, sin, offset=0):\n1    x1, x2 = x[..., ::2], x[..., 1::2]\n2    rx1 = x1 * cos - x2 * sin\n    rx2 = x1 * sin + x2 * cos\n    return torch.stack([rx1, rx2], dim=-1).flatten(-2)\n\n1\n\n把相鄰兩維當成平面上一個點。\n\n2\n\n旋轉它——旋轉不改變長度、只改方向，於是 q\\cdot k 自然變成相對位置的函數。\n\n\n實驗：學習式位置 1.7712 vs RoPE 1.6248——降 0.146（比 SwiGLU 還多），而且參數更少 （不需要學習式位置那張表）。連我都猜錯了——以為固定長度下兩者差不多，結果 RoPE 大勝。為什麼？ 因為「相對距離」是比「絕對位置」更好的 inductive bias。\n而 RoPE 真正的招牌好處是外推：\n\n\n\n\n\n\n图 2.1: 在長度 64 上訓練、評估到 256：學習式位置一過 64 就爆（1.93→2.79），RoPE 幾乎平（1.82→2.11）。\n\n\n\n讀 图 2.1 的三步：① 看軸；② 找虛線（訓練長度 64）；③ 只看過虛線之後兩條線怎麼分岔——重點是 相對差距，不是絕對高度。學習式位置一旦遇到「訓練時沒見過的長度」就崩，RoPE 因為看的是相對距離、 幾乎不受影響。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#gqa共用-kv-頭砍-kv-cache省",
+    "href": "02-modern-components.html#gqa共用-kv-頭砍-kv-cache省",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.5 GQA：共用 KV 頭，砍 KV-cache（省）",
+    "text": "2.5 GQA：共用 KV 頭，砍 KV-cache（省）\n標準的 multi-head attention，每個頭都有自己的 query、key、value。GQA（grouped-query attention）讓 多個 query 頭共用少數幾組 key/value——省下生成時要快取的 KV 量。\n實驗：MHA 1.7712 / GQA(2 組) 1.7974 / MQA(1 組) 1.8126。品質微降，換來 KV-cache 砍半（GQA）或砍到 四分之一（MQA）。這是個「省」型零件、而且是個甜蜜點——LLaMA-2/3、Mistral 都用 GQA。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#全部開起來一鍵-llama-配方",
+    "href": "02-modern-components.html#全部開起來一鍵-llama-配方",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.6 全部開起來：一鍵 LLaMA 配方",
+    "text": "2.6 全部開起來：一鍵 LLaMA 配方\n四個零件全開（--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2），val loss 從原版 1.7712 降到 1.5691——低 11%，而且參數更少（0.73M vs 0.81M）。但最有意思的是改善怎麼疊起來的：\n\n\n\n\n\n\n注记改善幾乎完全相加\n\n\n\n天真地把每個零件的改善加起來，預測 1.561；實際跑出來 1.569，只差 0.008。為什麼這麼接近？因為四個 零件各修不同的地方——RMSNorm 修 norm、SwiGLU 修 MLP、RoPE 修位置、GQA 修 KV——互補、不重疊。 所以 model.py 現在可以一鍵在「GPT-2 配方」和「LLaMA 配方」之間切換。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "02-modern-components.html#帶走什麼",
+    "href": "02-modern-components.html#帶走什麼",
+    "title": "2  把它變現代：RMSNorm、SwiGLU、RoPE、GQA",
+    "section": "2.7 帶走什麼",
+    "text": "2.7 帶走什麼\n\n換任何現代零件前，先問「它優化準還是省」——這個分類法會幫你預測對，也讓你不會對「省」型零件 失望（它本來就不該降 loss）。\n記分板：RMSNorm 同準更省、SwiGLU +0.09 準、RoPE +0.146 準且省參數且解鎖外推、GQA 微降換 KV 砍半。\nRoPE 把位置編成相對距離，所以外推好——這是個用一行旋轉矩陣的代數就能理解的漂亮設計。\n互補的零件可以疊加，效果幾乎相加。\n\n\n\n\n\n\n\n提示動手\n\n\n\n把 repo 的 make train run_name=modern args=\"--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2\" 跑起來，跟原版疊在同一張 loss 曲線上比。再挑一個零件，先預測它是準還是省，然後跑去驗證。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span>"
+    ]
+  },
+  {
+    "objectID": "03-efficiency.html",
+    "href": "03-efficiency.html",
+    "title": "3  跑多快：FlashAttention、KV-cache、取樣",
+    "section": "",
+    "text": "3.1 FlashAttention：同樣的數學，更省的算法\n第 2 章的零件多半在改「準」或改架構。這一章我們看純粹的「跑得快、佔得少」——以及一個重要的教訓： 效率技巧的好處跟你的 regime 強相關，不能照搬論文結論。\n回想第 1 章的 attention：它會把整個 T\\times T 的分數矩陣 \\frac{QK^\\top}{\\sqrt d} 攤出來、做 softmax、 再乘 V。問題是那個矩陣是 O(T^2) 的記憶體——序列一長就爆。\nFlashAttention 的洞見是：最終結果不需要把整個矩陣存下來。它把計算分塊（tiling），邊算邊累加， 用一個數值穩定的線上 softmax，讓記憶體從 O(T^2) 降到 O(T)。關鍵是——數學上完全一樣，不是近似。\n在程式碼裡，這甚至只是換一個呼叫：\n實測：同一台機器（RTX 5070、8 GB），樸素 attention 的 context 上限約 1024，換 FlashAttention 後 約 4096——同樣的卡，4 倍。這是純粹的「省」（記憶體），讓你能訓更長的 context。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>跑多快：FlashAttention、KV-cache、取樣</span>"
+    ]
+  },
+  {
+    "objectID": "03-efficiency.html#flashattention同樣的數學更省的算法",
+    "href": "03-efficiency.html#flashattention同樣的數學更省的算法",
+    "title": "3  跑多快：FlashAttention、KV-cache、取樣",
+    "section": "",
+    "text": "1y = F.scaled_dot_product_attention(q, k, v, is_causal=True)\n\n1\n\nPyTorch 內建的 FlashAttention。is_causal=True 幫忙做因果遮罩。結果跟第 1 章那個樸素版「逐位相等」， 我寫了測試驗證兩者 logits 差只有 6\\times10^{-7}。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>跑多快：FlashAttention、KV-cache、取樣</span>"
+    ]
+  },
+  {
+    "objectID": "03-efficiency.html#sec-kvcache",
+    "href": "03-efficiency.html#sec-kvcache",
+    "title": "3  跑多快：FlashAttention、KV-cache、取樣",
+    "section": "3.2 KV-cache：一個「不一定更快」的反例",
+    "text": "3.2 KV-cache：一個「不一定更快」的反例\n生成是自回歸的：吐一個 token、接回去、再吐下一個。問題是每多一個 token，attention 就要重算前面所有 token 的 key 和 value——這是 O(T^2) 的重複勞動。KV-cache 的點子很直觀：把算過的 key/value 快取起來， 每步只算「新 token」那一個，理論上 O(T^2)\\to O(T)。\n聽起來一定更快，對吧？我也這麼以為。然後我去量了。\n\n\n\n\n\n\n警告「省」不等於「快」——要看 regime\n\n\n\n我實測 KV-cache 在 CPU 長生成快 2.2×（符合預期）。但在我的 GPU + 小模型（8M）+ 短生成， 反而慢約 18%。為什麼？\nKV-cache 讓你「一次只算一個 token」。在 GPU 上，一次算一個 token 浪費了 GPU 的平行度——GPU 喜歡 一次算一大批。再加上每步都有固定的啟動開銷（kernel launch、Python 迴圈）。當模型小、序列短時，這些 per-step 開銷超過了省下來的 O(T^2) 重算。\n結論：一個技巧是否真的省/快，取決於你的 regime（硬體 × 模型大小 × 序列長度），別照搬論文結論—— 量你自己的 workload。\n\n\n這個反例是整本書方法論的縮影，值得停下來體會一下這個形狀：\n\n先預測：KV-cache 一定更快（理論上 O(T^2)\\to O(T)）。\n親手量：在我的 GPU 上反而慢 18%。\n想懂為什麼：平行度浪費 + per-step 開銷 &gt; 省下的重算，在小模型短生成的 regime 裡。\n\n如果只信直覺、不去量，你會在錯的地方優化。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>跑多快：FlashAttention、KV-cache、取樣</span>"
+    ]
+  },
+  {
+    "objectID": "03-efficiency.html#取樣從機率分布裡怎麼抽下一個字",
+    "href": "03-efficiency.html#取樣從機率分布裡怎麼抽下一個字",
+    "title": "3  跑多快：FlashAttention、KV-cache、取樣",
+    "section": "3.3 取樣：從機率分布裡怎麼抽下一個字",
+    "text": "3.3 取樣：從機率分布裡怎麼抽下一個字\n模型每一步輸出的是「下一個字的機率分布」。怎麼從這個分布抽一個字出來，決定了輸出的風格—— 保守正確 vs 大膽創意。常見三招：\n\ntop-k：只留機率最高的 k 個候選，固定數量。\ntop-p（nucleus）：從高到低累積機率到 p 為止——候選數量會自適應（分布尖時少、平時多）。\nmin-p：相對於峰值的門檻（低於「最高機率 × min_p」的都砍掉），2024 年提出，高溫下比 top-p 更穩。\n\n1if top_p is not None:\n    s_logits, s_idx = torch.sort(logits, descending=True, dim=-1)\n    cum = torch.cumsum(F.softmax(s_logits, dim=-1), dim=-1)\n2    remove = cum &gt; top_p\n    ...\n\n1\n\ntop-k 是「固定數量」、top-p 和 min-p 是「自適應截斷」——同一類、差在累積 vs 相對峰值。\n\n2\n\n累積機率超過 p 的尾巴砍掉，只在「核心 (nucleus)」裡抽。\n\n\n\n\n\n\n\n\n提示取樣方法用「人讀」選，不是用 loss\n\n\n\n選哪個由任務決定：要正確的答案就用冷一點、低溫；要創意就用暖一點、min-p。而且評估取樣品質要 用「人讀起來如何」，不是用 loss——loss 量的是「對不對」，不是「好不好讀」。這呼應第 5 章「選對指標」。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>跑多快：FlashAttention、KV-cache、取樣</span>"
+    ]
+  },
+  {
+    "objectID": "03-efficiency.html#帶走什麼",
+    "href": "03-efficiency.html#帶走什麼",
+    "title": "3  跑多快：FlashAttention、KV-cache、取樣",
+    "section": "3.4 帶走什麼",
+    "text": "3.4 帶走什麼\n\nFlashAttention：數學等價、記憶體 O(T^2)\\to O(T)，同卡 context ×4——純粹的省。\nKV-cache 不一定更快：小模型短生成的 GPU 上反而慢 18%。省的技巧是否真省，看你的 regime、量你的 workload。\n取樣方法（top-k/top-p/min-p）的選擇由任務決定，用人讀來判斷，不是 loss。\n這一章的核心不是某個技巧，是一個習慣：別信「一定更快」，去量。",
+    "crumbs": [
+      "第一部　原理",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>跑多快：FlashAttention、KV-cache、取樣</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html",
+    "href": "04-real-data.html",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "",
+    "text": "4.1 英文假設一個個破\n模型架構是一回事，餵它什麼是另一回事——而且後者往往更決定成敗。前面幾章我用的是 1 MB 的英文 莎士比亞，乾淨、小、好懂。這一章我換成 105 MB、11,000 多篇中文維基，看看真實規模的資料會怎麼 把我原本「想當然耳」的假設一個個打破。\n我的 pipeline 是照英文資料寫的。換成中文後，第一批壞掉的是這些：\n每一條都是同一個教訓：跨語言別照搬假設。英文用空白分詞、熵的尺度、甚至「一個 token 多大」， 換到中文全都要重想。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html#英文假設一個個破",
+    "href": "04-real-data.html#英文假設一個個破",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "",
+    "text": "原本（英文玩具）\n換成中文後壞在哪\n修法\n\n\n\n\n用空白切詞做 shingle 去重\n中文沒空白 → 整篇變成「一個詞」→ 去重失效\n改用字元 n-gram\n\n\n兩兩比對 O(n^2)\n11k 篇純 Python 跑「幾小時/卡死」\n加 MinHash + LSH（見 小节 4）\n\n\n熵門檻是英文校準的（3.5–6）\n中文字元熵 9.70，被誤判成「不健康」\n改用熵效率（熵 / \\log_2 vocab，跨語言通用）",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html#minhash-lsh把去重從-on2-降到接近-on",
+    "href": "04-real-data.html#minhash-lsh把去重從-on2-降到接近-on",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "4.2 MinHash + LSH：把去重從 O(n^2) 降到接近 O(n)",
+    "text": "4.2 MinHash + LSH：把去重從 O(n^2) 降到接近 O(n)\n近似去重的天真做法是「每兩篇算一次相似度」——O(n^2)，11k 篇就是上億次比較，純 Python 跑不動。 MinHash + LSH 是經典的解法，背後有漂亮的機率論（完整推導見 小节 4），直覺是：\n\nMinHash：把每篇文件壓成一個短「簽章」，性質是——兩篇的簽章相等的機率，恰好等於它們的 Jaccard 相似度。於是「比簽章」就近似「比相似度」，但便宜得多。\nLSH banding：把簽章切成幾個 band，只有「至少共用一個 band」的文件對才拿出來細比。這讓你 跳過絕大多數不可能相似的對，候選對數量大降。\n\n# src/data/dedup.py：字元 n-gram → MinHash 簽章 → LSH 找候選 → 再算真實 Jaccard 確認\n實測：改造後，11,126 篇中文維基 21.6 秒去完、抓出 161 篇近似重複。舊版（空白切詞 + 兩兩比） 會跑幾小時或直接卡死。這是個純粹的「省」——演算法複雜度的勝利。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html#聚合指標的盲點本章的核心教訓",
+    "href": "04-real-data.html#聚合指標的盲點本章的核心教訓",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "4.3 聚合指標的盲點（本章的核心教訓）",
+    "text": "4.3 聚合指標的盲點（本章的核心教訓）\n去重做完、清洗做完，我算了一輪資料品質指標：字元熵、壓縮比、重複率——全部顯示「資料健康 ✅」。 照理說可以開始訓練了。但我有個從稽核帶來的本能：不信任「總分漂亮」。總分漂亮，常常只是因為 問題被平均掉了。\n所以我做了一件事：把「看資料」這個動作工業化。\n\n\n\n\n\n\n重要一定要「看資料」，並把眼睛固化成程式\n\n\n\n我寫了一套資料品質偵測器：7 條規則（wiki 標記、HTML、控制字元、URL、符號洗版、重複、過短） 掃過全語料，量化每條的命中率、設門檻當資料 gate、並抽出問題片段樣本。\n結果抓到 21.6%（2,407 篇） 文件殘留維基的繁簡轉換語法 -{zh-tw:..;zh-cn:..}-——這是任何聚合 指標都看不到的。熵、壓縮、重複率全說健康，因為這些髒東西只佔每篇的一小部分、被平均稀釋掉了。 只有「真的去看樣本 + 把問題寫成偵測器」才讓它現形。\n修一條清洗規則（解析並抽取繁簡語法），21.6% → 0.05%，整批 gate 從 ❌ 變 ✅。我用監控面板的 before/after 對照圖留下視覺證據。\n\n\n這套偵測器系統的心法，跟我疊稽核控制項是同一個思路：\n\n看樣本發現問題 → 寫成一條偵測器 → 累積成資料的測試套件。\n\n每抓到一種新的髒資料，就多一條偵測器；久了，這套偵測器就成了「資料的回歸測試」——下次語料更新， 跑一遍就知道有沒有舊問題復發、有沒有新問題冒出來。一條來源動到 5–15 條偵測器是常態。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html#收成真實中文-gpt",
+    "href": "04-real-data.html#收成真實中文-gpt",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "4.4 收成：真實中文 GPT",
+    "text": "4.4 收成：真實中文 GPT\n清洗修好後重新跑完整 pipeline：collect 11,126 篇 → 清洗 → 去重 161 篇 → tokenize（字元級、vocab 14,210，全是中文字）→ pack 成 train 31.4M token。訓一個 6 層 / 256 維的現代架構模型（RoPE + GQA + SwiGLU + RMSNorm + Flash），四個成功判準全達標（細節見 章节 5），生成出可讀的中文片段—— 真詞、語法、標點都對，整體不連貫是 8M 小模型的預期水準。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "04-real-data.html#帶走什麼",
+    "href": "04-real-data.html#帶走什麼",
+    "title": "4  真實資料的坑：從 1 MB 英文到 105 MB 中文",
+    "section": "4.5 帶走什麼",
+    "text": "4.5 帶走什麼\n\n跨語言別照搬假設：切詞、熵門檻、token 大小在中文都要重想。\n近似去重靠 MinHash + LSH 從 O(n^2) 降到接近 O(n)——一個有漂亮機率論證的工程勝利。\n聚合指標必要但不夠。 一定要看樣本，並把「看資料的眼睛」寫成偵測器、累積成資料的測試套件。 21.6% 的髒資料，聚合指標全說健康——這是整本書最重要的「相信資料、不相信總分」的一課。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>真實資料的坑：從 1 MB 英文到 105 MB 中文</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html",
+    "href": "05-evaluation.html",
+    "title": "5  不騙自己的評估",
+    "section": "",
+    "text": "5.1 先講判準，再驗證\n訓練一個模型不難，難的是「誠實地知道它到底好不好」。這一章講四件事：先講判準、用對的尺、知道什麼 時候該重複跑、以及——最重要的——質疑你的尺有沒有被汙染。\n最容易自欺的方式，是訓完之後才去找「它哪裡好」。所以我的紀律是訓練前先寫死「什麼叫成功」， 訓完逐項對，不事後移動球門：\n注意「亂猜基準」那一格：一個 vocab 14,210 的模型，如果完全亂猜，loss 就是 \\ln 14210 \\approx 9.56。 所以 val loss 從 9.59 掉到 3.67，第一件事就證明了「它真的在學」，而不是我在自我感覺良好。先有基準， 數字才有意義。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html#先講判準再驗證",
+    "href": "05-evaluation.html#先講判準再驗證",
+    "title": "5  不騙自己的評估",
+    "section": "",
+    "text": "判準\n怎麼量\n結果\n\n\n\n\n有沒有在學？\nval loss vs 亂猜基準 \\ln 14210 = 9.56\n9.59 → 3.67 ✅\n\n\n會不會類推？\ntest loss ≈ val loss？\ntest 3.695 ≈ val 3.677（gap 0.018）✅\n\n\n學了多少？\nBPC vs 無條件熵 9.70\n5.33 bits/char（靠上下文砍 45%）✅\n\n\n像不像中文？\n質性讀生成樣本\n真詞/語法/標點對，整體不連貫＝小模型水準 ✅",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html#用對的尺bpc-而不是-raw-loss",
+    "href": "05-evaluation.html#用對的尺bpc-而不是-raw-loss",
+    "title": "5  不騙自己的評估",
+    "section": "5.2 用對的尺：BPC 而不是 raw loss",
+    "text": "5.2 用對的尺：BPC 而不是 raw loss\n我做了 char-level 和 BPE 兩種 tokenizer 的對比，結果踩到一個陷阱：\n\n\n\n\n\n\n警告跨 tokenizer 的 raw loss 不能比\n\n\n\nchar（vocab 65）的 cross-entropy 是 1.77，BPE（vocab 365）是 3.34——看起來 char 大勝？錯。 兩者的「類別數」不同（65 類 vs 365 類），cross-entropy 的尺度本來就不一樣，不能直接比。\n公平的指標是 BPC（bits per character）：\n\\text{BPC}=\\frac{\\text{loss}}{\\ln 2}\\Big/\\frac{\\text{字元數}}{\\text{token 數}}\n把它換算到「每個字元幾 bit」這個跨 tokenizer 通用的尺度上。換完：char 2.56 vs BPE 2.37——其實是 BPE 更好、而且序列只有一半長。換對尺，結論整個翻過來。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html#重大性原則什麼時候該跑多-seed",
+    "href": "05-evaluation.html#重大性原則什麼時候該跑多-seed",
+    "title": "5  不騙自己的評估",
+    "section": "5.3 重大性原則：什麼時候該跑多 seed",
+    "text": "5.3 重大性原則：什麼時候該跑多 seed\n單次訓練跑出來的數字，帶著抽樣的運氣。我用多 seed（跑 N 個不同隨機種子，報 mean ± std + 誤差線） 確認了第 2 章 SwiGLU/RoPE 的改善是真的：\n\n\n\n\n\n\n图 5.1: 多 seed：報 mean ± std，誤差棒不重疊才宣稱有差異。\n\n\n\n實測 3 seed：classic 1.787±.007、SwiGLU 1.678±.010、RoPE 1.625±.006。SwiGLU 比 classic 差 0.109，是雜訊 （≈0.01）的 11 倍；RoPE 差 0.162，是 22 倍——確認是真差異，不是運氣。我還抓到一件事：之前單次跑的 classic baseline 1.7712 其實是運氣偏低，真實 mean 是 1.787——單一裸數字會騙人。\n但多 seed 不必每次做。它的價值非均勻：\n\n\n\n\n\n\n提示重大性原則（借自稽核）\n\n\n\n大差距（如 SwiGLU/RoPE）單次跑就看得出來，多 seed 是冗餘的。多 seed 真正有用的場合，是「差距小到 跟雜訊同級」的決策——那時單次會誤導你。\n所以原則是：只在「差距小、決策貴、或要對外宣稱」時才加做多 seed。 這跟稽核的重大性原則一模一樣： 不是每個科目都查到底，是把查核力氣放在「錯了會出大事」的地方。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html#選對指標一把被汙染的尺如何給出相反的結論",
+    "href": "05-evaluation.html#選對指標一把被汙染的尺如何給出相反的結論",
+    "title": "5  不騙自己的評估",
+    "section": "5.4 選對指標：一把被汙染的尺如何給出相反的結論",
+    "text": "5.4 選對指標：一把被汙染的尺如何給出相反的結論\n這是整本書最重要的一課，我用後訓練的一個真實例子來講（完整脈絡在第 7 章）。\n做完 SFT（指令微調）後，我要評估它有沒有變好。直覺是用「維基 perplexity」——結果顯示 SFT 變爛了 （perplexity 升高）。如果我就此下結論，我會說「SFT 沒用」。但那把尺被汙染了：\n\n維基 perplexity 是預訓練的尺。SFT 為了學會「應答格式」付出了 alignment tax，在「續寫維基」這件 它不再專注的事上自然變差——但這不代表它變笨。\n我退一步，改量「回答段對 gold 答案的 loss」，以為這樣公平。結果還是被汙染：gold 答案是維基定義句， base 模型預訓練時看過，所以 base 的 loss 反而低。尺又一次騙了我。\n\n最後我換成量「行為」而不是「背特定答案」：生成式應答行為率——給一個問題，模型是否以定義句回應 （不需要 gold）。結果 base 29% → SFT 72%，才終於看出 SFT 的真價值。\n\n同一顆模型、不同的尺、相反的結論。 用維基 perplexity 它「變爛」、用行為率它「大幅變好」。差別 不在模型，在我選的尺有沒有被汙染。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "05-evaluation.html#帶走什麼",
+    "href": "05-evaluation.html#帶走什麼",
+    "title": "5  不騙自己的評估",
+    "section": "5.5 帶走什麼",
+    "text": "5.5 帶走什麼\n\n先講判準、再驗證，並且永遠先有「亂猜基準」，數字才有意義。\n跨 tokenizer 用 BPC 比，不用 raw loss——換對尺，結論可能整個翻。\n多 seed 看重大性原則：只在差距小、決策貴、要對外宣稱時做，不必每次。\n評估的真正難點，是選對指標、並質疑它有沒有被汙染。 這個形狀會在第 7 章的對齊一再出現—— SFT 的尺被汙染、DPO 的 train-acc 騙人、RLHF 的 reward model 被鑽。學會質疑你的尺，比學會任何單一 技巧都重要。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>不騙自己的評估</span>"
+    ]
+  },
+  {
+    "objectID": "06-deploy-governance.html",
+    "href": "06-deploy-governance.html",
+    "title": "6  上線與治理：把稽核接到 ML",
+    "section": "",
+    "text": "6.1 從訓練到服務\n前面五章我們把一個模型訓出來、評估好了。但「訓出一個好模型」和「有一個能上線、能被呼叫、能被稽核 的系統」是兩回事。這一章把模型一路推到「能上線、能治理」——用我熟悉的企業 IT 視角。\n服務跟訓練要的東西完全不同：要快、要能被呼叫、要看得到、要可重現、要可治理。我把它一層層接起來：",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>上線與治理：把稽核接到 ML</span>"
+    ]
+  },
+  {
+    "objectID": "06-deploy-governance.html#從訓練到服務",
+    "href": "06-deploy-governance.html#從訓練到服務",
+    "title": "6  上線與治理：把稽核接到 ML",
+    "section": "",
+    "text": "推論 API：用 FastAPI 把模型包成服務，常駐載入 checkpoint 和 tokenizer。端點有 /health （就緒探針，回模型載好沒、device、參數量）、/generate（主端點，回生成文字 + 延遲 + 吞吐）、 /metrics（給 Prometheus 抓）、/model（治理，回報自己是哪顆模型）。\n可觀測性：Prometheus metrics（請求數、延遲 histogram、生成 token 數）加結構化 JSON 日誌， 每個請求自動計數、計時、記狀態。一裝上就抓到一個現象：\n\n\n\n\n\n\n\n注记可觀測性立刻抓到「冷啟動」\n\n\n\n我沒特別找，metrics 一上線就顯示：第一個 /generate 請求約 354 ms，暖機後降到約 50 ms。 原因是首次呼叫時 CUDA kernel 要即時編譯。這種「你不量就不知道、量了立刻看到」的東西，正是可觀測性 的價值——它把模糊的「好像第一次比較慢」變成「354 vs 50 ms」的事實。\n\n\n\n容器化：用 Podman + GPU（透過 CDI passthrough）把服務打包。模型權重用 runtime mount 掛進去、 跟映像解耦——換模型不用重 build 映像。\n監控儀表板：Prometheus + Grafana，用一個 podman pod 把 API、Prometheus、Grafana 三個容器放在 一起、共享 localhost。\n\n\n\n\n\n\n\n提示podman pod 就是 k8s「Pod」的微縮版\n\n\n\n把多個容器放進一個 pod、共享網路命名空間、互相用 localhost 找得到——這正是 Kubernetes「Pod」概念的 微縮版。單機這樣剛好夠；要多副本、跨機、自動擴縮，才需要真的 k8s。從這裡到 k8s 是一條平滑的路。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>上線與治理：把稽核接到 ML</span>"
+    ]
+  },
+  {
+    "objectID": "06-deploy-governance.html#模型治理對線上的模型答得出四個稽核問題",
+    "href": "06-deploy-governance.html#模型治理對線上的模型答得出四個稽核問題",
+    "title": "6  上線與治理：把稽核接到 ML",
+    "section": "6.2 模型治理＝對「線上的模型」答得出四個稽核問題",
+    "text": "6.2 模型治理＝對「線上的模型」答得出四個稽核問題\n這是我最想經營的一段。在銀行，任何上線的東西都要能回答稽核：這是誰改的、改了什麼、測過沒、誰批准。 我把同一套骨架搬到模型上——只是對象從應用程式換成 model checkpoint：\n\n\n\n\n\n\n重要治理的四問\n\n\n\n\n哪一個？ 模型身份用 ckpt 的 sha256 digest——像 container image digest 或 cosign 簽章，不靠 檔名。檔名會騙人、會被覆寫；digest 是內容的指紋。\n吃什麼訓的？ lineage（血緣）：每筆註冊綁上資料 digest + 資料品質 gate 結果 + config + git commit。 問「這顆模型是用哪批資料、哪份設定、哪個 commit 訓的」要答得出來。\n表現如何？ model card：一份人讀的單據（registry/cards/&lt;digest&gt;.md），記錄這顆模型的評估數字、 用途、限制。而且它進 git——成為審計軌跡的一部分。\n憑什麼上線？ promotion gate：沒過資料品質 gate、沒過評估，就擋下——上線不是「誰想推就推」， 是被程式 enforce 的。服務端 /model 會回報自己跑的 digest + registry 狀態，確認線上那顆是不是被批准 的那顆（回報 UNREGISTERED 就是稽核紅旗）。\n\n\n\n這四問為什麼重要？因為模型治理的本質，跟 IT 變更管理是同一件事——只是多了「資料」這個變數。 而「要可審計軌跡、要 gate、要能回答稽核」正是我的本能。這是治理/稽核背景轉進 ML 的最大優勢， 不是包袱。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>上線與治理：把稽核接到 ML</span>"
+    ]
+  },
+  {
+    "objectID": "06-deploy-governance.html#進階會腐壞的系統要持續顧",
+    "href": "06-deploy-governance.html#進階會腐壞的系統要持續顧",
+    "title": "6  上線與治理：把稽核接到 ML",
+    "section": "6.3 進階：會腐壞的系統要持續顧",
+    "text": "6.3 進階：會腐壞的系統要持續顧\nDevOps 的 ML 版（MLOps）比 DevOps 多了兩個變數：資料，和模型會腐壞（data drift）。所以模型 永遠不算「做完」——要持續監控、必要時重訓。我做了嬰兒版但完整的迴圈：\n\n\n\n\n\n\n\n項\n做什麼\n\n\n\n\n漂移監控\n線上請求分布 vs 訓練分布（OOV + 分箱 PSI），偏離就建議重訓\n\n\n重訓迴圈\n資料→訓練→評估→註冊→gate→promote 的自動外圈，含回歸檢查（新模型比現行差就擋下）\n\n\n金絲雀 / A-B\n同時載兩顆模型、導 N% 流量到候選、按版本分標比較\n\n\nshadow 比對\n候選在「影子」裡跟著算同一輸入、回報與現行的一致率（不拖延遲）\n\n\n量化壓縮\nfp16 / int8，量「大小 vs 品質」的取捨\n\n\n\n\n\n\n\n\n\n警告放量決策別只看一個數字\n\n\n\n我訓了一顆真候選（8000 步，test_loss 3.46 &lt; 現行 3.70），但它跟現行的輸出一致率只有 67.5%。 低一致率「不是壞事」——是它真的學到更好的東西，更好的模型本來就該跟舊的不一樣。所以放行的硬條件 是「品質 gate（更好就放行）」，一致率只告訴你「改動多大、要多謹慎驗」。把一致率當硬門檻，會擋掉每一次 真進步。這又是一個「選對指標」的例子。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>上線與治理：把稽核接到 ML</span>"
+    ]
+  },
+  {
+    "objectID": "06-deploy-governance.html#帶走什麼",
+    "href": "06-deploy-governance.html#帶走什麼",
+    "title": "6  上線與治理：把稽核接到 ML",
+    "section": "6.4 帶走什麼",
+    "text": "6.4 帶走什麼\n\n服務要快、可觀測、可重現、可治理——訓練只是整條鏈的一段。\n模型治理＝對線上模型答得出稽核四問（哪一個 / 吃什麼訓的 / 表現如何 / 憑什麼上線），骨架跟 IT 變更管理一致。\n模型會腐壞，所以要持續監控 + 重訓；放量決策的硬條件是品質 gate，別把「改動幅度」當門檻。\n治理/稽核背景在 MLOps 是差異化優勢——你的本能（要審計軌跡、要 gate）正是這個領域稀缺的。",
+    "crumbs": [
+      "第二部　工程",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>上線與治理：把稽核接到 ML</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html",
+    "href": "07-alignment.html",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "",
+    "text": "7.1 SFT：從「會接話」到「會聽話」\n我把對齊的兩個家族都親手走過：偏好優化（DPO → IPO）和 RL 對齊（GRPO → PPO）， 每個都有對照實驗。這一章是整本書的皇冠。\n第一步 SFT（指令微調）很單純：在「問：…答：…」的對話格式上續訓，模型的行為就從「續寫維基」 變成「在『答：』的位置產生回應」。\n但評估它馬上踩到第 5 章那個坑的進階版：用維基 perplexity 量，SFT 看起來變爛了。真相是 尺被汙染（alignment tax + gold 答案洩漏進預訓練）。改量「應答行為率」，base 29% → SFT 72%—— 選對指標，結論才對。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html#dpo免-reward-model-的捷徑與它的封閉式",
+    "href": "07-alignment.html#dpo免-reward-model-的捷徑與它的封閉式",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "7.2 DPO：免 reward model 的捷徑，與它的封閉式",
+    "text": "7.2 DPO：免 reward model 的捷徑，與它的封閉式\nDPO（直接偏好優化）給一組「同一個問題、一好一壞」的回答，用一條封閉式損失直接優化偏好， 不需要訓練 reward model、也不需要 RL：\ndef dpo_loss(policy_lp, ref_lp, beta):\n1    margin = _margin(policy_lp, ref_lp)\n2    loss = -F.logsigmoid(beta * margin).mean()\n    acc = (margin &gt; 0).float().mean()\n    return loss, margin.mean().item(), acc.item()\n\n1\n\nmargin = chosen 與 rejected 各自「policy 相對 reference 的對數機率比」之差。\n\n2\n\n損失把這個 margin 推大——拉高 chosen、壓低 rejected。\n\n\n這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」 （完整證明見 小节 1）。\n\n7.2.1 死背 vs 真學：train-acc 會騙你\n我設了兩種偏好軸——一種模型容量內、一種超出容量——然後看它們類推得如何：\n\n\n\n\n\n\n图 7.1: 兩種偏好軸：train-acc 都衝 100%，held-out 才說真話。\n\n\n\n\n\n\n\n\n\n警告看 held-out，不要看 train\n\n\n\n图 7.1 裡兩條 train 線（虛線）都衝到 100%——只看 train 你會說「兩個都學會了」。但 held-out （實線）一個 97%、一個只有 9%。後者需要「標題↔︎內容」的語義綁定，8M 模型學不動、只能把訓練題 背起來。這是 MLOps 鐵則：看 held-out、別看 train。\n\n\n\n\n7.2.2 精修 β：一個被資料打臉的直覺\nDPO 唯一的旋鈕是 β。教科書直覺是「β 大＝KL 罰得重＝貼緊 reference」。我掃了 β，結果固定步數下 剛好相反——β 越小，policy 漂移越大（為什麼見 小节 2）。\n\n\n\n\n\n\n图 7.2: β 旋鈕：小 β 反而更激進（漂移更大）。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html#ipo把margin-推到無窮改成回歸固定目標",
+    "href": "07-alignment.html#ipo把margin-推到無窮改成回歸固定目標",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "7.3 IPO：把「margin 推到無窮」改成「回歸固定目標」",
+    "text": "7.3 IPO：把「margin 推到無窮」改成「回歸固定目標」\nDPO 的 logistic 損失飽和後梯度雖小卻永不歸零 → margin 被一路推爆 → 過度優化。IPO 改用平方損失 (m-\\frac{1}{2\\beta})^2，給 margin 一個有限目標，到了就停。\n\n\n\n\n\n\n图 7.3: DPO vs IPO：DPO margin 爆衝、IPO 釘在目標；但 clean 偏好上 DPO 反而較準。\n\n\n\n\n\n\n\n\n\n提示防過度優化的工具不是「無腦更好」\n\n\n\n图 7.3 右圖：clean 偏好上 IPO held-out 78% &lt; DPO 97%。IPO 拿準度換穩定，它的勝場在「過度優化 會傷」的場景（偏好含雜訊時 DPO 會死記）。煞車是保險，不是免費的。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html#rlhf-之一-grpo與招牌坑-reward-hacking",
+    "href": "07-alignment.html#rlhf-之一-grpo與招牌坑-reward-hacking",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "7.4 RLHF 之一 — GRPO，與招牌坑 reward hacking",
+    "text": "7.4 RLHF 之一 — GRPO，與招牌坑 reward hacking\nDPO 把 reward 隱含在 policy 裡；RLHF 把它做成一顆獨立的 reward model，再用 RL 去最大化它。 我用 GRPO（DeepSeek，不需 critic）做，並刻意演示對齊最有名的坑：\n\n\n\n\n\n\n图 7.4: reward hacking：拿掉 KL 錨，RM 分數（代理）暴漲、輸出多樣性（真實）崩潰。\n\n\n\n\n\n\n\n\n\n重要Goodhart：指標一旦變成目標，就不再是好指標\n\n\n\n图 7.4：拿掉 KL 錨，policy 把 RM 分數從 3.7 衝到 13.2，輸出卻 collapse 成「不管問什麼都吐 同一串高分垃圾」（多樣性 100%→6%）。那串垃圾落在 RM 訓練分布外、被誤判高分——policy 鑽了漏洞。 這和稽核裡「KPI 被優化就造假」是同一回事。防法＝KL 錨把 policy 綁在可信舊模型附近。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html#rlhf-之二-ppo與-grpo-簡化掉的兩塊",
+    "href": "07-alignment.html#rlhf-之二-ppo與-grpo-簡化掉的兩塊",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "7.5 RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊",
+    "text": "7.5 RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊\n把 GRPO 的精簡還原回 PPO（InstructGPT 用的經典），就看得到 GRPO 丟掉了什麼：\n\n\n\n\n\n\n\n\n零件\nPPO 有\nGRPO 怎麼省\n\n\n\n\nCritic（value 網路）\n學一個基準 A=R-V(x)\n用「同組 K 個回答的平均」當基準\n\n\nClipped surrogate\nratio 夾在 [1\\pm\\epsilon]、可重用 rollout 多 epoch\n一批只訓一次，不需要\n\n\n\n\n\n\n\n\n\n图 7.5: PPO clip：拿掉 clip，一步走太遠把 policy 走崩；clip 把更新夾住就穩。\n\n\n\n图 7.5（為了隔離 clip，刻意關掉 KL 罰）：無 clip 時某一步把 policy 推太遠 → 直接走崩 （多樣性 100%→6%、RM 7.5→0.2）；clip 把 importance ratio 夾住 → 穩定改進。這就是 PPO 名字裡 Proximal（近端） 的意義：逼新 policy 待在舊的附近。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "07-alignment.html#帶走什麼一條貫穿四種方法的主線",
+    "href": "07-alignment.html#帶走什麼一條貫穿四種方法的主線",
+    "title": "7  對齊：把「接龍機器」教成「會聽話、有偏好」",
+    "section": "7.6 帶走什麼：一條貫穿四種方法的主線",
+    "text": "7.6 帶走什麼：一條貫穿四種方法的主線\n\n\n\n方法\n漂亮的機制\n會咬人的坑\n\n\n\n\nSFT\n學會應答格式\n評估的尺被汙染\n\n\nDPO\n配分函數相消、免 RL\ntrain-acc 騙你（死背 vs 真學）\n\n\nIPO\nmargin 有限目標、防過度優化\n不是無腦更好（拿準度換穩定）\n\n\nGRPO\n不需 critic\nreward model 被 hack（Goodhart）\n\n\nPPO\nclip 防破壞性更新\n要隔離一個機制得先關掉會蓋過它的另一個\n\n\n\n\n五個方法，五次「換把尺、結論就翻」。永遠質疑你的指標有沒有被汙染或被鑽——這比任何單一方法都重要。",
+    "crumbs": [
+      "第三部　對齊",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>對齊：把「接龍機器」教成「會聽話、有偏好」</span>"
+    ]
+  },
+  {
+    "objectID": "08-math-appendix.html",
+    "href": "08-math-appendix.html",
+    "title": "附錄：數學推導",
+    "section": "",
+    "text": "RLHF → DPO 封閉式\n命題. RLHF 的約束最佳化\n\\max_{\\pi}\\ \\mathbb{E}_{y\\sim\\pi(\\cdot|x)}[r(x,y)]-\\beta\\,D_{\\mathrm{KL}}\\big(\\pi(\\cdot|x)\\,\\|\\,\\pi_\\text{ref}(\\cdot|x)\\big)\n其最優解為 \\pi^*(y|x)=\\frac{1}{Z(x)}\\pi_\\text{ref}(y|x)\\exp(\\frac1\\beta r(x,y))；由此可導出不需 reward model、 不需 RL 的 DPO 損失。\n推導. 固定 x、加歸一化約束寫 Lagrangian，對 \\pi(y) 偏微分令為 0（用 \\frac{\\partial}{\\partial\\pi}\\pi\\log\\frac{\\pi}{\\pi_\\text{ref}}=\\log\\frac{\\pi}{\\pi_\\text{ref}}+1）得 \\pi^*\\propto\\pi_\\text{ref}\\exp(r/\\beta)。反解 reward：\nr(x,y)=\\beta\\log\\frac{\\pi^*(y|x)}{\\pi_\\text{ref}(y|x)}+\\beta\\log Z(x).\n把待訓練的 \\pi_\\theta 當成它自己隱含獎勵的最優 policy，代進 Bradley-Terry P(y_w\\succ y_l)=\\sigma(r_w-r_l)。\\beta\\log Z(x) 對 y_w,y_l 相同，相減抵消：\n\\mathcal{L}_\\text{DPO}=-\\mathbb{E}\\Big[\\log\\sigma\\Big(\\beta\\log\\tfrac{\\pi_\\theta(y_w|x)}{\\pi_\\text{ref}(y_w|x)}-\\beta\\log\\tfrac{\\pi_\\theta(y_l|x)}{\\pi_\\text{ref}(y_l|x)}\\Big)\\Big].\\quad\\square\n在說什麼. 那個算不出來的配分函數 Z(x) 被相減消掉了——這就是 DPO 不用跑 RL、不用 reward model 的根本原因。",
+    "crumbs": [
+      "附錄",
+      "附錄：數學推導"
+    ]
+  },
+  {
+    "objectID": "08-math-appendix.html#sec-margin-math",
+    "href": "08-math-appendix.html#sec-margin-math",
+    "title": "附錄：數學推導",
+    "section": "為什麼 margin 尺度 ≈ 1/\\beta",
+    "text": "為什麼 margin 尺度 ≈ 1/\\beta\n命題. DPO 單筆損失 \\ell=-\\log\\sigma(\\beta m) 的梯度在 m\\gtrsim 1/\\beta 後才消失。\n推導. \\dfrac{\\partial\\ell}{\\partial m}=-\\beta\\,\\sigma(-\\beta m)=-\\beta(1-\\sigma(\\beta m))。 當 \\beta m\\ll1 梯度約 \\beta/2（還在推）；\\beta m\\gg1 梯度 \\to0（飽和）。所以 DPO 把 m 推到 m\\sim1/\\beta 才鬆手。\\square\n在說什麼. β 越小 → 飽和尺度 1/\\beta 越大 → policy 離 \\pi_\\text{ref} 越遠（漂移越大）。 這就是第 7 章 图 7.2 那個反直覺。誠實標注：1/\\beta 是「梯度消失的尺度」、非精確停點（還受 lr/步數 影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 \\frac{1}{2\\beta}。",
+    "crumbs": [
+      "附錄",
+      "附錄：數學推導"
+    ]
+  },
+  {
+    "objectID": "08-math-appendix.html#sec-rope-math",
+    "href": "08-math-appendix.html#sec-rope-math",
+    "title": "附錄：數學推導",
+    "section": "RoPE：旋轉 = 相對位置",
+    "text": "RoPE：旋轉 = 相對位置\n命題. 位置 m 的 query 旋轉 R_m、位置 n 的 key 旋轉 R_n，內積只跟相對位置 n-m 有關：\n\\langle R_m q,R_n k\\rangle=q^\\top R_m^\\top R_n k=q^\\top R_{n-m}k.\n推導. 旋轉矩陣正交可加：R_a^\\top=R_{-a}、R_aR_b=R_{a+b}，故 R_m^\\top R_n=R_{n-m}。\\square\n在說什麼. attention 分數自動變成相對距離的函數，不靠學習式位置向量——所以 RoPE 外推好 （图 2.1）、又省參數。",
+    "crumbs": [
+      "附錄",
+      "附錄：數學推導"
+    ]
+  },
+  {
+    "objectID": "08-math-appendix.html#sec-minhash-math",
+    "href": "08-math-appendix.html#sec-minhash-math",
+    "title": "附錄：數學推導",
+    "section": "MinHash 碰撞 = Jaccard；LSH 的 S 曲線",
+    "text": "MinHash 碰撞 = Jaccard；LSH 的 S 曲線\n命題. 對隨機排列 \\pi，\\Pr[\\min\\pi(A)=\\min\\pi(B)]=\\frac{|A\\cap B|}{|A\\cup B|}=\\operatorname{Jaccard}(A,B)。\n推導. A\\cup B 中哪個元素被排到最小是均勻的；兩集合 minhash 相等 \\iff 該「全域最小」元素同時在 A,B（即在 A\\cap B）。機率 =|A\\cap B|/|A\\cup B|。\\square\nLSH banding. 把 n 個 minhash 切成 b 個 band、每 band r 行，兩文件至少共用一個 band 的機率 P(s)=1-(1-s^{r})^{b}（s＝Jaccard），是一條 S 曲線、拐點約在 s\\approx(1/b)^{1/r}。調 b,r 就能把 「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。",
+    "crumbs": [
+      "附錄",
+      "附錄：數學推導"
+    ]
+  },
+  {
+    "objectID": "08-math-appendix.html#政策梯度-grpo-的-baseline-為何不偏",
+    "href": "08-math-appendix.html#政策梯度-grpo-的-baseline-為何不偏",
+    "title": "附錄：數學推導",
+    "section": "政策梯度 + GRPO 的 baseline 為何不偏",
+    "text": "政策梯度 + GRPO 的 baseline 為何不偏\n命題. \\nabla_\\theta\\mathbb{E}_{y\\sim\\pi_\\theta}[R(y)]=\\mathbb{E}[R\\,\\nabla\\log\\pi_\\theta]；且減任何與動作無關的 baseline b 不改變期望（因 \\mathbb{E}[\\nabla\\log\\pi_\\theta]=\\sum_y\\nabla\\pi_\\theta=\\nabla\\sum_y\\pi_\\theta=\\nabla1=0）。\n在說什麼. 減 baseline 不偏、但降變異數。PPO 用學來的 critic V(x) 當 baseline；GRPO 改用「同組平均 獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 图 7.5）。\n\n\n\n\n\n\n注记想自己推一遍？\n\n\n\nrepo 的 docs/exercise-dpo-derivation.md 是一份「換你來推」的練習單：每步給目標+提示、答案摺疊， 推完你就握住整個後訓練最漂亮那條數學。",
+    "crumbs": [
+      "附錄",
+      "附錄：數學推導"
+    ]
+  },
+  {
+    "objectID": "99-references.html",
+    "href": "99-references.html",
+    "title": "參考文獻",
+    "section": "",
+    "text": "完整書目\n每塊程式碼出自哪篇論文、哪一年、新還是舊，在 repo 的 docs/theory-map.md 有完整三層對照。 下面按主題列出本書用到的關鍵文獻。\n架構 ：Vaswani 等 (2017年)（Transformer）、Radford 等 (2018年)（GPT）、Zhang 和 Sennrich (2019年)（RMSNorm）、 Shazeer (2020年)（SwiGLU）、Su 等 (2021年)（RoPE）、Ainslie 等 (2023年)（GQA）。\n效率與取樣 ：Dao 等 (2022年)（FlashAttention）、Holtzman 等 (2020年)（nucleus/top-p）。\n資料 ：Sennrich 等 (2016年)（BPE）、Broder (1997年)（MinHash）。\n對齊（注意新舊：RLHF 骨架與 KL 錨是 2017–2022，DPO 2023，GRPO 2024–25） ：Christiano 等 (2017年)、Ziegler 等 (2019年)（KL 錨）、Ouyang 等 (2022年)（InstructGPT）、 Schulman 等 (2017年)（PPO）、Rafailov 等 (2023年)（DPO）、Azar 等 (2023年)（IPO）、Shao 等 (2024年)（GRPO）、 Gao 等 (2023年)（reward model 過度優化）。\n其他 ：Lakshminarayanan 等 (2017年)（deep ensemble）。",
+    "crumbs": [
+      "附錄",
+      "參考文獻"
+    ]
+  },
+  {
+    "objectID": "99-references.html#完整書目",
+    "href": "99-references.html#完整書目",
+    "title": "參考文獻",
+    "section": "",
+    "text": "Ainslie, Joshua et al. 2023. “GQA:\nTraining Generalized Multi-Query Transformer Models from Multi-Head\nCheckpoints.” EMNLP.\n\n\nAzar, Mohammad Gheshlaghi et al. 2023.\n“A General Theoretical Paradigm to Understand Learning from Human\nPreferences.” arXiv:2310.12036.\n\n\nBroder, Andrei Z. 1997. “On the Resemblance and Containment of\nDocuments.” SEQUENCES.\n\n\nChristiano, Paul et al. 2017. “Deep\nReinforcement Learning from Human Preferences.” NeurIPS.\n\n\nDao, Tri et al. 2022. “FlashAttention:\nFast and Memory-Efficient Exact Attention with IO-Awareness.”\nNeurIPS.\n\n\nGao, Leo, John Schulman, and Jacob Hilton. 2023. “Scaling Laws for\nReward Model Overoptimization.” ICML.\n\n\nHoltzman, Ari et al. 2020. “The\nCurious Case of Neural Text Degeneration.” ICLR.\n\n\nLakshminarayanan, Balaji et al. 2017.\n“Simple and Scalable Predictive Uncertainty Estimation Using Deep\nEnsembles.” NeurIPS.\n\n\nOuyang, Long et al. 2022. “Training\nLanguage Models to Follow Instructions with Human Feedback.”\nNeurIPS.\n\n\nRadford, Alec et al. 2018. Improving\nLanguage Understanding by Generative Pre-Training.\n\n\nRafailov, Rafael et al. 2023. “Direct\nPreference Optimization: Your Language Model Is Secretly a Reward\nModel.” NeurIPS.\n\n\nSchulman, John et al. 2017. “Proximal\nPolicy Optimization Algorithms.” arXiv:1707.06347.\n\n\nSennrich, Rico et al. 2016. “Neural\nMachine Translation of Rare Words with Subword Units.”\nACL.\n\n\nShao, Zhihong et al. 2024.\n“DeepSeekMath: Pushing the Limits of Mathematical Reasoning in\nOpen Language Models.” arXiv:2402.03300.\n\n\nShazeer, Noam. 2020. “GLU Variants Improve Transformer.”\narXiv:2002.05202.\n\n\nSu, Jianlin et al. 2021. “RoFormer:\nEnhanced Transformer with Rotary Position Embedding.”\narXiv:2104.09864.\n\n\nVaswani, Ashish et al. 2017.\n“Attention Is All You Need.” NeurIPS.\n\n\nZhang, Biao, and Rico Sennrich. 2019. “Root Mean Square Layer\nNormalization.” NeurIPS.\n\n\nZiegler, Daniel et al. 2019.\n“Fine-Tuning Language Models from Human Preferences.”\narXiv:1909.08593.",
+    "crumbs": [
+      "附錄",
+      "參考文獻"
+    ]
+  }
+]
