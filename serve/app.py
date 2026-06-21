@@ -13,6 +13,7 @@ Java 類比：lifespan 載入 = Spring 的 @PostConstruct 單例 Bean；@app.pos
 import json
 import logging
 import os
+import random
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -31,6 +32,9 @@ from src.registry import load_registry, sha256_file   # noqa: E402
 from src.tokenizer import load_tokenizer   # noqa: E402
 
 ART = Path(os.environ.get("ARTIFACTS", "artifacts"))
+# 金絲雀：設了 CANDIDATE_CKPT 就同時載入候選模型，CANARY_PCT% 的流量導去它
+CANDIDATE_CKPT = os.environ.get("CANDIDATE_CKPT")
+CANARY_PCT = float(os.environ.get("CANARY_PCT", "0"))
 STATE: dict = {}
 
 # ---- 可觀測性：Prometheus metrics（k8s/Grafana 同款標準）----------------------
@@ -40,6 +44,8 @@ LATENCY = Histogram("llm_request_latency_seconds", "請求延遲(秒)", ["endpoi
 TOKENS = Counter("llm_generated_tokens_total", "累計生成 token 數")
 DRIFT_PSI = Gauge("llm_drift_psi", "請求字元分布 vs 訓練分布的 PSI（>0.25 顯著漂移）")
 DRIFT_OOV = Gauge("llm_drift_oov_rate", "請求用到訓練外字元的比例")
+VARIANT = Counter("llm_variant_requests_total", "各版本接到的請求數", ["variant"])
+VARIANT_LAT = Histogram("llm_variant_latency_seconds", "各版本延遲", ["variant"])
 
 # 結構化日誌（每請求一行 JSON → 生產環境送到 log 聚合器）
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -51,21 +57,30 @@ def log_event(**kw):
 
 
 def _load_model():
-    """啟動時載入一次：ckpt + tokenizer 常駐記憶體。"""
+    """啟動時載入一次：ckpt + tokenizer 常駐記憶體（含可選的金絲雀候選模型）。"""
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    ckpt_path = ART / "ckpt.pt"
-    ckpt = torch.load(ckpt_path, map_location=device)
-    cfg = GPTConfig(**ckpt["gpt_config"])
-    model = GPT(cfg).to(device)
-    model.load_state_dict(ckpt["model"])
-    model.eval()
+
+    def load_one(path):
+        ck = torch.load(path, map_location=device)
+        m = GPT(GPTConfig(**ck["gpt_config"])).to(device)
+        m.load_state_dict(ck["model"])
+        m.eval()
+        return m, f"sha256:{sha256_file(path)}"
+
+    model, digest = load_one(ART / "ckpt.pt")
     STATE.update(
-        model=model, cfg=cfg, device=device,
+        model=model, cfg=GPTConfig(**torch.load(ART / "ckpt.pt", map_location=device)["gpt_config"]),
+        device=device,
         tok=load_tokenizer(ART / "tokenizer.json"),
         params_M=round(model.num_params() / 1e6, 3),
-        digest=f"sha256:{sha256_file(ckpt_path)}",   # 服務的模型身份（治理用）
-        drift=DriftMonitor.from_artifacts(ART),       # 以訓練語料為基準的漂移監控
+        digest=digest,                                # production 模型身份
+        drift=DriftMonitor.from_artifacts(ART),
+        candidate=None, candidate_digest=None,
     )
+    if CANDIDATE_CKPT and Path(CANDIDATE_CKPT).exists():
+        cand, cand_digest = load_one(Path(CANDIDATE_CKPT))
+        STATE["candidate"] = cand
+        STATE["candidate_digest"] = cand_digest       # 金絲雀候選
 
 
 @asynccontextmanager
@@ -110,6 +125,8 @@ def model_info():
         "status": match["status"] if match else "UNREGISTERED",
         "metrics": match["metrics"] if match else None,
         "data_quality_gate": match["lineage"].get("data_quality_gate") if match else None,
+        "canary": ({"digest": STATE["candidate_digest"], "traffic_pct": CANARY_PCT}
+                   if STATE.get("candidate") is not None else None),
     }
 
 
@@ -135,6 +152,8 @@ class GenResponse(BaseModel):
     generated_tokens: int
     latency_ms: float
     tokens_per_sec: float
+    variant: str = "production"        # production / canary（金絲雀）
+    served_digest: str | None = None
 
 
 @app.get("/health")
@@ -153,11 +172,19 @@ def health():
 @app.post("/generate", response_model=GenResponse)
 def generate(req: GenRequest):
     """自回歸生成。回傳生成文字 + 延遲/吞吐（線上服務要看得到效能）。"""
-    model, tok, device = STATE["model"], STATE["tok"], STATE["device"]
+    tok, device = STATE["tok"], STATE["device"]
     drift = STATE["drift"]
     drift.observe(req.prompt)                # 餵給漂移監控（累計線上分布）
     DRIFT_PSI.set(drift.psi())
     DRIFT_OOV.set(drift.oov_rate())
+
+    # 金絲雀路由：有候選 + 擲骰子落在 CANARY_PCT% → 走 canary，否則 production
+    if STATE.get("candidate") is not None and random.random() * 100 < CANARY_PCT:
+        model, variant, served = STATE["candidate"], "canary", STATE["candidate_digest"]
+    else:
+        model, variant, served = STATE["model"], "production", STATE["digest"]
+    VARIANT.labels(variant).inc()
+
     ids = tok.encode(req.prompt) or [0]      # 空/全生字 → 用一個起始 token 兜底
     idx = torch.tensor([ids], dtype=torch.long, device=device)
 
@@ -171,11 +198,12 @@ def generate(req: GenRequest):
     if device == "cuda":
         torch.cuda.synchronize()             # 等 GPU 真的算完再計時
     dt = time.perf_counter() - t0
+    VARIANT_LAT.labels(variant).observe(dt)  # 各版本延遲分開記 → 才能 A/B 比較
 
     full = out[0].tolist()
     n_gen = len(full) - len(ids)
     TOKENS.inc(n_gen)                        # 累計生成 token（Prometheus）
-    log_event(event="generate", prompt_len=len(ids), tokens=n_gen,
+    log_event(event="generate", variant=variant, prompt_len=len(ids), tokens=n_gen,
               latency_ms=round(dt * 1000, 1), kv_cache=req.use_kv_cache)  # 結構化日誌
     return GenResponse(
         text=tok.decode(full),
@@ -183,4 +211,6 @@ def generate(req: GenRequest):
         generated_tokens=n_gen,
         latency_ms=round(dt * 1000, 1),
         tokens_per_sec=round(n_gen / dt, 1) if dt > 0 else 0.0,
+        variant=variant,
+        served_digest=served,
     )
