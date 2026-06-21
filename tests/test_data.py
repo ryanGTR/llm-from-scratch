@@ -334,5 +334,24 @@ class TestStats(unittest.TestCase):
         self.assertLess(repetitive, diverse)   # 越重複壓縮比越小
 
 
+class TestServe(unittest.TestCase):
+    """推論 API 冒煙測試（無 ckpt / 無 fastapi 就跳過，CI 不會紅）。"""
+
+    def test_health_and_generate(self):
+        import os
+        if not os.path.exists("artifacts/ckpt.pt"):
+            self.skipTest("無 artifacts/ckpt.pt（尚未訓練）")
+        try:
+            from fastapi.testclient import TestClient
+            from serve.app import app
+        except ImportError:
+            self.skipTest("無 fastapi/torch")
+        with TestClient(app) as c:
+            self.assertTrue(c.get("/health").json()["model_loaded"])
+            r = c.post("/generate", json={"prompt": "數學", "max_new_tokens": 5}).json()
+            self.assertEqual(r["generated_tokens"], 5)     # 生成數量正確
+            self.assertIn("latency_ms", r)                  # 有回報延遲（可觀測）
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

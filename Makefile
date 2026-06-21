@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -83,3 +83,6 @@ bpe:
 
 quality:
 	$(PY) scripts/quality_report.py --doc_sep "<|doc|>"
+
+serve:  ## 起推論 API（http://127.0.0.1:8000/docs）
+	$(PY) -m uvicorn serve.app:app --host 127.0.0.1 --port 8000 --reload
