@@ -14,3 +14,6 @@ data/raw/*.txt
 .ipynb_checkpoints/
 data/raw/demo/
 artifacts/*.csv
+
+# verify 的隔離產物（不碰真 artifacts）
+artifacts/_verify/

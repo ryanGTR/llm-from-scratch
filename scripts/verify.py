@@ -18,6 +18,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artifacts"
+# verify 用獨立的子目錄放 demo 產物，絕不覆寫真實的 artifacts/（不然有真模型在場時，
+# tokenizer.json 會被 demo 的 81 字 vocab 蓋掉 → serve 單元測試 tokenizer/ckpt 不匹配 KeyError）。
+VERIFY_ART = ART / "_verify"
 sys.path.insert(0, str(ROOT))   # 讓 import src.* / tests.* 找得到
 
 # ── 驗收標準（針對示範髒語料 data/raw/demo，與 playbook 文件一致）──────────
@@ -53,16 +56,17 @@ def main():
     print("=" * 60)
 
     # ── 步驟 0：準備乾淨環境，重跑 pipeline（可重現是前提）──────────────
-    print("\n[setup] 重建示範語料並重跑資料 pipeline ...")
+    print("\n[setup] 重建示範語料並重跑資料 pipeline（產物導向 artifacts/_verify，不碰真 artifacts）...")
     run(["python", "scripts/make_messy_corpus.py"])
-    proc = run(["python", "pipeline/01_prepare_data.py", "--input", "data/raw/demo"])
+    proc = run(["python", "pipeline/01_prepare_data.py", "--input", "data/raw/demo",
+                "--artifacts", str(VERIFY_ART)])
     check("pipeline 正常結束（exit 0）", proc.returncode == 0,
           proc.stderr.strip().splitlines()[-1] if proc.returncode else "")
     if proc.returncode != 0:
         return report_and_exit()
 
-    meta = json.loads((ART / "meta.json").read_text())
-    report = json.loads((ART / "data_report.json").read_text())
+    meta = json.loads((VERIFY_ART / "meta.json").read_text())
+    report = json.loads((VERIFY_ART / "data_report.json").read_text())
 
     # ── 驗收項 1：文件進出數 ──────────────────────────────────────────
     check(f"輸入文件數 == {EXPECTED['docs_in']}",
@@ -92,16 +96,16 @@ def main():
           f"實際 {nr.get('dropped')}")
 
     # ── 驗收項 3：清洗確實生效（產物裡不該有髒東西）──────────────────
-    corpus = (ART / "clean_corpus.txt").read_text(encoding="utf-8")
+    corpus = (VERIFY_ART / "clean_corpus.txt").read_text(encoding="utf-8")
     check("乾淨全文不含 HTML 標籤 '<'", "<" not in corpus,
           f"找到 {corpus.count('<')} 個")
     check("乾淨全文不含 NUL 控制字元", "\x00" not in corpus, "")
 
     # ── 驗收項 4：打包的 .bin 能無損 decode 回原文 ───────────────────
     from src.tokenizer import CharTokenizer
-    tok = CharTokenizer.load(ART / "tokenizer.json")
+    tok = CharTokenizer.load(VERIFY_ART / "tokenizer.json")
     a = array("I" if meta.get("token_dtype") == "uint32" else "H")
-    a.frombytes((ART / "train.bin").read_bytes())
+    a.frombytes((VERIFY_ART / "train.bin").read_bytes())
     decoded = tok.decode(list(a))
     check(".bin round-trip：train 解碼回乾淨全文前段",
           corpus.startswith(decoded),

@@ -429,11 +429,16 @@ class TestServe(unittest.TestCase):
         try:
             from fastapi.testclient import TestClient
             from serve.app import app
+            from src.tokenizer import load_tokenizer
         except ImportError:
             self.skipTest("無 fastapi/torch")
+        # prompt 從 tokenizer 自己的 vocab 取字，不綁特定字元——換語料/換 tokenizer 都不會壞
+        # （硬寫「數學」曾在 demo tokenizer 在場時 KeyError）。
+        chars = getattr(load_tokenizer("artifacts/tokenizer.json"), "chars", None)
+        prompt = next((ch for ch in (chars or []) if ch.strip()), "a") * 2
         with TestClient(app) as c:
             self.assertTrue(c.get("/health").json()["model_loaded"])
-            r = c.post("/generate", json={"prompt": "數學", "max_new_tokens": 5}).json()
+            r = c.post("/generate", json={"prompt": prompt, "max_new_tokens": 5}).json()
             self.assertEqual(r["generated_tokens"], 5)     # 生成數量正確
             self.assertIn("latency_ms", r)                  # 有回報延遲（可觀測）
             self.assertEqual(r["variant"], "production")    # 沒設候選 → 全走 production

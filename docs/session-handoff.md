@@ -8,11 +8,12 @@ updated: 2026-06-21
 > `make dpo`/`eval-dpo`、`tests/test_dpo.py` 5 條，全套 `make test` 39 條綠）。核心發現：
 > 兩種偏好軸對照 → format（連貫 vs 退化）held-out **69%→97% 真類推**；topic（對題 vs 張冠李戴）
 > 8M **學不動只背 train**（held-out ~9%）。圖 `artifacts/dpo_generalization.png`。
-> ⚠️ **已知雷（與 DPO 無關、待修）**：`make verify` 會用 demo 資料**覆寫 `artifacts/tokenizer.json`**
-> （81 字），之後若有真實中文 ckpt 在場，serve 單元測試會因 tokenizer/ckpt vocab 不匹配而 KeyError。
-> 解法擇一：① 中文 tokenizer 重建＝`python pipeline/01_prepare_data.py --input data/raw/zhwiki.txt
-> --doc_sep '<|doc|>' --tokenizer char --test_frac 0.1`（確定性、回到 vocab 14210 匹配 ckpt）；
-> ② 之後修 serve 測試在 vocab 不匹配時 skipTest。**CI 閘門用 `make test`（不碰 demo、39 綠）不是 verify。**
+> ✅ **已修（測試隔離）**：`make verify` 以前用 demo 資料覆寫 `artifacts/tokenizer.json`（81 字），
+> 害有真實中文 ckpt 在場時 serve 單元測試 KeyError。現在 verify 把 demo 產物導到 `artifacts/_verify/`
+> （`--artifacts` flag、gitignored），絕不碰真 `artifacts/`；serve 測試 prompt 也改成從 tokenizer 自己
+> 的 vocab 取字（不綁特定字元）。**make verify 11/11、make test 39 綠，且不再覆寫真 tokenizer。**
+> 中文 tokenizer 重建指令（若日後又被別的操作清掉）：`python pipeline/01_prepare_data.py
+> --input data/raw/zhwiki.txt --doc_sep '<|doc|>' --tokenizer char --test_frac 0.1`（確定性、vocab 14210）。
 
 # Session 接續點
 
@@ -50,7 +51,6 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 - **後訓練再往下**：① DPO 精修（mask-prompt / 多模板 / 調 β 看 KL-reward 取捨）② RLHF（PPO/GRPO，「會思考」入門，比 DPO 重）
 - **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力；DPO topic 軸學不動就是規模牆）
 - **k8s**：把容器真部上 k8s-lab（/health→probe、/metrics→ServiceMonitor）——偏 k8s 練習
-- **清理**：修 `make verify` 覆寫 tokenizer 的測試隔離問題（見頂部已知雷）
 - 或就此收尾沉澱
 
 ## 怎麼接續（關鍵指令）
