@@ -210,6 +210,26 @@ curl -s 127.0.0.1:8000/generate -H 'content-type: application/json' \
 > e1–e3 是「治理線」（偵測→重訓→漸進放量），e4–e5 是「效能/成本線」。權重量化（e5）跟
 > KV-cache 量化（TurboQuant）是不同軸、可疊加。
 
+**產出正確性（不只比效能）**：服務最容易只盯延遲/吞吐，忘了驗「答得對不對」。三道檢查：
+- **批次不變量**：合批生成必須逐字等於單獨生成（`tests/` 有測；e4 只該更快、不該改輸出）。
+- **模型比較**：`make compare A=… B=…` → 兩模型的 test_loss + greedy 一致率（離線）。
+- **shadow agreement**：候選「在影子裡」跟著算同一輸入、回報與現行的 next-token 一致率（線上、
+  `SHADOW_PCT`、不拖延遲）→ dashboard 面板。
+
+**放量決策台**：要決定「新模型能不能加大流量」，不靠感覺，看 dashboard 三條訊號一起亮綠：
+
+| 看什麼 | 面板 | 綠燈條件 |
+|---|---|---|
+| 答得夠像？（正確性）| ⑨ 候選一致率 | shadow agreement ≥ 0.95（紅<0.9 別放）|
+| 沒變慢？（效能）| ⑦ 各版本 p95 延遲 | canary 延遲 ≈ production |
+| 輸入正常？（環境）| ⑤ 漂移 PSI | PSI < 0.25 |
+
+```bash
+cp <候選>.pt artifacts/candidate.pt        # 放一顆候選
+BATCH_MAX=8 make dashboard                  # 自動開金絲雀+shadow，開 127.0.0.1:3000
+# 三盞綠 → 調高 CANARY_PCT 漸進放量；任一轉紅 → CANARY_PCT=0 秒回滾
+```
+
 ## 心智模型（Java 類比）
 
 | 這個專案 | Java 世界 |
