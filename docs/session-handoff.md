@@ -8,6 +8,8 @@ updated: 2026-06-21
 > `make dpo`/`eval-dpo`、`tests/test_dpo.py` 5 條，全套 `make test` 39 條綠）。核心發現：
 > 兩種偏好軸對照 → format（連貫 vs 退化）held-out **69%→97% 真類推**；topic（對題 vs 張冠李戴）
 > 8M **學不動只背 train**（held-out ~9%）。圖 `artifacts/dpo_generalization.png`。
+> **DPO 精修＝β 旋鈕掃描**（`make dpo-beta`、`scripts/dpo_beta_sweep.py`）：固定步數下「β 越小漂移越大
+> （margin 目標≈1/β）」翻掉教科書直覺；行為兌現＝生成重複率 SFT 8%→DPO 5–6%。圖 `dpo_beta_sweep.png`。
 > ✅ **已修（測試隔離）**：`make verify` 以前用 demo 資料覆寫 `artifacts/tokenizer.json`（81 字），
 > 害有真實中文 ckpt 在場時 serve 單元測試 KeyError。現在 verify 把 demo 產物導到 `artifacts/_verify/`
 > （`--artifacts` flag、gitignored），絕不碰真 `artifacts/`；serve 測試 prompt 也改成從 tokenizer 自己

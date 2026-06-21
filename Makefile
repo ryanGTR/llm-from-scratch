@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -137,3 +137,6 @@ dpo:  ## DPO 偏好對齊（後訓練里程碑2）：SFT → 偏好較好回答�
 
 eval-dpo:  ## DPO 評估（held-out 偏好類推率：format 會類推 vs topic 只死背 + 曲線圖）
 	$(PY) scripts/eval_dpo.py
+
+dpo-beta:  ## DPO 精修：掃 β（KL 旋鈕）→ 偏好/漂移/生成重複率三取捨 + 圖
+	$(PY) scripts/dpo_beta_sweep.py
