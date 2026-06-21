@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import torch
-from fastapi import FastAPI, Request, Response
+from fastapi import BackgroundTasks, FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel
 
@@ -36,6 +36,7 @@ ART = Path(os.environ.get("ARTIFACTS", "artifacts"))
 # 金絲雀：設了 CANDIDATE_CKPT 就同時載入候選模型，CANARY_PCT% 的流量導去它
 CANDIDATE_CKPT = os.environ.get("CANDIDATE_CKPT")
 CANARY_PCT = float(os.environ.get("CANARY_PCT", "0"))
+SHADOW_PCT = float(os.environ.get("SHADOW_PCT", "0"))   # %請求讓候選「影子」跟著算、比一致率
 BATCH_MAX = int(os.environ.get("BATCH_MAX", "1"))        # >1 開動態批次
 BATCH_WAIT_MS = float(os.environ.get("BATCH_WAIT_MS", "8"))
 STATE: dict = {}
@@ -51,6 +52,18 @@ VARIANT = Counter("llm_variant_requests_total", "各版本接到的請求數", [
 VARIANT_LAT = Histogram("llm_variant_latency_seconds", "各版本延遲", ["variant"])
 BATCH_SIZE = Histogram("llm_batch_size", "動態批次的批量大小",
                        buckets=(1, 2, 4, 8, 16, 32))
+SHADOW_AGREE = Histogram("llm_shadow_agreement", "候選 vs 現行 next-token 一致率",
+                         buckets=(0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0))
+
+
+def _shadow_compare(prod, cand, ids, device):
+    """影子比對：同一輸入下，候選與現行的 next-token 預測一致率（argmax 比對）。
+    不影響回給使用者的答案，只當「候選行為跟現行多接近」的即時指標。"""
+    with torch.no_grad():
+        x = torch.tensor([ids], dtype=torch.long, device=device)
+        a = prod(x)[0].argmax(-1)
+        b = cand(x)[0].argmax(-1)
+    SHADOW_AGREE.observe((a == b).float().mean().item())
 
 # 結構化日誌（每請求一行 JSON → 生產環境送到 log 聚合器）
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -187,7 +200,7 @@ def health():
 
 
 @app.post("/generate", response_model=GenResponse)
-async def generate(req: GenRequest):
+async def generate(req: GenRequest, background: BackgroundTasks):
     """自回歸生成。回傳生成文字 + 延遲/吞吐（線上服務要看得到效能）。"""
     tok, device = STATE["tok"], STATE["device"]
     drift = STATE["drift"]
@@ -203,6 +216,11 @@ async def generate(req: GenRequest):
     VARIANT.labels(variant).inc()
 
     ids = tok.encode(req.prompt) or [0]      # 空/全生字 → 用一個起始 token 兜底
+
+    # 影子比對：抽樣讓候選跟著算同一輸入、回報一致率（背景跑，不拖慢使用者）
+    if STATE.get("candidate") is not None and random.random() * 100 < SHADOW_PCT:
+        background.add_task(_shadow_compare, STATE["model"], STATE["candidate"], ids, device)
+
     params = {"max_new_tokens": req.max_new_tokens, "temperature": req.temperature,
               "top_k": req.top_k, "top_p": req.top_p, "min_p": req.min_p,
               "use_kv_cache": req.use_kv_cache}

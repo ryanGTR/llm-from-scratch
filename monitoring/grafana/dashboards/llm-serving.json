@@ -80,6 +80,17 @@
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
         "expr": "rate(llm_batch_size_sum[1m]) / rate(llm_batch_size_count[1m])", "legendFormat": "平均批量", "refId": "A" }]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "候選一致率（shadow agreement）— 放量前看這個",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1,
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "red", "value": null }, { "color": "yellow", "value": 0.9 }, { "color": "green", "value": 0.95 }] } },
+        "overrides": [] },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "rate(llm_shadow_agreement_sum[1m]) / rate(llm_shadow_agreement_count[1m])", "legendFormat": "候選 vs 現行一致率", "refId": "A" }]
     }
   ]
 }
