@@ -92,11 +92,9 @@ KV-cache 在 CPU 長生成快 2.2×，但在我的 **GPU + 小模型 + 短生成
 
 ## 部署與治理：把我的本行接上 ML
 
-這是我最想經營的一段（下圖：服務監控 dashboard 8 面板快照）。
+這是我最想經營的一段——把企業 IT 的治理視角接到模型上。
 
-![dashboard](dashboard-snapshot.png)
-
-> 註：上圖——把企業 IT 的治理視角接到模型上。
+![服務監控 dashboard（8 面板：請求率/延遲/吞吐/累計 token、e1 漂移、e3 金絲雀流量與延遲、e4 批量）](dashboard-snapshot.png)
 
 - **推論服務**：FastAPI（`/health` `/generate` `/model` `/metrics`），KV-cache 路徑可切換。
 - **可觀測性**：Prometheus metrics（請求率 / 延遲 histogram / token）+ 結構化 JSON 日誌；
