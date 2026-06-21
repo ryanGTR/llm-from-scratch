@@ -10,6 +10,11 @@ updated: 2026-06-21
 > 8M **學不動只背 train**（held-out ~9%）。圖 `artifacts/dpo_generalization.png`。
 > **DPO 精修＝β 旋鈕掃描**（`make dpo-beta`、`scripts/dpo_beta_sweep.py`）：固定步數下「β 越小漂移越大
 > （margin 目標≈1/β）」翻掉教科書直覺；行為兌現＝生成重複率 SFT 8%→DPO 5–6%。圖 `dpo_beta_sweep.png`。
+> **後訓練里程碑3＝RLHF（reward model + GRPO）**：`src/reward_model.py`、`pipeline/07_reward_model.py`(`make
+> reward`，BT 損失、held-out 偏好 100%)、`pipeline/08_grpo.py`(`make grpo`，GRPO=取樣→RM 打分→組內 advantage→
+> PG+KL 錨，不需 critic)、`scripts/eval_grpo.py`(`make eval-grpo`)、`tests/test_rlhf.py` 5 條。**核心對照＝
+> reward hacking**：無 KL 錨(β=0) RM 分數 3.7→13.2 暴漲但生成多樣性 100%→6% mode collapse（三題全吐「方言，
+> 的方言…」鑽 RM 分布外盲點）＝Goodhart；KL 錨(β>0) 防之。圖 `grpo_reward_hacking.png`。`make test` 44 綠。
 > ✅ **已修（測試隔離）**：`make verify` 以前用 demo 資料覆寫 `artifacts/tokenizer.json`（81 字），
 > 害有真實中文 ckpt 在場時 serve 單元測試 KeyError。現在 verify 把 demo 產物導到 `artifacts/_verify/`
 > （`--artifacts` flag、gitignored），絕不碰真 `artifacts/`；serve 測試 prompt 也改成從 tokenizer 自己
@@ -25,8 +30,8 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 ## 一句話現況
 
 從零手刻的小型中文 GPT，已走完**整個 LLM + MLOps 生命週期**：原理 → 現代架構 → 真實中文資料工程
-→ 訓練評估 → 部署/可觀測/GPU 容器/Grafana/治理 → 進階 MLOps(e1–e5) → 真候選上線 → **後訓練 SFT
-里程碑（含正規評估）**。公開於 GitHub（CI 綠、~35 測試、全可重跑）。
+→ 訓練評估 → 部署/可觀測/GPU 容器/Grafana/治理 → 進階 MLOps(e1–e5) → 真候選上線 → **後訓練全弧
+（SFT → DPO → RLHF）**。公開於 GitHub（CI 綠、44 測試、全可重跑）。
 
 ## 已完成（大圖）
 
@@ -38,19 +43,21 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 6. **真候選上線**：8000 步候選 test_loss 3.46 < 舊 3.70，過 gate→promote→**production = digest `4d694be9342d`**，舊 `00b47fc84755` archived
 7. **後訓練 SFT**：`pipeline/05_sft.py`，base→會應答格式；正規評估(`scripts/eval_sft.py`)暴露兩個評估陷阱（見 lessons-learned）
 8. **後訓練 DPO**：`pipeline/06_dpo.py`，SFT→偏好對齊（policy+凍結 reference，免 reward model）。兩軸對照證明「容量內類推 vs 超出只背」；`eval_dpo` 出 `dpo_generalization.png`
+9. **後訓練 RLHF**：reward model（`07`）+ GRPO（`08`）。把 DPO 收合的零件拆開；reward hacking 對照（β=0 RM 暴漲但 mode collapse）；`eval_grpo` 出 `grpo_reward_hacking.png`
 
 ## 目前狀態（具體）
 
 - **production 模型** = `artifacts/ckpt.pt`（digest `4d694be9342d`，8000 步，test_loss ~3.46）。registry 台帳：`make models`
 - **SFT 模型** = `artifacts/sft_ckpt.pt`（chat 版，沒 promote；評估方式不同）
 - **DPO 模型** = `artifacts/dpo_format_ckpt.pt`（會類推那顆）、`artifacts/dpo_ckpt.pt`（topic 對照、只背）；都沒 promote（對齊版，評估尺＝偏好類推率）
+- **RLHF 模型** = `artifacts/reward_ckpt.pt`（RM）、`artifacts/grpo_ckpt.pt`（KL 錨穩定版）、`artifacts/grpo_hack_ckpt.pt`（reward-hacked 教學反例）；都沒 promote
 - **registry/**（進 git，審計軌跡）：production + archived 兩顆 + cards
 - artifacts/（gitignored）：ckpt、bin、語料、sft/dpo 的 jsonl + dpo_*_ckpt.pt + dpo_generalization.png 等
 - 監控 stack 可能還開著：`make dashboard-down` 收
 
 ## 下一步選項（未拍板，Ryan 挑）
 
-- **後訓練再往下**：① DPO 精修（mask-prompt / 多模板 / 調 β 看 KL-reward 取捨）② RLHF（PPO/GRPO，「會思考」入門，比 DPO 重）
+- **後訓練再往下**：① IPO（專治 DPO/RLHF 的過度優化）② PPO（補完 RL 家族，比 GRPO 重、有 critic）③ DPO 多模板
 - **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力；DPO topic 軸學不動就是規模牆）
 - **k8s**：把容器真部上 k8s-lab（/health→probe、/metrics→ServiceMonitor）——偏 k8s 練習
 - 或就此收尾沉澱
@@ -66,6 +73,7 @@ make serve           # 起推論 API（/docs 試）
 make dashboard       # Prometheus+Grafana（放 artifacts/candidate.pt 自動開金絲雀+shadow）
 make sft / eval-sft  # 後訓練 SFT + 正規評估
 make dpo / eval-dpo  # 後訓練 DPO 偏好對齊 + 類推 vs 死背曲線圖
+make reward / grpo / eval-grpo  # 後訓練 RLHF：reward model + GRPO + reward hacking 對照圖
 make compare A= B=   # 比兩模型 test_loss + 一致率
 ```
 

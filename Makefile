@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta reward grpo eval-grpo lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -140,3 +140,13 @@ eval-dpo:  ## DPO 評估（held-out 偏好類推率：format 會類推 vs topic 
 
 dpo-beta:  ## DPO 精修：掃 β（KL 旋鈕）→ 偏好/漂移/生成重複率三取捨 + 圖
 	$(PY) scripts/dpo_beta_sweep.py
+
+reward:  ## RLHF①：訓 reward model（Bradley-Terry，從 SFT 接骨幹 + 純量 head）
+	$(PY) pipeline/07_reward_model.py --iters 400
+
+grpo:  ## RLHF②：GRPO 用 RM 分數做 RL（有 KL 錨 + 無 KL 錨對照，揭露 reward hacking）
+	$(PY) pipeline/08_grpo.py --iters 150 --beta 0.05 --out artifacts/grpo_ckpt.pt --log_csv artifacts/runs/grpo.csv
+	$(PY) pipeline/08_grpo.py --iters 250 --beta 0.0 --lr 1e-4 --out artifacts/grpo_hack_ckpt.pt --log_csv artifacts/runs/grpo_hack.csv
+
+eval-grpo:  ## RLHF 評估：代理(RM)漲 vs 真實(多樣性)崩 = reward hacking 對照圖
+	$(PY) scripts/eval_grpo.py
