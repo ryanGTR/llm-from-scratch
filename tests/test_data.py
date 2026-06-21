@@ -309,6 +309,18 @@ class TestSampling(unittest.TestCase):
         self.assertTrue(torch.equal(a, b))   # 快取版必須逐 token 完全相同
 
 
+class TestQualityReport(unittest.TestCase):
+    def test_detects_wiki_markup_and_gate_fails(self):
+        from src.data.quality_report import quality_report
+        docs = ["乾淨的一段中文內容夠長沒有任何問題在裡面所以應該通過",
+                "這段有維基語法 -{zh-tw:核心;zh-cn:内核}- 殘留需要被抓出來"]
+        rep = quality_report(docs)
+        wiki = next(r for r in rep["detectors"] if r["name"] == "wiki_markup")
+        self.assertEqual(wiki["hits"], 1)            # 只有第二篇命中
+        self.assertIn("-{", wiki["samples"][0])      # 樣本秀出問題片段
+        self.assertFalse(rep["all_pass"])            # 50% > 門檻 → gate fail
+
+
 class TestStats(unittest.TestCase):
     def test_entropy_single_char_is_zero(self):
         self.assertEqual(S.char_entropy("aaaa"), 0.0)

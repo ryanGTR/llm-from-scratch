@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test verify stats quality lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -80,3 +80,6 @@ attn:
 
 bpe:
 	$(PY) scripts/train_bpe.py --merges 500
+
+quality:
+	$(PY) scripts/quality_report.py --doc_sep "<|doc|>"
