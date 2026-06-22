@@ -47,7 +47,8 @@ tags: [book, plan, handoff, quarto]
     `#sec-tiny-serve` / `#sec-drift` `#sec-build-drift` `#sec-tiny-drift`。
 - **已深耕到 A 級**：✅ 全 9 章（01–09）+ 附錄 + 術語表。每章都有：學習目標框＋一段逐行走讀＋
   一個 💻 純 CPU 真跑範例（真數字）＋章末 3 題（預測/動手/弄壞，答案摺疊）。
-- **下一步**：➡️ 全書主體 + 收口 + 插圖 + CI + MLOps 重構都完成。剩 Ryan 拍板 push + 重部署 GitHub Pages。
+- **下一步**：➡️ 全書主體 + 收口 + 插圖 + CI + MLOps 重構 + Ch5 雙 baseline 都完成。
+  **✅ 2026-06-22 已 push origin/main + 線上書(gh-pages)重新部署 + CI 綠**（線上書已是最新四部版）。
 - **✅ 本波（2026-06-22 第三段）插圖 + CI**：
   - **插圖**（4 張，全部由真跑數據產生、可重現）：`make_book_figures.py` 產出 →
     Ch3 `kvcache_speedup.png`、Ch4 `dedup_blindspot.png`、Ch6 `governance_gate.png`、
@@ -66,8 +67,8 @@ tags: [book, plan, handoff, quarto]
   - **Ch8 補直覺**（#5）：四條推導各加一個「直覺」callout（兩步壓一條 / β 是反方向煞車 /
     MinHash 是便宜估計 / baseline 是跟平均比），並把政策梯度節補上 `{#sec-pg-math}` 標籤、
     全部交叉連到對應章末習題與 💻 走讀。
-- **本機 commit 但⚠️尚未 push**：`5f4962b`(Ch1)、`394f2d6`(Ch2)、`<本波 ch3-7>`。
-  Ryan 還沒決定要不要 push + 重部署 GitHub Pages。
+- **✅ 已 push（2026-06-22）**：全部 commit 已上 origin/main、線上書(gh-pages)已重新部署、CI 綠。
+  （此前一度本機未 push，Ryan 拍板後一次推完；push 前掃過密鑰乾淨。）
 - **本波順手修的全書級 bug**：`08-math-appendix.qmd` 標題原為 `.unnumbered`，導致全書對
   `@sec-dpo-math / @sec-margin-math / @sec-minhash-math / @sec-rope-math` 的交叉參照**全部解析失敗**
   （render 時 `Unable to resolve crossref`、HTML 連結變成同頁死錨、文字顯示成 `sec-margin-math`）。

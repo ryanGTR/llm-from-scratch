@@ -49,4 +49,5 @@ on-device 成硬體賣點（AI PC/NPU）、Ollama/llama.cpp/GGUF 民主化；反
 ## 下一步
 - 等 Ryan 拍板**範圍**（全四部 vs 先第四部）。拍板後：起 `book2-edge/` 骨架（`_quarto.yml` + 章節 +
   `examples/`）、把本檔的「⏩ 目前狀態」更新成進度格（同第一本慣例）。
-- 在那之前**不動手建章節**。第一本一路本機 commit、未 push，維持不動。
+- 在那之前**不動手建章節**。第一本已於 2026-06-22 push origin/main + 線上書重新部署完成。
+- **第一部素材已備**：`book2-edge/research/slm-market.md`（SLM 應用+國際市場 deep-research 報告，已 push）。
