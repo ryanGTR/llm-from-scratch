@@ -15,17 +15,20 @@
 """
 
 import math
+import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+_SMOKE = bool(os.environ.get("BOOK_SMOKE"))   # CI 煙霧測試：極少步數只驗「跑得動」
 
 # ---- 超參數（小到 CPU 也跑得動，但已足以學到結構）----
 block_size = 64        # context length：一次最多看 64 個字
 n_embd     = 128       # embedding 維度
 n_head     = 4         # attention 頭數（128 / 4 = 每頭 32 維）
 n_layer    = 3         # 疊 3 個 Transformer block
-max_iters  = 3000      # 訓練步數
-eval_every = 500
+max_iters  = 30 if _SMOKE else 3000      # 訓練步數
+eval_every = 10 if _SMOKE else 500
 batch_size = 32
 lr         = 3e-3
 torch.manual_seed(1337)

@@ -6,7 +6,7 @@ PY := python
 ART := artifacts
 INPUT := data/raw/input.txt
 
-.PHONY: all data data-demo test verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta dpo-ipo reward grpo eval-grpo ppo eval-ppo lab train eval gen plot-loss attn bpe clean smoke help
+.PHONY: all data data-demo test book-smoke book-figures verify stats quality serve image run-container dashboard dashboard-down register models retrain compress compare sft-data sft eval-sft dpo-data dpo eval-dpo dpo-beta dpo-ipo reward grpo eval-grpo ppo eval-ppo lab train eval gen plot-loss attn bpe clean smoke help
 
 help:
 	@echo "make data      - 下載樣本語料並跑資料 pipeline"
@@ -58,6 +58,23 @@ smoke: data
 
 test:
 	$(PY) -m unittest discover -s tests -v
+
+# 書本 book/examples/*.py 的端到端煙霧測試：BOOK_SMOKE=1 縮到極小設定，CPU 幾十秒，
+# 只驗「每支範例都跑得動、不崩」。數字正確性的快測在 tests/test_book_examples.py（make test）。
+book-smoke: $(INPUT)
+	ln -sf ../../$(INPUT) book/examples/input.txt
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_kvcache.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_dedup.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_eval.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_serve.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_dpo.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_gpt.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_modern.py
+
+# 從真跑數據重新產生書裡的插圖（存進 book/images/）；純 CPU 約 5 分鐘
+book-figures: $(INPUT)
+	ln -sf ../../$(INPUT) book/examples/input.txt
+	cd book/examples && $(PY) make_book_figures.py
 
 # 驗證 playbook：操作者導向的驗收，逐項 PASS/FAIL，全過才 exit 0
 verify:

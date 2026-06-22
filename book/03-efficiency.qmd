@@ -131,22 +131,26 @@ python tiny_kvcache.py
 在我的 Framework 16（純 CPU）上：
 
 ```
-參數 0.88M，context 上限 512，生成 500 token，device=cpu
+參數 0.95M，context 上限 1024，生成 500 token，device=cpu
 
 逐 token 完全相同？ True（KV-cache 是省、不是近似）
-naive  （每步重算全序列）：  5.65 s
-cached （每步只算新 token）：  0.59 s
-加速：9.58×
+naive  （每步重算全序列）：  1.48 s
+cached （每步只算新 token）：  0.15 s
+加速：10.13×
 ```
 
 **怎麼讀**：第一行最重要——cached 與 naive 的輸出**逐 token 完全相同**，證明 KV-cache 是
-數學等價的「省」，不是會改變結果的近似。確認對了，才看第二件事：CPU 上長生成快了近 10 倍。
+數學等價的「省」，不是會改變結果的近似。確認對了，才看第二件事：CPU 上長生成快了約 10 倍。
 這正好對上前面那個 regime 故事的另一面——**KV-cache 在「CPU 長生成」這個 regime 是大勝**，
 在「GPU 小模型短生成」反而會輸。同一個技巧，兩個相反結論，全看 regime。
 
+把不同生成長度跑一輪、畫出來，就看到那條 $O(T^2)$ vs $O(T)$ 的差距隨長度張開（@fig-kvcache）：
+
+![KV-cache 計時（純 CPU 真跑）：左圖 naive 的牆鐘時間隨生成長度呈 $O(T^2)$ 飆升、cached 近線性；右圖加速倍率隨長度從 2× 一路張到 17×。生成越長、cached 贏越多。](images/kvcache_speedup.png){#fig-kvcache width=92%}
+
 ::: {.callout-tip}
 ## 加速倍率會隨設定變——這正是重點
-你跑出來的倍率不會剛好是 9.58×：它隨**生成長度**（越長，naive 的 $O(T^2)$ 浪費越多、cached 贏越多）、
+你跑出來的倍率不會剛好是 10×：它隨**生成長度**（越長，naive 的 $O(T^2)$ 浪費越多、cached 贏越多）、
 層數、執行緒數而變。把 `n_new` 從 500 改成 100 再改成 1000，看倍率怎麼動——你會親手畫出
 「$O(T^2)$ vs $O(T)$」這條差距隨長度張開的曲線。
 :::

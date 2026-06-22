@@ -29,3 +29,8 @@ jobs:
         run: |
           source .venv/bin/activate
           make verify
+
+      - name: 書本範例煙霧測試（make book-smoke：BOOK_SMOKE=1 極小設定跑通每支 example）
+        run: |
+          source .venv/bin/activate
+          make book-smoke

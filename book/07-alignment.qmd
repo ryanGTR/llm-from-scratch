@@ -131,7 +131,9 @@ B 學不動（隨機標籤）                          100.0%         47.7%
 **怎麼讀**：兩軸的 **train-acc 都是 100%**——只看 train，你會宣稱「兩個都學會了」。但 held-out
 說了真話：A 軸 100%（真的學到「真>亂」這個通則、能類推），B 軸掉回 **47.7%≈擲硬幣**（規則無從
 類推，100% 只是死背訓練題）。這跟 @fig-dpo-gen 的容量內 vs 容量外是同一個形狀，只是縮到你的
-筆電上、兩三分鐘就親眼看到。
+筆電上、兩三分鐘就親眼看到（@fig-dpo-tiny）。
+
+![tiny_dpo（純 CPU 真跑）：兩種偏好軸的 train-acc 都衝到 100%（灰），但 held-out（深藍）才說真話——A 可學的軸 100%、B 學不動的軸掉回擲硬幣線（紅虛線）。只看 train 兩個沒差，看 held-out 高下立判。](images/dpo_trainvsheldout.png){#fig-dpo-tiny width=72%}
 
 ::: {.callout-important}
 ## 這就是 MLOps 鐵則的最小可重現版

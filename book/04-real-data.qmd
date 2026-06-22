@@ -149,6 +149,10 @@ python tiny_dedup.py
    重複。$N$ 越大這個比例越懸殊——這就是 $O(n^2)\to$ 接近 $O(n)$ 的來源。（LSH 是**近似**法，會
    漏掉幾組卡在門檻邊界的對，是用一點 recall 換速度；要更高 recall 就加 band。）
 
+@fig-dedup 把這兩課畫在一起：
+
+![去重 + 偵測器（純 CPU 真跑）：左圖——平均長度、字元熵這些聚合指標都把資料判成乾淨（0% 旗標），同一批資料一條 per-doc 偵測器卻抓出 20.7% 含髒語法；右圖——naive 要比 96,580 對，LSH 只細比 1,868 個候選（log 軸，僅 1.9%）。](images/dedup_blindspot.png){#fig-dedup width=92%}
+
 ## 收成：真實中文 GPT
 
 清洗修好後重新跑完整 pipeline：collect 11,126 篇 → 清洗 → 去重 161 篇 → tokenize（字元級、vocab

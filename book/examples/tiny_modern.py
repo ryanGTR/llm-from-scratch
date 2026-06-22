@@ -13,15 +13,18 @@ deltas 會比 repo 全量訓練小一點、也帶一點雜訊，但「準/省」
 """
 
 import math
+import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+_SMOKE = bool(os.environ.get("BOOK_SMOKE"))   # CI 煙霧測試：極少步數只驗「跑得動」
 
 block_size = 64
 n_embd     = 128
 n_head     = 4
 n_layer    = 3
-max_iters  = 2500
+max_iters  = 30 if _SMOKE else 2500
 eval_every = 2500          # 只在頭尾各評一次，省時間
 batch_size = 32
 lr         = 3e-3

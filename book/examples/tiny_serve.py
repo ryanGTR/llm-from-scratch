@@ -21,9 +21,15 @@
 import hashlib
 import io
 import math
+import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+_SMOKE = bool(os.environ.get("BOOK_SMOKE"))   # CI 煙霧測試：極少步數只驗「跑得動」
+
+def _steps(n):
+    return 20 if _SMOKE else n
 
 block_size = 64
 n_embd, n_head, n_layer = 96, 4, 3
@@ -124,8 +130,8 @@ def promote(model, current_loss):
 if __name__ == "__main__":
     print(f"vocab={vocab_size}  device=cpu\n")
     print("訓兩顆：current（少訓）、candidate（多訓）...")
-    current = train(300, seed=1)
-    candidate = train(900, seed=2)
+    current = train(_steps(300), seed=1)
+    candidate = train(_steps(900), seed=2)
     cur_loss, cand_loss = val_loss(current), val_loss(candidate)
 
     print("\n=== 稽核問題 1：哪一個？（digest 不靠檔名）===")
@@ -154,7 +160,7 @@ if __name__ == "__main__":
     ok, msg = promote(candidate, cur_loss)
     print(f"  候選（資料 gate=True ）：{msg}")
     # 一顆沒註冊的野模型想上線 → 紅旗
-    rogue = train(50, seed=99)
+    rogue = train(_steps(50), seed=99)
     ok, msg = promote(rogue, cur_loss)
     print(f"  未註冊的野模型：{msg}")
 

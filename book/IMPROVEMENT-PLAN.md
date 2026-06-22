@@ -17,8 +17,17 @@ tags: [book, plan, handoff, quarto]
 - **已深耕到 A 級**：✅ Ch1–Ch7 全部完成（Ch1 最小 GPT＝範本、Ch2 現代零件、Ch3 效率、
   Ch4 真實資料、Ch5 評估、Ch6 部署治理、Ch7 對齊）。每章都有：學習目標框＋一段逐行走讀＋
   一個 💻 純 CPU 真跑範例（真數字）＋章末 3 題（預測/動手/弄壞，答案摺疊）。
-- **下一步**：➡️ 全書主體 + 收口項已完成。可選的後續：補圖（前言/章節插圖）、把 examples 接進 CI、
-  Ryan 拍板 push + 重部署 GitHub Pages。
+- **下一步**：➡️ 全書主體 + 收口 + 插圖 + CI 都完成。剩 Ryan 拍板 push + 重部署 GitHub Pages。
+- **✅ 本波（2026-06-22 第三段）插圖 + CI**：
+  - **插圖**（4 張，全部由真跑數據產生、可重現）：`make_book_figures.py` 產出 →
+    Ch3 `kvcache_speedup.png`、Ch4 `dedup_blindspot.png`、Ch6 `governance_gate.png`、
+    Ch7 `dpo_trainvsheldout.png`，各章已用 `@fig-` 嵌入 + 中文圖說。`make book-figures` 一鍵重產。
+  - **examples 接進 CI**：每支加 `BOOK_SMOKE` 環境開關（縮成極小步數）；新增 `make book-smoke`
+    端到端跑通 7 支；`tests/test_book_examples.py`（kvcache 對拍相同 + dedup 三不變量，~1s）併進
+    `make test`；`ci.yml` 加一步 `make book-smoke`。
+  - **順手修**：`tiny_kvcache.py` 的 cache 無滑動視窗，`n_new>context` 會爆 → context 512→1024
+    （章末習題 n_new=1000 才不掛）；Ch3 內嵌數字同步更新（10.13×、0.95M、context 1024）。
+    `tiny_dedup.py` 重構成可 import（函式化 + `main()` guard），CI/出圖共用。
 - **✅ 本波收口（2026-06-22 第二段）**：
   - **09 術語表**（#6）：新建 `09-glossary.qmd`（符號約定表 + ~50 條術語，每條一句話 + 出處交叉連結），
     已加進 `_quarto.yml` 附錄、render 通過（52 個 xref 全解析）。

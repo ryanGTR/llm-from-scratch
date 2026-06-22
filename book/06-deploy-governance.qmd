@@ -133,6 +133,10 @@ python tiny_serve.py
 2. **gate 真的會擋**：同一顆 candidate，資料 gate=False 時被 **BLOCK**、補過後才 **PROMOTE**；
    一顆沒註冊的野模型想上線直接 **UNREGISTERED 紅旗**。上線被程式 enforce，不是口頭約定。
 
+@fig-gate 把 gate 的判斷畫出來——注意左兩根是**同一顆**候選（val loss 都 1.825），差別只在資料 gate：
+
+![promotion gate（純 CPU 真跑）：虛線是現行模型的門檻；左兩根是同一顆候選——資料 gate 沒過就 BLOCK、過了才 PROMOTE；最右的野模型沒進台帳，直接 RED FLAG。決策由程式 enforce，不靠人記得檢查。](images/governance_gate.png){#fig-gate width=78%}
+
 ::: {.callout-important}
 ## 這就是「把稽核接到 ML」的最小可執行核心
 你親手跑的這幾行，就是銀行對任何上線系統要的東西的縮影：**身份可驗證、決策可 enforce、軌跡可

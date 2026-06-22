@@ -16,17 +16,20 @@ key/value 快取起來，每步只算「新 token」那一個，理論上 $O(T^2
 """
 
 import math
+import os
 import time
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-block_size = 512        # 最大 context
+_SMOKE = bool(os.environ.get("BOOK_SMOKE"))   # CI 煙霧測試：少生成幾個只驗「跑得動」
+
+block_size = 1024       # 最大 context（夠大，讓章末習題的 n_new=1000 也不爆）
 n_embd     = 128
 n_head     = 4
 n_layer    = 4
 vocab_size = 96
-n_new      = 500        # 生成多少 token
+n_new      = 60 if _SMOKE else 500        # 生成多少 token
 torch.manual_seed(0)
 head_dim = n_embd // n_head
 
