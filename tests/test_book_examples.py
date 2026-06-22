@@ -77,5 +77,31 @@ class TestDriftPSI(unittest.TestCase):
         self.assertGreater(shift_v, 0.25, "明顯漂移 PSI 應越過重訓門檻(0.25)")
 
 
+class TestBaseline(unittest.TestCase):
+    """笨基準的不變量（純函式、合成語料、秒級、不需 input.txt）。"""
+
+    def setUp(self):
+        import tiny_baseline as tb
+        self.tb = tb
+        # 合成一段「有結構」的文字：n-gram 該明顯贏亂猜
+        self.text = ("the quick brown fox jumps over the lazy dog. " * 200)
+        chars = sorted(set(self.text))
+        self.V = len(chars)
+        stoi = {c: i for i, c in enumerate(chars)}
+        self.ids = [stoi[c] for c in self.text]
+
+    def test_random_is_an_upper_bound(self):
+        # 有結構的文字，gzip 與 n-gram 都應明顯優於亂猜 log2(V)
+        rnd = self.tb.bpc_random(self.V)
+        self.assertLess(self.tb.bpc_gzip(self.text), rnd)
+
+    def test_ngram_learns_structure(self):
+        tb = self.tb
+        tables = tb.build_ngram(self.ids, tb.NGRAM_ORDER)
+        ng = tb.bpc_ngram(tables, self.ids, tb.NGRAM_ORDER, self.V)
+        self.assertGreater(ng, 0)
+        self.assertLess(ng, tb.bpc_random(self.V))   # 數頻率明顯贏亂猜
+
+
 if __name__ == "__main__":
     unittest.main()

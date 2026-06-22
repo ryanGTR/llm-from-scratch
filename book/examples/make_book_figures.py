@@ -173,7 +173,26 @@ def fig_drift():
     print("  -> drift_psi.png")
 
 
+# ---- Ch5：先贏過笨基準（tiny_baseline）----
+def fig_baseline():
+    import tiny_baseline as tb
+    rows = tb.results()
+    print("  " + "  ".join(f"{n}={b:.2f}" for n, b in rows))
+    names = [n for n, _ in rows]
+    vals = [b for _, b in rows]
+    colors = ["#95a5a6", "#e67e22", "#7f8c8d", "#27ae60"]   # GPT 綠
+    fig, ax = plt.subplots(figsize=(6.4, 3.8))
+    bars = ax.bar(names, vals, color=colors)
+    ax.bar_label(bars, fmt="%.2f", padding=3)
+    ax.set_ylabel("BPC (bits/char)  —  lower is better")
+    ax.set_title("Earn your complexity: tiny GPT vs dumb baselines (same val)")
+    ax.set_ylim(0, max(vals) * 1.15)
+    fig.tight_layout(); fig.savefig(f"{IMG}/baseline_bpc.png", dpi=120)
+    print("  -> baseline_bpc.png")
+
+
 if __name__ == "__main__":
+    print("Ch5 baseline:");      fig_baseline()
     print("Ch3 kvcache:");       fig_kvcache()
     print("Ch4 dedup:");         fig_dedup()
     print("Ch6 latency:");       fig_latency()

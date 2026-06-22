@@ -14,6 +14,14 @@ tags: [book, plan, handoff, quarto]
 
 ## ⏩ 目前狀態（最後更新 2026-06-22，接續者先看這格）
 
+- **🆕 價值槓桿（第六段）：對外 baseline 對照（Ch5）。** 補掉「評估都跟自己比」的可信度缺口：
+  新增 `book/examples/tiny_baseline.py`——tiny GPT vs 亂猜 vs gzip vs 4-gram(backoff)，同一份 val、
+  同一把尺 BPC（純 CPU 真跑）。實測 **亂猜 6.02 → gzip 3.19 → 4-gram 2.55 → tiny GPT 2.32**：
+  神經網路贏過會數頻率的 n-gram＝賺到複雜度（但只贏 0.23＝笨基準很硬、要記得跑）。Ch5 加一節
+  「先贏過笨基準」(@sec-baseline) + `baseline_bpc.png` + 「選下界基準不選虛榮基準(GPT-2)＝選對 baseline」
+  的 callout。術語表加「笨基準」、`make book-smoke` 納入、`tests/test_book_examples.py` 加 2 條不變量
+  （make test 58 綠）。**誠實界線寫進書：這是對的尺度的 baseline（證明賺到複雜度+尺站得住），不宣稱
+  打贏真 LLM**。下一個更大的價值槓桿仍是「真實規模故事」（非再加輔助）。
 - **🆕 可讀性（第五段）：給「技術主管」的定位輔助。** 因為這是「LLM × MLOps × 治理」一半一半的
   領域、讀者只精通一邊，加了三層 orientation 讓不熟那邊的主管也不迷路：
   - **前言全書地圖**（Mermaid `@fig-bookmap`）：橫向生命週期 + 促上線/重訓回饋迴圈 + 後訓練分支。

@@ -28,6 +28,7 @@
 | **Autoregressive（自回歸）** | 生成方式：吐一個 token、接回去、再吐下一個 | @sec-minimal-gpt |
 | **Baseline（RL 基準）** | 政策梯度裡「跟平均比而非跟零比」的減項，不偏但降變異數 | @sec-pg-math |
 | **BPC（bits per character，每字元位元）** | 跨 tokenizer 公平的尺：raw loss 換算成「每個字元幾 bit」 | @sec-build-bpc |
+| **笨基準 / baseline（gzip / n-gram）** | 不用神經網路的參照（壓縮率、數頻率）；模型要明顯贏它才算賺到複雜度 | @sec-baseline |
 | **Bradley-Terry 模型** | 把「A 勝 B 的機率」寫成 $\sigma(r_A-r_B)$，DPO 損失的出發點 | @sec-dpo-math |
 | **因果遮罩（causal mask）** | 把未來位置填 $-\infty$，讓第 $i$ 個 token 只能看 $\le i$ | @sec-build-attention |
 | **Cross-entropy（交叉熵）** | 「預測下一字」的 loss；亂猜時 $=\ln V$ | @sec-eval |
