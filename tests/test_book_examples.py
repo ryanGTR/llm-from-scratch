@@ -103,5 +103,21 @@ class TestBaseline(unittest.TestCase):
         self.assertLess(ng, tb.bpc_random(self.V))   # 數頻率明顯贏亂猜
 
 
+class TestCorrectness(unittest.TestCase):
+    """正確性 baseline：手刻 attention 必須對 torch 內建數值相等（不需語料、秒級）。"""
+
+    def test_handrolled_matches_torch(self):
+        import torch
+        from torch.nn import functional as F
+        import tiny_correctness as tc
+        torch.manual_seed(0)
+        q, k, v = (torch.randn(2, 4, 16, 32) for _ in range(3))
+        mine, w = tc.naive_causal_attention(q, k, v)
+        ref = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        self.assertLess(tc.max_abs_diff(mine, ref), 1e-5)
+        # 結構不變量：softmax 每列和為 1
+        self.assertTrue(torch.allclose(w.sum(-1), torch.ones_like(w.sum(-1)), atol=1e-6))
+
+
 if __name__ == "__main__":
     unittest.main()

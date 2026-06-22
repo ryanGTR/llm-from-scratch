@@ -22,6 +22,10 @@ tags: [book, plan, handoff, quarto]
   的 callout。術語表加「笨基準」、`make book-smoke` 納入、`tests/test_book_examples.py` 加 2 條不變量
   （make test 58 綠）。**誠實界線寫進書：這是對的尺度的 baseline（證明賺到複雜度+尺站得住），不宣稱
   打贏真 LLM**。下一個更大的價值槓桿仍是「真實規模故事」（非再加輔助）。
+  - **②正確性 baseline 也補了**：`tiny_correctness.py` 把手刻 causal attention 對 torch 內建
+    `scaled_dot_product_attention` 數值對拍（單頭 2.38e-07／多頭 4.77e-07＋結構不變量），Ch5
+    加 `### 正確性 baseline：你沒在騙自己`(@sec-correctness)，接第 3 章 FlashAttention 同一招。
+    進 make book-smoke、tests 加 1 條（make test 59 綠）。
 - **🆕 可讀性（第五段）：給「技術主管」的定位輔助。** 因為這是「LLM × MLOps × 治理」一半一半的
   領域、讀者只精通一邊，加了三層 orientation 讓不熟那邊的主管也不迷路：
   - **前言全書地圖**（Mermaid `@fig-bookmap`）：橫向生命週期 + 促上線/重訓回饋迴圈 + 後訓練分支。

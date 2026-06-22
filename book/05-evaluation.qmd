@@ -210,6 +210,26 @@ tiny GPT                         2.323
 回答真問題。這跟前面「先有亂猜基準」是同一條紀律的進階版。
 :::
 
+### 正確性 baseline：你沒在騙自己 {#sec-correctness}
+
+品質 baseline 問「有沒有贏笨基準」；還有一個更底層的 baseline：**你確定手刻的數學是對的嗎？**
+書裡每個漂亮數字的前提，是底層程式真的算對——所以 from-scratch 的東西要對一個**可信參照實作**
+數值對拍。配套程式 `tiny_correctness.py`（純 CPU、瞬間）把書裡那條手刻 causal attention
+（`softmax(QKᵀ/√d)` 遮罩 → `@V`）對 torch 內建的 `scaled_dot_product_attention`：
+
+```
+=== 正確性對拍（手刻 vs torch 內建可信參照）===
+  單頭 causal attention   max|diff| = 2.38e-07
+  多頭 causal attention   max|diff| = 4.77e-07
+=== 結構不變量 ===
+  softmax 每列和為 1？        True
+  因果遮罩讓未來權重=0？      True
+```
+
+差只在浮點誤差等級（~1e-7）——手刻版跟工業級實作算出**同一個答案**。這跟第 3 章用同一招驗
+FlashAttention（logits 差 $6\times10^{-7}$、@sec-efficiency）是同一條紀律：**對拍可信參照 = 不騙自己**。
+單元測試把這個對拍釘成回歸（`tests/test_book_examples.py`），改壞了會立刻紅燈。
+
 ## 選對指標：一把被汙染的尺如何給出相反的結論
 
 這是整本書最重要的一課，我用後訓練的一個真實例子來講（完整脈絡在第 7 章）。
