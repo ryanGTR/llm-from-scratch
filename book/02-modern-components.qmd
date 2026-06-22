@@ -8,6 +8,16 @@
 但**不是盲目換**——我把 `src/model.py` 寫成可以用設定開關一鍵切換每個零件，然後一個一個做對照實驗，
 親眼看它到底有沒有用。
 
+::: {.callout-note}
+## 這章的定位（讀之前先對齊期待）
+**假設你已經會**：第 1 章的最小 GPT（attention、residual、token+pos embedding、訓練迴圈）。
+不需要任何「現代 LLM」背景。
+
+**學完你會**：(1) 用一句「這零件優化的是**準**還是**省**」事先預測每個現代零件的效果，少猜錯一半；
+(2) 講清楚 RMSNorm / SwiGLU / RoPE / GQA 各自改了哪裡、為什麼；(3) 在**你自己的 CPU 上**把這些零件
+一鍵切換、跑對照實驗，親眼驗證「準的會降 loss、省的持平」。本章每個零件都有完整內嵌程式碼與**可重現**的對照數字。
+:::
+
 ## 一個會幫你預測對的問題：準 vs 省
 
 做這些對照時我學到最重要的一件事，不是「哪個零件更好」，而是一個能讓你**事先預測對**的分類法：
@@ -108,6 +118,69 @@ def apply_rope(x, cos, sin, offset=0):
 所以 `model.py` 現在可以一鍵在「GPT-2 配方」和「LLaMA 配方」之間切換。
 :::
 
+## 💻 在你的機器上：親手跑一次「準 vs 省」對照 {#sec-modern-hands-on}
+
+上面那些數字是 repo 在完整語料上跑出來的。但這個分類法最棒的地方是——**你自己的筆電就能驗證**。
+本章配套程式 `examples/tiny_modern.py` 延續第 1 章那支 char-level 小 GPT，把三個零件做成可一鍵切換的開關：
+
+```python
+# 一個 config 字典控制三個開關，同一個模型骨架就能切「GPT-2 配方」↔「LLaMA 配方」
+OFF = {"rmsnorm": False, "swiglu": False, "rope": False}
+CONFIGS = [
+    ("baseline (LayerNorm+GELU+學習位置)", {**OFF}),
+    ("+RMSNorm (預測：省=持平)",            {**OFF, "rmsnorm": True}),
+    ("+SwiGLU  (預測：準=降)",              {**OFF, "swiglu": True}),
+    ("+RoPE    (預測：準=降)",              {**OFF, "rope": True}),
+    ("全開 (LLaMA 配方)", {"rmsnorm": True, "swiglu": True, "rope": True}),
+]
+```
+
+每個零件就是課本那幾行——例如 RMSNorm 砍掉減均值、RoPE 把 q/k 依位置旋轉：
+
+```python
+class RMSNorm(nn.Module):                       # 「省」：只除 RMS，不減均值、不要 bias
+    def forward(self, x):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + 1e-5) * self.weight
+
+def apply_rope(x, cos, sin):                     # 「準＋外推」：把 q/k 依位置旋轉
+    T = x.shape[2]
+    cos, sin = cos[:T].view(1, 1, T, -1), sin[:T].view(1, 1, T, -1)
+    x1, x2 = x[..., ::2], x[..., 1::2]
+    return torch.stack([x1 * cos - x2 * sin, x1 * sin + x2 * cos], -1).flatten(-2)
+```
+
+開跑（純 CPU，五個配置約 7 分鐘）：
+
+```bash
+curl -o input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+python tiny_modern.py
+```
+
+在我的 Framework 16（純 CPU）上跑出來：
+
+```
+配置                                      val loss        參數
+----------------------------------------------------------
+baseline (LayerNorm+GELU+學習位置)            1.6361     0.62M
++RMSNorm           (預測：省=持平)              1.6389     0.62M  (+0.003)
++SwiGLU            (預測：準=降)               1.6169     0.62M  (-0.019)
++RoPE              (預測：準=降)               1.6288     0.61M  (-0.007)
+全開 (LLaMA 配方)                             1.6108     0.61M  (-0.025)
+```
+
+**怎麼讀這張表**：先看你跑之前對每個零件下的「準/省」預測，再對答案。
+
+- **RMSNorm +0.003**（甚至微微往上、落在雜訊內）——RMSNorm 幾乎沒動到 val loss，正是「省」型零件的長相（同準、更省）。
+- **SwiGLU、RoPE 都降 loss**——它們是「準」型，符合預測。
+- **全開＝LLaMA 配方**最低，而且**參數沒有變多**（RoPE 還省掉了學習式位置表）。
+
+::: {.callout-warning}
+## 小設定的數字會比 repo 雜
+這支用的是「省時間」的小設定（2500 步、CPU），deltas 比 repo 全量訓練小、也帶一點雜訊——
+單次跑甚至可能出現某個「準」型零件沒贏的情況。**這正好是個提醒**：比較模型時要問「這個差距大過雜訊嗎」
+（見 @sec-eval、以及為什麼要固定隨機種子）。要更穩，把 `max_iters` 調大、或換幾個 seed 取平均。
+:::
+
 ## 帶走什麼
 
 - 換任何現代零件前，先問「它優化準還是省」——這個分類法會幫你預測對，也讓你不會對「省」型零件
@@ -116,8 +189,47 @@ def apply_rope(x, cos, sin, offset=0):
 - RoPE 把位置編成相對距離，所以外推好——這是個用一行旋轉矩陣的代數就能理解的漂亮設計。
 - 互補的零件可以疊加，效果幾乎相加。
 
+## 練習 {#sec-ch2-exercises}
+
+::: {.callout-note}
+## 1（先預測）：GQA 是「準」還是「省」？
+在你跑 `tiny_modern.py` 之前，先寫下你對 GQA（多個 query 頭共用少數 KV 頭）的預測：它會降 loss 嗎？
+為什麼 LLaMA-2/3、Mistral 都用它？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+GQA 是「省」——它砍的是**生成時要快取的 KV 量**，不是準度。本章 repo 實驗也印證：MHA 1.7712 →
+GQA(2 組) 1.7974，品質微降、換 KV-cache 砍半。大模型在意推論記憶體，這個甜蜜點很划算。
+（`tiny_modern.py` 為了精簡沒放 GQA 開關，可當延伸題自己加：把 k/v 的頭數設少、再 `repeat_interleave` 補回。）
+:::
+:::
+
+::: {.callout-note}
+## 2（動手）：把零件單獨開、對答案
+跑 `python tiny_modern.py`，把印出來的五行對照表，逐一對你事先下的「準/省」預測。
+有沒有哪個跟你想的不一樣？是真的反例，還是落在雜訊範圍內（提示：deltas 有多大、跟 baseline 比）？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+重點不是「每個零件都贏」，而是**方向**：RMSNorm 應接近 baseline、SwiGLU/RoPE 應略低。小設定下若某項
+沒贏，先別急著下結論——把 `max_iters` 調大或多跑幾個 seed，看差距是否穩定。這就是「質疑你的尺」。
+:::
+:::
+
+::: {.callout-warning}
+## 3（弄壞）：RoPE 模式還留著學習式位置表
+打開 `GPT.__init__`，把 `self.pos = None if cfg["rope"] else ...` 改成永遠建一張 `nn.Embedding`，
+並在 `forward` 裡無條件加上去（等於 RoPE + 學習式位置**同時**用）。重訓，loss 會變好還是變壞？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+通常不會更好、還可能略糟、參數也變多——RoPE 已經把位置資訊編進旋轉裡，再疊一張絕對位置表是多餘的
+（還破壞了 RoPE「只看相對距離」的好性質、傷外推）。這說明現代零件不是「越多越好」，是**各司其職、別重複**。
+:::
+:::
+
 ::: {.callout-tip}
-## 動手
-把 repo 的 `make train run_name=modern args="--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2"`
-跑起來，跟原版疊在同一張 loss 曲線上比。再挑一個零件，**先預測它是準還是省**，然後跑去驗證。
+## 進階：在真實模型上看外推
+repo 的 `make train run_name=modern args="--use_rmsnorm --use_swiglu --use_rope --n_kv_head 2"`
+跑完整 LLaMA 配方，並能重現 @fig-rope 的外推對照（訓練長度 64、評估到 256）。
 :::
