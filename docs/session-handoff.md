@@ -1,10 +1,33 @@
 ---
 title: Session 接續點（斷 session 後從這裡繼續）
 type: handoff
-updated: 2026-06-21
+updated: 2026-06-22
 ---
 
-> **最新（2026-06-21 下午）**：完成**後訓練里程碑2＝DPO 偏好對齊**（`pipeline/06_dpo.py`、
+> **最新（2026-06-22 整天，Telegram 驅動的大改一輪 — 書）**：把 `book/` 從「B+ 延伸敘事」做成 **A 級成書**，
+> 並**重定位成 MLOps 為主軸**。依序（全部已 commit + **已 push origin/main + 線上書 gh-pages 重新部署 + CI 綠**）：
+> ① Ch1–9 全章深耕 A 級（學習框 + 逐行走讀 + 💻 純 CPU 真跑範例 + 章末 3 題；數字皆真跑不杜撰）
+> ② 收口：前言「受眾＋假設知識」段、Ch8(數學)四條推導補直覺、新增 **11 術語表**
+> ③ **重大重構：四部、MLOps 升為「第三部 重心」**——原 Ch6 一章拆成 **06 服務化與可觀測 / 07 模型治理 / 08 會腐壞的系統**；
+> 對齊移第四部(09)、附錄(10 數學/11 術語表)。檔名改了但交叉參照用 label 不靠檔名 → render 零 unresolved。
+> ④ **真跑插圖 7 張**（`book/examples/make_book_figures.py` 從真數據生）+ **examples 接 CI**（`make book-smoke` 9 支端到端、
+> `tests/test_book_examples.py`、ci.yml；**make test 59 綠**）
+> ⑤ 「給技術主管」定位輔助：前言全書 Mermaid 地圖 + **每章「你在這裡」地圖** + 每章**「🎯 給技術主管」術語速查框**（可摺疊）；章首瘦身（學習框改可摺疊）；README 加「拿這個 repo 做什麼（依投入程度）」入口
+> ⑥ **Ch5 兩個 baseline**：品質(`book/examples/tiny_baseline.py`：tiny GPT BPC 2.32 < 4-gram 2.55 < gzip 3.19 < 亂猜 6.02，@sec-baseline)
+> ＋正確性(`tiny_correctness.py`：手刻 attention 對 torch SDPA 差 2e-7，@sec-correctness)。
+> **書 1 接續＝先讀 `book/IMPROVEMENT-PLAN.md` 最上方「⏩ 目前狀態」（單一真相）。** 新增 examples：tiny_gpt/modern/
+> kvcache/eval/dedup/observability/serve/drift/dpo/baseline/correctness（全純 CPU、CI 顧著）。Mermaid 在此 Quarto 原生可 render(CJK OK)。
+>
+> 📕 **決定寫第二本書＝邊緣運算（on-device + 邊緣機隊治理，第一本續集、雙倍下注治理 moat）**。**尚未起骨架**
+> （Ryan 在想範圍）。記錄＝`book2-edge/IMPROVEMENT-PLAN.md`；第一部素材＝`book2-edge/research/slm-market.md`
+> （SLM 應用+國際市場 deep-research 報告，有引用、對抗式驗證過）。前置：同 repo book2-edge/；無 ARM 硬體→edge 部署
+> 在 CPU+llama.cpp/ONNX 並誠實標注「裝置模擬」；範圍待 Ryan 拍板（我建議先做第四部「邊緣機隊治理」）。
+>
+> 🔭 **我給 Ryan 的誠實評估**（他多次問）：以「金融×MLOps×治理 作品集/面試主菜」這把尺＝A−/A；核心天花板未動
+> （8M 玩具＝展示判斷力非規模執行）；scaffolding 邊際報酬已到反曲點；**下一個真價值槓桿＝真實規模故事**，不是再加輔助。
+> 定位＝「面試官友善的能力證明」，讀者＝金融/受監管 ML 技術主管。
+
+> **前一波（2026-06-21 下午）**：完成**後訓練里程碑2＝DPO 偏好對齊**（`pipeline/06_dpo.py`、
 > `make dpo`/`eval-dpo`、`tests/test_dpo.py` 5 條，全套 `make test` 39 條綠）。核心發現：
 > 兩種偏好軸對照 → format（連貫 vs 退化）held-out **69%→97% 真類推**；topic（對題 vs 張冠李戴）
 > 8M **學不動只背 train**（held-out ~9%）。圖 `artifacts/dpo_generalization.png`。
@@ -41,7 +64,8 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 
 從零手刻的小型中文 GPT，已走完**整個 LLM + MLOps 生命週期**：原理 → 現代架構 → 真實中文資料工程
 → 訓練評估 → 部署/可觀測/GPU 容器/Grafana/治理 → 進階 MLOps(e1–e5) → 真候選上線 → **後訓練全弧
-（SFT → DPO → IPO → RLHF：GRPO + PPO）**。公開於 GitHub（CI 綠、49 測試、全可重跑）。
+（SFT → DPO → IPO → RLHF：GRPO + PPO）**。公開於 GitHub（CI 綠、**59 測試**、全可重跑）。
+**並已寫成一本 A 級、MLOps 為主軸的書（`book/`，線上版已部署最新）**；第二本（邊緣運算）已立案、待定範圍。
 
 ## 已完成（大圖）
 
@@ -67,6 +91,9 @@ repo 是自足的真相來源；本檔只給「我們走到哪、下一步可以
 
 ## 下一步選項（未拍板，Ryan 挑）
 
+- **🔥 第二本書（邊緣運算）範圍**：Ryan 已立案、在想範圍——全四部 vs 先做第四部「邊緣機隊治理」（建議）。
+  拍板後起 `book2-edge/` 骨架。先讀 `book2-edge/IMPROVEMENT-PLAN.md`。
+- **第一本書**：A 級主體已完成、已 push、線上版最新；真要再提價值＝「真實規模故事/對外更強 baseline」（非再加輔助）。
 - **後訓練再往下**：DPO 多模板 / mask-prompt 精修 / GAE（PPO 的多步優勢估計）——但對齊家族（DPO/IPO/GRPO/PPO）核心已收齊
 - **規模**：換更大語料/更大模型（唯一真讓能力上世代的槓桿，但燒算力；DPO topic 軸學不動就是規模牆）
 - **k8s**：把容器真部上 k8s-lab（/health→probe、/metrics→ServiceMonitor）——偏 k8s 練習
