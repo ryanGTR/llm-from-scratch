@@ -26,6 +26,46 @@
 
 > 📖 給人讀的完整旅程敘事（作品集入口）：[docs/case-study.md](docs/case-study.md)　·　📐 數學推導：[docs/derivations.md](docs/derivations.md)　·　📊 讀圖指南：[docs/reading-the-charts.md](docs/reading-the-charts.md)
 
+## 拿這個 repo，你可以做什麼（依投入程度）
+
+不只是「讀」——這 repo 的東西**按得下去、跑得出來**。依你的時間與設備選一條：
+
+### 🟢 10 分鐘・零 GPU・任何筆電 ← 最推薦的起點
+
+`book/examples/tiny_*.py` 是書裡每個結論的**自包含、純 CPU、幾十秒~幾分鐘**可重現版（只要 `torch`，
+連 repo 其他東西都不用懂；用 1 MB 莎士比亞，不必抓 105 MB 中文）。每支都被 **CI 顧著、不會壞**：
+
+| 跑這支 | 親手看到 |
+|---|---|
+| `tiny_gpt.py` | 從零訓一個會「假裝莎士比亞」的小 GPT（亂碼→有劇本形狀）|
+| `tiny_modern.py` | 一鍵切 RMSNorm/SwiGLU/RoPE，驗證「準 vs 省」|
+| `tiny_kvcache.py` | KV-cache 與樸素版**逐 token 對拍相同**、再看加速隨長度張開 |
+| `tiny_eval.py` | 亂猜基準、BPC、多 seed mean±std（評估三紀律）|
+| `tiny_dedup.py` | 聚合指標說「健康」但偵測器抓出 20% 髒資料；MinHash/LSH 候選暴減 |
+| `tiny_observability.py` | 冷啟動 vs 暖機、p50/p95 尾延遲 |
+| `tiny_serve.py` | digest 身份（認內容不認檔名）+ promotion gate 真的擋下 |
+| `tiny_drift.py` | PSI 把資料漂移量化成一個數字、觸發重訓 |
+| `tiny_dpo.py` | DPO「train-acc 衝 100%、held-out 才說真話」|
+
+```bash
+cd book/examples
+curl -o input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+python tiny_gpt.py          # 或任一支；make book-smoke 會極小設定跑通全部
+```
+
+### 🟡 完整版・要 GPU + 環境（uv / torch-cu128 / podman）
+
+`uv sync` 後跑完整 pipeline：訓真的 8M 中文模型、起 FastAPI 服務、Prometheus+Grafana 儀表板、
+模型 registry + promotion gate、drift/重訓/金絲雀迴圈。入口在下面的「跑跑看」與線上書第三部。
+
+### 🔵 借 pattern 進你自己的專案
+
+把這些當「怎麼把治理接到 ML」的範式庫直接搬：`src/registry.py`（digest 身份 + gate）、
+`src/data/quality_report.py`（資料品質偵測器）、`pipeline/06_dpo.py`／`08_grpo.py`（DPO/RLHF 損失）。
+
+> 誠實邊界：這是**學習 / 作品集** repo，不是維護中的 library；目標是「真正搞懂 + 可重現地證明」，
+> 不是做出 ChatGPT（模型是 8M 玩具尺度）。
+
 ## 這個專案涵蓋什麼
 
 - **資料工程**：collect → clean → 去重 → tokenize → pack，附驗收 playbook、品質指標與**偵測器報表**
