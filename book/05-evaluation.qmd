@@ -15,7 +15,7 @@ flowchart LR
   class E here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 1 章的 cross-entropy loss、第 2 章的對照實驗。不需要任何統計學背景
 （會用到的都會在這裡建立直覺）。

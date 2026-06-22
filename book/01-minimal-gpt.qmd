@@ -12,7 +12,7 @@ flowchart LR
   class A here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：Python、基本線性代數（矩陣相乘、向量內積）、知道什麼是「神經網路用梯度下降訓練」。
 **不需要**：任何 NLP / Transformer 背景。

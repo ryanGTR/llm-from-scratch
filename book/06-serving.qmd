@@ -12,7 +12,7 @@ flowchart LR
   class F here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 5 章的評估判準。不需要 MLOps / k8s / 容器背景（會用到的概念都會在這裡建立類比）。
 

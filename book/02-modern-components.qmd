@@ -17,7 +17,7 @@ flowchart LR
   class B here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 1 章的最小 GPT（attention、residual、token+pos embedding、訓練迴圈）。
 不需要任何「現代 LLM」背景。

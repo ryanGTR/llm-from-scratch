@@ -12,7 +12,7 @@ flowchart LR
   class G here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 6 章把模型包成服務（@sec-serving）、第 5 章的評估判準。不需要稽核 / 合規背景。
 

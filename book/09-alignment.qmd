@@ -15,7 +15,7 @@ flowchart LR
   class I here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 1 章的小 GPT 與「預測下一字」的訓練、第 5 章「選對指標／看 held-out」的紀律。
 不需要任何 RLHF 背景。

@@ -15,7 +15,7 @@ flowchart LR
   class C here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：第 1 章的 attention（$O(T^2)$ 的分數矩陣）與自回歸生成。不需要任何
 CUDA / 系統優化背景。

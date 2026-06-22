@@ -16,7 +16,7 @@ flowchart LR
   class D here
 ```
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## 這章的定位（讀之前先對齊期待）
 **假設你已經會**：基本集合運算與機率直覺。不需要任何 NLP 資料工程背景。
 
