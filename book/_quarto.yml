@@ -33,6 +33,7 @@ book:
     - part: "附錄"
       chapters:
         - 08-math-appendix.qmd
+        - 09-glossary.qmd
         - 99-references.qmd
 
 bibliography: references.bib

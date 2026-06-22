@@ -25,6 +25,15 @@ $$\mathcal{L}_\text{DPO}=-\mathbb{E}\Big[\log\sigma\Big(\beta\log\tfrac{\pi_\the
 **在說什麼.** 那個算不出來的配分函數 $Z(x)$ 被相減消掉了——這就是 DPO 不用跑 RL、不用 reward model
 的根本原因。
 
+::: {.callout-tip}
+## 直覺：把「兩步」壓成「一條損失」
+RLHF 本來要兩步：先**學**一顆 reward model，再用 **RL** 去最大化它。上面的代數證明這兩步可以
+合併——因為「最優 policy」和「reward」是一一對應的（$r=\beta\log\frac{\pi}{\pi_\text{ref}}+\text{const}$），
+所以「優化 reward」就等於「直接優化 policy 的對數機率比」。$Z(x)$ 是那個 const，對 chosen/rejected
+相同、一減就沒了。**這就是為什麼第 7 章那條 `dpo_loss` 只有 4 行**——逐行走讀見 @sec-build-dpo，
+動手把 reference 拿掉看會怎樣見 @sec-ch7-exercises。
+:::
+
 ## 為什麼 margin 尺度 ≈ $1/\beta$ {#sec-margin-math}
 
 **命題.** DPO 單筆損失 $\ell=-\log\sigma(\beta m)$ 的梯度在 $m\gtrsim 1/\beta$ 後才消失。
@@ -36,6 +45,13 @@ $m\sim1/\beta$ 才鬆手。$\square$
 **在說什麼.** β 越**小** → 飽和尺度 $1/\beta$ 越**大** → policy 離 $\pi_\text{ref}$ 越遠（漂移越大）。
 這就是第 7 章 @fig-beta 那個反直覺。誠實標注：$1/\beta$ 是「梯度消失的尺度」、非精確停點（還受 lr/步數
 影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 $\frac{1}{2\beta}$。
+
+::: {.callout-tip}
+## 直覺：β 是「煞車」，但煞車力道不是你想的方向
+教科書直覺「β 大＝KL 罰得重＝貼緊 reference」沒錯，但**固定步數**下你看到的是另一面：β 大 →
+飽和尺度 $1/\beta$ 小 → margin 推一點點就鬆手 → 漂移小。所以「β 小反而漂移大」。想親手掃 β、
+驗這個反直覺，見第 7 章的動手題 @sec-ch7-exercises（練習 2）。
+:::
 
 ## RoPE：旋轉 = 相對位置 {#sec-rope-math}
 
@@ -59,13 +75,30 @@ $A,B$（即在 $A\cap B$）。機率 $=|A\cap B|/|A\cup B|$。$\square$
 $P(s)=1-(1-s^{r})^{b}$（$s$＝Jaccard），是一條 S 曲線、拐點約在 $s\approx(1/b)^{1/r}$。調 $b,r$ 就能把
 「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。
 
-## 政策梯度 + GRPO 的 baseline 為何不偏
+::: {.callout-tip}
+## 直覺：MinHash 是「便宜的相似度估計」，LSH 是「只比可能相似的」
+MinHash 把「算兩個集合的 Jaccard」這件貴事，換成「比兩串簽章相等幾位」——而上面那條等式保證
+**這個便宜估計是無偏的**。LSH 再加一層篩：相似度高的文件對「至少共用一個 band」的機率接近 1、
+不相似的接近 0（那條 S 曲線），所以只把同桶的拿出來細比。$b$（band 數）往上調，S 曲線左移→
+recall 升、但候選變多——這正是第 4 章動手題要你親手調的取捨（@sec-ch4-exercises 練習 1），
+程式版見 @sec-build-dedup。
+:::
+
+## 政策梯度 + GRPO 的 baseline 為何不偏 {#sec-pg-math}
 
 **命題.** $\nabla_\theta\mathbb{E}_{y\sim\pi_\theta}[R(y)]=\mathbb{E}[R\,\nabla\log\pi_\theta]$；且減任何與動作無關的
 baseline $b$ 不改變期望（因 $\mathbb{E}[\nabla\log\pi_\theta]=\sum_y\nabla\pi_\theta=\nabla\sum_y\pi_\theta=\nabla1=0$）。
 
 **在說什麼.** 減 baseline 不偏、但降變異數。PPO 用學來的 critic $V(x)$ 當 baseline；GRPO 改用「同組平均
 獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 @fig-ppo）。
+
+::: {.callout-tip}
+## 直覺：baseline 是「跟平均比」，不是「跟零比」
+與其問「這個回答的獎勵是 +7，好不好？」，不如問「它比**同題其他回答的平均**好還是差？」——
+高於平均才往上推、低於平均往下壓。減掉 baseline 不改變「該往哪推」（期望不偏），但讓訊號不再被
+獎勵的絕對大小淹沒（變異數小）。PPO 花一顆 critic 網路去學這個平均；GRPO 發現「同組 K 個回答
+當場算平均」就夠用，省掉整顆 critic——這就是第 7 章那張 PPO vs GRPO 對照表（@sec-alignment）的數學底。
+:::
 
 ::: {.callout-note}
 ## 想自己推一遍？

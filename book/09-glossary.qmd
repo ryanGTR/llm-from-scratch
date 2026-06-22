@@ -1,0 +1,80 @@
+# 附錄：術語表與符號約定 {#sec-glossary}
+
+> 這頁是查閱用的速查表。**術語**按英文字母排，每條一句話 + 它在書裡哪章登場（點章節連結回去看脈絡）；
+> **符號**集中列一次，全書一致。技術名詞一律保留英文、附中文說明。
+
+## 符號約定 {#sec-notation}
+
+| 符號 | 意義 |
+|---|---|
+| $x$ | 模型輸入（一段 token 序列）；在程式裡常是形狀 $(B,T)$ 的整數張量 |
+| $B,\,T,\,C$ | batch 大小、序列長度（context length）、每個 token 的向量維度（embedding 維度）|
+| $V$ | vocabulary 大小（token 種類數）；亂猜基準 loss $=\ln V$ |
+| $d$ | attention 每個 head 的維度；縮放用 $\sqrt{d}$（見 @sec-sqrt-d）|
+| $Q,\,K,\,V$ | query / key / value 矩陣（注意這個 $V$ 不是 vocab，是 value）|
+| $\pi_\theta,\,\pi_\text{ref}$ | 待訓練的 policy（參數 $\theta$）、凍結的 reference policy（對齊用）|
+| $\beta$ | DPO/IPO/RLHF 的溫度，控制離 reference 多遠（見 @sec-margin-math）|
+| $r(x,y)$ | reward（獎勵）；$R$ 指整段回答的總獎勵 |
+| $\sigma(\cdot)$ | sigmoid 函數 $1/(1+e^{-z})$ |
+| $D_{\mathrm{KL}}(\cdot\|\cdot)$ | KL divergence（兩個分布的差距）|
+| $\mathbb{E}[\cdot]$ | 期望值（平均）|
+| nat / bit | loss 的單位：自然對數 → nat，$\log_2$ → bit；BPC 用 bit（見 @sec-build-bpc）|
+
+## 術語表 {#sec-terms}
+
+| 術語 | 一句話 | 出處 |
+|---|---|---|
+| **Attention / self-attention（自注意力）** | 每個位置產生 query 去跟所有位置的 key 算相似度、softmax 後加權平均 value——「模糊版的 `HashMap.get()`」 | @sec-minimal-gpt |
+| **Autoregressive（自回歸）** | 生成方式：吐一個 token、接回去、再吐下一個 | @sec-minimal-gpt |
+| **Baseline（RL 基準）** | 政策梯度裡「跟平均比而非跟零比」的減項，不偏但降變異數 | @sec-pg-math |
+| **BPC（bits per character，每字元位元）** | 跨 tokenizer 公平的尺：raw loss 換算成「每個字元幾 bit」 | @sec-build-bpc |
+| **Bradley-Terry 模型** | 把「A 勝 B 的機率」寫成 $\sigma(r_A-r_B)$，DPO 損失的出發點 | @sec-dpo-math |
+| **因果遮罩（causal mask）** | 把未來位置填 $-\infty$，讓第 $i$ 個 token 只能看 $\le i$ | @sec-build-attention |
+| **Cross-entropy（交叉熵）** | 「預測下一字」的 loss；亂猜時 $=\ln V$ | @sec-eval |
+| **資料漂移（data drift）** | 線上流量分布偏離訓練分布，是模型「會腐壞」的原因 | @sec-governance |
+| **去重（dedup）** | 移除近似重複文件；用 MinHash + LSH 從 $O(n^2)$ 降到接近 $O(n)$ | @sec-build-dedup |
+| **Digest（sha256 內容指紋）** | 模型身份「認內容不認檔名」——改名不變、改一個權重就變 | @sec-build-governance |
+| **DPO（直接偏好優化）** | 用一條封閉式損失直接學偏好，免 reward model、免 RL | @sec-build-dpo |
+| **熵效率（entropy efficiency）** | 熵 / $\log_2 V$，跨語言通用的「資料健康」尺（中文熵高不代表壞）| @sec-data |
+| **FlashAttention** | 數學等價、把 attention 記憶體從 $O(T^2)$ 降到 $O(T)$ 的算法 | @sec-efficiency |
+| **GQA（grouped-query attention）** | 多個 query head 共用 K/V，省 KV-cache 記憶體（「省」）| @sec-modern |
+| **Goodhart 定律** | 指標一旦變成目標就不再是好指標——reward hacking 的本質 | @sec-alignment |
+| **GRPO** | 不需 critic 的 RLHF，用「同組平均獎勵」當 baseline | @sec-alignment |
+| **Held-out（保留集）** | 訓練沒看過的資料；衡量「真學會還是死背」只能看它 | @sec-tiny-dpo |
+| **IPO** | 把 DPO 的 margin 從「推到無窮」改成「回歸固定目標」，防過度優化 | @sec-alignment |
+| **Jaccard 相似度** | $\lvert A\cap B\rvert/\lvert A\cup B\rvert$；MinHash 估的就是它 | @sec-minhash-math |
+| **KL 錨（KL anchor）** | 用 KL 罰把 policy 綁在 reference 附近，防 reward hacking | @sec-alignment |
+| **KV-cache** | 快取算過的 key/value，每步只算新 token，$O(T^2)\to O(T)$（但不一定更快，看 regime）| @sec-kvcache |
+| **LayerNorm / RMSNorm** | 正規化層；RMSNorm 砍掉減均值、只除 RMS，是「省」不是「準」| @sec-modern |
+| **Logits** | 模型最後輸出、過 softmax 前的每個 token 分數 | @sec-minimal-gpt |
+| **LSH（locality-sensitive hashing）** | 把 MinHash 簽章切 band、只細比同桶的對；那條 S 曲線決定 recall | @sec-minhash-math |
+| **Margin（DPO）** | chosen 比 rejected「相對 reference 多漲多少」；$>0$ 即偏好排對 | @sec-margin-math |
+| **MinHash** | 把文件壓成短簽章，簽章相等機率 $=$ Jaccard | @sec-minhash-math |
+| **MLOps** | DevOps 的 ML 版，多了「資料」與「模型會腐壞」兩個變數 | @sec-governance |
+| **Model card** | 一份人讀的模型單據（評估/用途/限制），進 git 當審計軌跡 | @sec-governance |
+| **Multi-head（多頭）** | 平行擺多顆 attention head，各看一個子空間再 concat | @sec-build-attention |
+| **Overfit（過擬合）** | train loss 明顯低於 val loss——背起來而非學通則 | @sec-tiny-gpt |
+| **Perplexity（困惑度）** | $e^{\text{loss}}$；當尺被汙染時會給相反結論（SFT 案例）| @sec-eval |
+| **PPO** | InstructGPT 的經典 RLHF，用 critic + clipped surrogate | @sec-alignment |
+| **Promotion gate（上線閘）** | 沒過資料 gate / 沒比現行好就擋下，用程式 enforce 上線 | @sec-build-governance |
+| **Reference model** | DPO/RLHF 裡凍結的對照模型（通常是 SFT 後那顆）| @sec-build-dpo |
+| **Residual connection（殘差連接）** | $x=x+f(x)$，讓深層網路訓得動的「承重牆」 | @sec-minimal-gpt |
+| **Reward hacking** | policy 鑽 reward model 的漏洞，代理分數暴漲、真實品質崩 | @sec-alignment |
+| **Reward model（獎勵模型）** | RLHF 裡一顆獨立模型，學人類偏好給分數 | @sec-alignment |
+| **RoPE（rotary position embedding）** | 用旋轉編位置，內積只跟相對距離有關，外推好又省參數 | @sec-rope-math |
+| **取樣（sampling）** | 從下一字分布抽字的策略（top-k / top-p / min-p），用「人讀」選不是 loss | @sec-efficiency |
+| **Seed / 多 seed** | 隨機種子；跑多 seed 報 mean±std 才知差異是真是運氣 | @sec-tiny-eval |
+| **SFT（監督式微調 / 指令微調）** | 在「問:…答:…」格式上續訓，把續寫機器變成會應答 | @sec-alignment |
+| **Shingle（字元 n-gram）** | 把文件切成字元片段集合，去重的基本單位（中文不切詞）| @sec-build-dedup |
+| **重大性原則（significance）** | 只在「差距小、決策貴、要對外宣稱」時才多跑 seed | @sec-eval |
+| **Softmax** | 把一組分數轉成「和為 1」的權重；把「選擇」變成可微 | @sec-build-attention |
+| **SwiGLU** | 帶閘門的前饋層，比 GELU-MLP 略「準」（降 loss）| @sec-modern |
+| **Token / tokenizer** | 模型處理的最小單位 / 切 token 的方法；char-level vs BPE 影響 BPC | @sec-eval |
+| **Transformer block** | attention + MLP，各帶一條 residual，疊 $N$ 個成 GPT | @sec-minimal-gpt |
+| **Val / test split** | 驗證集 / 測試集；test≈val 代表會類推、沒過擬合 | @sec-eval |
+
+::: {.callout-note}
+## 找不到某個詞？
+本書刻意只收「會反覆出現、或容易搞混」的術語。更細的數學定義在 @sec-math（數學推導附錄），
+更完整的程式在公開 repo（<https://github.com/ryanGTR/llm-from-scratch>）。
+:::

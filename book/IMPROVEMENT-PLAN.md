@@ -17,8 +17,16 @@ tags: [book, plan, handoff, quarto]
 - **已深耕到 A 級**：✅ Ch1–Ch7 全部完成（Ch1 最小 GPT＝範本、Ch2 現代零件、Ch3 效率、
   Ch4 真實資料、Ch5 評估、Ch6 部署治理、Ch7 對齊）。每章都有：學習目標框＋一段逐行走讀＋
   一個 💻 純 CPU 真跑範例（真數字）＋章末 3 題（預測/動手/弄壞，答案摺疊）。
-- **下一步**：➡️ 剩 **09 術語表**（未建，#6）、**前言「受眾＋假設知識」段**（#4）、
-  **Ch8 數學附錄補直覺**（已較完整）。內容主體 Ch1–7 已收口。
+- **下一步**：➡️ 全書主體 + 收口項已完成。可選的後續：補圖（前言/章節插圖）、把 examples 接進 CI、
+  Ryan 拍板 push + 重部署 GitHub Pages。
+- **✅ 本波收口（2026-06-22 第二段）**：
+  - **09 術語表**（#6）：新建 `09-glossary.qmd`（符號約定表 + ~50 條術語，每條一句話 + 出處交叉連結），
+    已加進 `_quarto.yml` 附錄、render 通過（52 個 xref 全解析）。
+  - **前言受眾段**（#4）：`index.qmd` 加「這本書寫給誰、你需要先會什麼」（有經驗工程師 + ML 新手；
+    需 Python + 線代 + 一點機率；不需 ML/GPU）。
+  - **Ch8 補直覺**（#5）：四條推導各加一個「直覺」callout（兩步壓一條 / β 是反方向煞車 /
+    MinHash 是便宜估計 / baseline 是跟平均比），並把政策梯度節補上 `{#sec-pg-math}` 標籤、
+    全部交叉連到對應章末習題與 💻 走讀。
 - **本機 commit 但⚠️尚未 push**：`5f4962b`(Ch1)、`394f2d6`(Ch2)、`<本波 ch3-7>`。
   Ryan 還沒決定要不要 push + 重部署 GitHub Pages。
 - **本波順手修的全書級 bug**：`08-math-appendix.qmd` 標題原為 `.unnumbered`，導致全書對
@@ -83,7 +91,7 @@ tags: [book, plan, handoff, quarto]
 
 | 章 | 現況 | 待辦 |
 |---|---|---|
-| 前言 | 完整 | 加「受眾 + 假設知識」段（#4）|
+| 前言 | **✅** | 已加「受眾＋假設知識」段（#4）|
 | Ch1 最小 GPT | **✅ A 級（範本）** | 已補：學習目標框、attention 逐行走讀（@sec-build-attention）、💻 CPU 版自包含 `tiny_gpt.py`（真跑、真數字 val 1.59、莎士比亞 wow 對照）、章末 3 題（預測/動手/弄壞，答案摺疊）。**其他章照這個範本套** |
 | Ch2 現代零件 | **✅ A 級** | 已補：學習目標框、💻 CPU 對照（`tiny_modern.py` 一鍵切 RMSNorm/SwiGLU/RoPE，真跑 5 配置驗「準/省」：RMSNorm +0.003 持平、SwiGLU −0.019、RoPE −0.007、全開 −0.025 且省參數）、章末 3 題（預測 GQA/對答案/弄壞）。保留準vs省主線+repo 表+RoPE 外推圖 |
 | Ch3 效率取樣 | **✅ A 級** | 已補：學習框、KV-cache 逐行走讀(@sec-build-kvcache)、💻 `tiny_kvcache.py`(先對拍證對再計時 9.58×)、章末 3 題 |
@@ -91,15 +99,15 @@ tags: [book, plan, handoff, quarto]
 | Ch5 評估 | **✅ A 級** | 已補：學習框、BPC 逐行換算(@sec-build-bpc)、💻 `tiny_eval.py`(亂猜基準＋BPC＋3-seed std=0.005)、章末 3 題 |
 | Ch6 部署治理 | **✅ A 級** | 已補：學習框、digest+gate 逐行(@sec-build-governance)、💻 `tiny_serve.py`(digest不認檔名＋gate 真擋)、章末 3 題 |
 | Ch7 對齊 | **✅ A 級（皇冠）** | 已補：學習框、DPO loss 逐行從 seq_logprob 建起(@sec-build-dpo)、💻 `tiny_dpo.py`(train-acc騙你的最小重現)、章末 3 題 |
-| Ch8 數學附錄 | 較完整（已改為有編號）| 補直覺、連到章末習題；`.unnumbered` 已移除以修交叉參照 |
-| 09 術語表 | **未建** | #6 新增 |
+| Ch8 數學附錄 | **✅** | 已補：四條推導各加直覺 callout + 政策梯度補 `{#sec-pg-math}` + 交叉連到章末習題；`.unnumbered` 已移除修交叉參照 |
+| 09 術語表 | **✅ 已建** | `09-glossary.qmd`：符號約定 + ~50 條術語（#6）|
 
 ## 下一步（建議）
 
 **✅ Ch1 已深耕成 A 級範本**（見上表）。配套程式 `book/examples/tiny_gpt.py`——自包含、純 CPU、
 真跑過（0.62M 參數、3000 步、val loss 1.59、生成出有莎士比亞形狀的對白）。**接續者照這個範本套下一章。**
 
-**已完成**：Ch1–Ch7 全部深耕成 A 級（見上表）。內容主體收口，剩 09 術語表(#6)、前言受眾段(#4)、Ch8 補直覺。
+**已完成**：Ch1–Ch7 全部深耕成 A 級、前言受眾段(#4)、Ch8 補直覺(#5)、09 術語表(#6)——A 級檢查表全項收口。
 **驗證方式**：每章 `~/.local/quarto/bin/quarto render --to html`（或全書 render）→ 確認零 error、
 零 `Unable to resolve crossref`、新 anchor 都在、嵌入數字與 examples 真跑輸出一致。本波已驗過。
 範本要點：每章都該有①學習目標框 ②一段逐行走讀 ③一個 💻 CPU 最小可跑版（真跑、真數字）
