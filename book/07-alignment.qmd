@@ -6,6 +6,17 @@
 我把對齊的兩個家族都親手走過：**偏好優化**（DPO → IPO）和 **RL 對齊**（GRPO → PPO），
 每個都有對照實驗。這一章是整本書的皇冠。
 
+::: {.callout-note}
+## 這章的定位（讀之前先對齊期待）
+**假設你已經會**：第 1 章的小 GPT 與「預測下一字」的訓練、第 5 章「選對指標／看 held-out」的紀律。
+不需要任何 RLHF 背景。
+
+**學完你會**：(1) 用一句話講清楚 SFT / DPO / IPO / GRPO / PPO 各自的**漂亮機制**與**會咬人的坑**；
+(2) **逐行**把 DPO 損失從「序列對數機率」建起來，並說清楚 `margin`、`β`、`logsigmoid` 各做什麼；
+(3) 在**你自己的 CPU 上**親手重現本章最重要的一課——**train-acc 衝 100%、held-out 才說真話**。
+本章的 💻 配套程式 `tiny_dpo.py` 完整內嵌、純 CPU 兩三分鐘可跑。
+:::
+
 ## SFT：從「會接話」到「會聽話」
 
 第一步 SFT（指令微調）很單純：在「問：…答：…」的對話格式上續訓，模型的行為就從「續寫維基」
@@ -15,22 +26,60 @@
 尺被汙染（alignment tax + gold 答案洩漏進預訓練）。改量「應答行為率」，base 29% → SFT 72%——
 **選對指標，結論才對。**
 
-## DPO：免 reward model 的捷徑，與它的封閉式
+## DPO：免 reward model 的捷徑，與它的封閉式 {#sec-build-dpo}
 
 DPO（直接偏好優化）給一組「同一個問題、一好一壞」的回答，用一條封閉式損失直接優化偏好，
-不需要訓練 reward model、也不需要 RL：
+不需要訓練 reward model、也不需要 RL。我們從**一個序列的對數機率**這個積木開始，一步一步
+把這條損失建起來——這就是 `tiny_dpo.py` 裡 `dpo_loss` 的逐行拆解。
+
+**第 0 步——一段序列的對數機率。** 模型對「下一字」給機率；把一整段回答每個位置的
+log p(token｜前文) 加起來，就是「這個模型有多想生出這段話」的分數：
 
 ```python
-def dpo_loss(policy_lp, ref_lp, beta):
-    margin = _margin(policy_lp, ref_lp)         # <1>
-    loss = -F.logsigmoid(beta * margin).mean()  # <2>
-    acc = (margin > 0).float().mean()
-    return loss, margin.mean().item(), acc.item()
+def seq_logprob(model, seq):
+    logits = model(seq[:, :-1])                 # 每個位置對下一字的分數
+    logp = F.log_softmax(logits, dim=-1)
+    tgt = seq[:, 1:].unsqueeze(-1)              # 真正的下一字
+    return logp.gather(-1, tgt).squeeze(-1).sum(dim=1)   # Σ_t log p：整段的對數機率
 ```
-1. `margin` = chosen 與 rejected 各自「policy 相對 reference 的對數機率比」之差。
-2. 損失把這個 margin 推大——拉高 chosen、壓低 rejected。
 
-這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」
+**第 1 步——policy 相對 reference 漲了多少。** 我們不看「絕對機率」，看「**相對凍結的
+reference（=SFT 後、還沒做偏好優化的那顆）漲了多少**」。對 chosen 算一次、rejected 算一次：
+
+```python
+pol_ch,  pol_rej  = seq_logprob(model, chosen), seq_logprob(model, rejected)
+ref_ch,  ref_rej  = seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)
+```
+
+**第 2 步——margin：chosen 比 rejected 多漲多少。** 把兩邊的「相對 reference 漲幅」相減。
+margin > 0 就代表「policy 把 chosen 推得比 rejected 高」，也就是偏好排對了：
+
+```python
+margin = (pol_ch - ref_ch) - (pol_rej - ref_rej)
+```
+
+**第 3 步——把 margin 推大的損失。** 用 `logsigmoid` 把 margin 變成損失：margin 越大、損失越小。
+`β` 是溫度，控制「推多用力 / 離 reference 多遠」（β 的反直覺行為見 @sec-margin-math）：
+
+```python
+loss = -F.logsigmoid(beta * margin).mean()      # 拉高 chosen、壓低 rejected
+acc  = (margin > 0).float().mean()              # margin>0 的比例 = 偏好排對率
+```
+
+把四步拼起來就是完整的 `dpo_loss`——**沒有 reward model、沒有 RL，就一條可微的損失**：
+
+```python
+def dpo_loss(model, ref, chosen, rejected, beta):
+    pol_ch,  pol_rej  = seq_logprob(model, chosen), seq_logprob(model, rejected)
+    ref_ch,  ref_rej  = seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)
+    margin = (pol_ch - ref_ch) - (pol_rej - ref_rej)
+    loss = -F.logsigmoid(beta * margin).mean()
+    acc  = (margin > 0).float().mean()
+    return loss, acc.item()
+```
+
+這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」——
+本來 RLHF 要先學 reward、再用 RL 去最大化它，DPO 證明這兩步可以**合併成上面這一條損失**
 （完整證明見 @sec-dpo-math）。
 
 ### 死背 vs 真學：train-acc 會騙你
@@ -52,6 +101,43 @@ DPO 唯一的旋鈕是 β。教科書直覺是「β 大＝KL 罰得重＝貼緊 
 剛好相反**——β 越小，policy 漂移越大（為什麼見 @sec-margin-math）。
 
 ![β 旋鈕：小 β 反而更激進（漂移更大）。](images/dpo_beta_sweep.png){#fig-beta width=85%}
+
+## 💻 在你的機器上：親手看 train-acc 怎麼騙你 {#sec-tiny-dpo}
+
+圖會說話，但自己跑過一次更難忘。配套程式 `tiny_dpo.py` 把上面那條 `dpo_loss` 接到第 1 章的
+char-level 小 GPT 上，**純 CPU、兩三分鐘**，讓你親手重現 @fig-dpo-gen 的那一課。
+
+它先在莎士比亞上預訓練一顆 base 當 reference，複製一份當 policy，然後設**兩種偏好軸**做 DPO：
+
+- **A 軸（可學）**：chosen = 真實片段、rejected = 把同一段**字元順序打亂**。「真的比亂的好」是個
+  有語義的通則 → 模型該能**類推**到沒看過的片段。
+- **B 軸（學不動）**：chosen / rejected 都是真實片段，誰是 chosen 用**擲硬幣亂指**。這規則沒有
+  任何語義、無從類推 → 模型只能把訓練題**背起來**。
+
+```bash
+curl -o input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+python tiny_dpo.py
+```
+
+在我的 Framework 16（純 CPU）上跑出來：
+
+```
+偏好軸                               train-acc  held-out-acc
+---------------------------------------------------------
+A 可學（真實 vs 打亂）                       100.0%        100.0%
+B 學不動（隨機標籤）                          100.0%         47.7%
+```
+
+**怎麼讀**：兩軸的 **train-acc 都是 100%**——只看 train，你會宣稱「兩個都學會了」。但 held-out
+說了真話：A 軸 100%（真的學到「真>亂」這個通則、能類推），B 軸掉回 **47.7%≈擲硬幣**（規則無從
+類推，100% 只是死背訓練題）。這跟 @fig-dpo-gen 的容量內 vs 容量外是同一個形狀，只是縮到你的
+筆電上、兩三分鐘就親眼看到。
+
+::: {.callout-important}
+## 這就是 MLOps 鐵則的最小可重現版
+**train 上漂亮的數字，可能只是背起來。** 衡量「有沒有真學會」的唯一誠實方式是看 **held-out**。
+這條鐵則在 DPO 如此、在你日後任何模型都如此——這也是為什麼第 5 章要花整章講「質疑你的尺」。
+:::
 
 ## IPO：把「margin 推到無窮」改成「回歸固定目標」
 
@@ -106,3 +192,45 @@ DPO 把 reward 隱含在 policy 裡；RLHF 把它做成一顆**獨立的 reward 
 | PPO | clip 防破壞性更新 | 要隔離一個機制得先關掉會蓋過它的另一個 |
 
 > 五個方法，五次「換把尺、結論就翻」。**永遠質疑你的指標有沒有被汙染或被鑽**——這比任何單一方法都重要。
+
+## 練習 {#sec-ch7-exercises}
+
+::: {.callout-note}
+## 1（先預測）：把 reference 拿掉會怎樣？
+DPO 的 `margin` 是「policy 相對 **reference** 的漲幅」之差。**先寫下你的預測**：如果把 `dpo_loss`
+裡的 `ref_ch`、`ref_rej` 都當成 0（等於沒有 reference 錨），訓練會怎麼變？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+少了 reference 這個錨，損失只剩「把 chosen 的絕對對數機率推高、rejected 推低」，policy 會更不受
+約束地漂移、更容易過度優化（把整個分布往訓練偏好硬拉），也更可能把無關的東西一起帶歪。
+reference 項的作用正是 @sec-margin-math 講的 KL 錨——它把「漲幅」而非「絕對機率」當目標，
+讓 policy 待在可信舊模型附近。動手把 `ref_*` 設 0 跑一次，對照 held-out 與生成樣本。
+:::
+:::
+
+::: {.callout-note}
+## 2（動手）：掃 β
+在 `tiny_dpo.py` 把 `beta` 從 0.1 改成 0.02 和 0.5 各跑一次，記錄 A/B 兩軸的 train/held-out acc。
+β 變大、變小，分別怎麼影響「學得多快 / 漂移多遠」？對照 @fig-beta。
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+固定步數下，**β 小反而漂移更大**（見 @sec-margin-math 的反直覺結果）——這跟教科書「β 大＝罰得重＝
+貼緊 reference」的直覺一致，但要小心「固定步數」這個前提。A 軸（可學）通常各 β 都能類推到 held-out；
+B 軸（學不動）不管 β 怎麼調，held-out 都停在擲硬幣附近——**煞車調得再好，學不動的東西還是學不動。**
+:::
+:::
+
+::: {.callout-warning}
+## 3（弄壞）：把 B 軸的「隨機標籤」改成「可學規則」
+B 軸現在用擲硬幣指定 chosen。把它改成一條**有語義、模型學得動**的規則（例如「chosen = 兩段中
+較長的那段」），重跑。held-out 會怎麼變？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+held-out 會從 ~50% 爬上去——因為「比較長」是個 8M 模型也能從序列長度線索學到、且能類推的通則。
+這直接證明剛才的 47.7% **不是 DPO 壞了**，而是那條規則本身無從類推。**同一套損失，換個學得動的
+偏好軸，held-out 就說真話了**——再次呼應「問題常在尺/任務、不在方法」。
+:::
+:::

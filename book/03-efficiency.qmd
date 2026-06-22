@@ -6,6 +6,17 @@
 第 2 章的零件多半在改「準」或改架構。這一章我們看純粹的「跑得快、佔得少」——以及一個重要的教訓：
 效率技巧的好處**跟你的 regime 強相關**，不能照搬論文結論。
 
+::: {.callout-note}
+## 這章的定位（讀之前先對齊期待）
+**假設你已經會**：第 1 章的 attention（$O(T^2)$ 的分數矩陣）與自回歸生成。不需要任何
+CUDA / 系統優化背景。
+
+**學完你會**：(1) 講清楚 FlashAttention（省記憶體）與 KV-cache（省重算）各自省的是什麼、為什麼；
+(2) **逐行**把 KV-cache 的生成迴圈建起來；(3) 在**你自己的 CPU 上**親手量到 KV-cache 的加速、
+並**先證明它沒算錯**（逐 token 對拍）。最重要的是學到一個習慣：**別信「一定更快」，去量你自己的
+workload。** 本章 💻 配套程式 `tiny_kvcache.py` 純 CPU、十幾秒、不需語料。
+:::
+
 ## FlashAttention：同樣的數學，更省的算法
 
 回想第 1 章的 attention：它會把整個 $T\times T$ 的分數矩陣 $\frac{QK^\top}{\sqrt d}$ 攤出來、做 softmax、
@@ -54,6 +65,92 @@ per-step 開銷**超過**了省下來的 $O(T^2)$ 重算。
 
 如果只信直覺、不去量，你會在錯的地方優化。
 
+### 逐行把 KV-cache 建起來 {#sec-build-kvcache}
+
+樸素生成每一步都把「越來越長的整段」重餵一次（第 1 章那個 `generate`）。KV-cache 的差別只有一句話：
+**把算過的 key/value 留著，每步只算新 token 那一個**。我們把它逐行建出來。
+
+**第 0 步——樸素版在浪費什麼。** 生第 $t$ 個字時，樸素版重算位置 $0..t$ 全部的 q/k/v，但其中
+$0..t{-}1$ 的 k/v 跟上一步**一模一樣**。這就是 $O(T^2)$ 的重複勞動：
+
+```python
+def generate_naive(self, idx, n):
+    for _ in range(n):
+        logits = self(idx[:, -block_size:])      # 整段重跑一次（含已算過的 k/v）
+        nxt = logits[:, -1, :].argmax(-1, keepdim=True)
+        idx = torch.cat([idx, nxt], dim=1)
+    return idx
+```
+
+**第 1 步——一個能吃 cache 的 attention step。** 改寫 attention：只收「新 token」一個 `(B,1,C)`，
+把它的 k/v **接到歷史 cache 後面**，再讓新 query 對「整段歷史 + 自己」算 attention。注意
+**不需要因果遮罩**了——cache 裡全是過去，本來就看得到：
+
+```python
+def step(self, x_t, cache):                       # x_t 只有新 token：(B,1,C)
+    q, k, v = self.qkv(x_t).split(n_embd, dim=2)
+    # ...reshape 成多頭...
+    if cache is None:
+        k_all, v_all = k, v
+    else:
+        k_all = torch.cat([cache[0], k], dim=2)   # 接上歷史 key
+        v_all = torch.cat([cache[1], v], dim=2)   # 接上歷史 value
+    att = q @ k_all.transpose(-2, -1) / math.sqrt(head_dim)  # 不必遮罩：cache 全是過去
+    y = F.softmax(att, dim=-1) @ v_all
+    return self.proj(...), (k_all, v_all)         # 回傳輸出 + 更新後的 cache
+```
+
+**第 2 步——生成迴圈：先灌 prompt、之後每步一個 token。** 把每層的 cache 串起來，每步只前傳
+一個新 token，$O(T^2)\to O(T)$：
+
+```python
+def generate_cached(self, idx, n):
+    caches = [None] * n_layer
+    # 先把 prompt 逐 token 灌進 cache（略）...
+    for _ in range(n):
+        nxt = logits[:, -1, :].argmax(-1, keepdim=True)
+        x = self.tok(nxt) + self.pos(...)
+        for i, b in enumerate(self.blocks):
+            x, caches[i] = b.step(x, caches[i])   # 每步只算新 token 那一個
+        logits = self.head(self.lnf(x))
+    return out
+```
+
+## 💻 在你的機器上：先證它沒算錯，再看它快多少 {#sec-tiny-kvcache}
+
+效率優化最容易犯的錯，是「優化完忘了驗證結果還對不對」。配套程式 `tiny_kvcache.py`（純 CPU、
+十幾秒、不需語料）刻意把順序倒過來：**先證對、再看快**。
+
+模型用隨機初始化即可——**計時跟模型好不好無關，只跟「算多少」有關**。用 greedy 解碼讓兩條路徑
+可以逐 token 對拍：
+
+```bash
+python tiny_kvcache.py
+```
+
+在我的 Framework 16（純 CPU）上：
+
+```
+參數 0.88M，context 上限 512，生成 500 token，device=cpu
+
+逐 token 完全相同？ True（KV-cache 是省、不是近似）
+naive  （每步重算全序列）：  5.65 s
+cached （每步只算新 token）：  0.59 s
+加速：9.58×
+```
+
+**怎麼讀**：第一行最重要——cached 與 naive 的輸出**逐 token 完全相同**，證明 KV-cache 是
+數學等價的「省」，不是會改變結果的近似。確認對了，才看第二件事：CPU 上長生成快了近 10 倍。
+這正好對上前面那個 regime 故事的另一面——**KV-cache 在「CPU 長生成」這個 regime 是大勝**，
+在「GPU 小模型短生成」反而會輸。同一個技巧，兩個相反結論，全看 regime。
+
+::: {.callout-tip}
+## 加速倍率會隨設定變——這正是重點
+你跑出來的倍率不會剛好是 9.58×：它隨**生成長度**（越長，naive 的 $O(T^2)$ 浪費越多、cached 贏越多）、
+層數、執行緒數而變。把 `n_new` 從 500 改成 100 再改成 1000，看倍率怎麼動——你會親手畫出
+「$O(T^2)$ vs $O(T)$」這條差距隨長度張開的曲線。
+:::
+
 ## 取樣：從機率分布裡怎麼抽下一個字
 
 模型每一步輸出的是「下一個字的機率分布」。怎麼從這個分布抽一個字出來，決定了輸出的風格——
@@ -85,3 +182,43 @@ if top_p is not None:                                  # <1>
 - KV-cache **不一定更快**：小模型短生成的 GPU 上反而慢 18%。省的技巧是否真省，看你的 regime、量你的 workload。
 - 取樣方法（top-k/top-p/min-p）的選擇由任務決定，用人讀來判斷，不是 loss。
 - 這一章的核心不是某個技巧，是一個習慣：**別信「一定更快」，去量。**
+
+## 練習 {#sec-ch3-exercises}
+
+::: {.callout-note}
+## 1（先預測）：加速倍率隨生成長度怎麼變？
+在 `tiny_kvcache.py` 把 `n_new` 依序設成 100、500、1000。**先寫下你的預測**：加速倍率會往哪個方向走？
+為什麼？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+倍率隨生成長度**變大**。naive 的總成本是 $O(T^2)$（每步重算越來越長的序列），cached 是 $O(T)$；
+序列越長，naive 浪費的重算越多、差距張得越開。短生成時 cached 的好處還不明顯，這也呼應「GPU 小模型
+短生成反而慢」——在那個 regime，per-step 開銷大過省下的重算。
+:::
+:::
+
+::: {.callout-note}
+## 2（動手）：算一次記憶體帳
+FlashAttention 把 attention 的記憶體從 $O(T^2)$ 降到 $O(T)$。假設 context 從 1024 變 4096（×4），
+樸素 attention 的分數矩陣記憶體變幾倍？這跟本章「同卡 context ×4」的實測怎麼對上？
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+分數矩陣是 $T\times T$，$T$ ×4 → 記憶體 ×16。所以在固定顯存下，省掉這塊 $O(T^2)$ 正是讓你能把
+context 拉長好幾倍的原因；本章「同卡 1024→4096」的實測就是這個帳的具體結果。FlashAttention 是
+數學等價的「省」——記憶體省下來，數字不變。
+:::
+:::
+
+::: {.callout-warning}
+## 3（弄壞）：拔掉 KV-cache 的「接歷史」
+把 `Attn.step` 裡 `torch.cat([cache[0], k], ...)` 改成只用當前的 `k`（不接歷史），重跑對拍。
+
+::: {.callout-tip collapse="true"}
+## 參考答案
+「逐 token 完全相同？」會變成 `False`——少了歷史 key/value，每個新 token 只能注意到自己，等於
+把因果上下文整個丟掉，生成立刻走樣。這證明 cache 不是「順便快取」，它**承載了全部歷史脈絡**；
+也是為什麼第 0 步要先確認「對不對」再談「快不快」。
+:::
+:::

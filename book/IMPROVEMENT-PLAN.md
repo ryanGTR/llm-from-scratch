@@ -14,14 +14,29 @@ tags: [book, plan, handoff, quarto]
 
 ## ⏩ 目前狀態（最後更新 2026-06-22，接續者先看這格）
 
-- **已深耕到 A 級**：✅ Ch1（最小 GPT，範本）、✅ Ch2（現代零件）。
-- **下一章**：➡️ **Ch7（對齊，皇冠章）**——已較完整，補 DPO loss 走讀 + 章末題最划算。
-- **本機 commit 但⚠️尚未 push**：`5f4962b`(Ch1)、`394f2d6`(Ch2)。Ryan 還沒決定要不要 push + 重部署 GitHub Pages。
-- **配套程式新慣例**：A 級章節的「💻 在你的機器上」對應 `book/examples/*.py`——
-  - `tiny_gpt.py`（Ch1）：自包含 char-level 小 GPT，純 CPU，~1分50秒，val 1.59。
-  - `tiny_modern.py`（Ch2）：一鍵切 RMSNorm/SwiGLU/RoPE 的對照，純 CPU ~7分鐘。
-  - 都讀 `input.txt`（= repo 的 `data/raw/input.txt`，1.1MB tiny shakespeare；examples 內可 `ln -s`）。
+- **已深耕到 A 級**：✅ Ch1–Ch7 全部完成（Ch1 最小 GPT＝範本、Ch2 現代零件、Ch3 效率、
+  Ch4 真實資料、Ch5 評估、Ch6 部署治理、Ch7 對齊）。每章都有：學習目標框＋一段逐行走讀＋
+  一個 💻 純 CPU 真跑範例（真數字）＋章末 3 題（預測/動手/弄壞，答案摺疊）。
+- **下一步**：➡️ 剩 **09 術語表**（未建，#6）、**前言「受眾＋假設知識」段**（#4）、
+  **Ch8 數學附錄補直覺**（已較完整）。內容主體 Ch1–7 已收口。
+- **本機 commit 但⚠️尚未 push**：`5f4962b`(Ch1)、`394f2d6`(Ch2)、`<本波 ch3-7>`。
+  Ryan 還沒決定要不要 push + 重部署 GitHub Pages。
+- **本波順手修的全書級 bug**：`08-math-appendix.qmd` 標題原為 `.unnumbered`，導致全書對
+  `@sec-dpo-math / @sec-margin-math / @sec-minhash-math / @sec-rope-math` 的交叉參照**全部解析失敗**
+  （render 時 `Unable to resolve crossref`、HTML 連結變成同頁死錨、文字顯示成 `sec-margin-math`）。
+  拿掉 `.unnumbered` 後 8 處 -math 參照全部解析成 `08-math-appendix.html#sec-...`（顯示「小节 8.x」），
+  render 零警告。附錄因此變成有編號（章 8），可接受。
+- **配套程式新慣例**：A 級章節的「💻 在你的機器上」對應 `book/examples/*.py`，全部純 CPU、真跑過——
+  - `tiny_gpt.py`（Ch1）：自包含 char-level 小 GPT，~1分50秒，val 1.59。
+  - `tiny_modern.py`（Ch2）：一鍵切 RMSNorm/SwiGLU/RoPE 對照，~7分鐘。
+  - `tiny_kvcache.py`（Ch3）：KV-cache vs naive，先對拍逐 token 相同（證對）再計時，~十幾秒、不需語料（9.58×）。
+  - `tiny_dedup.py`（Ch4）：注入重複+髒語法，示範聚合指標盲點(20.7%)＋MinHash/LSH(候選佔1.9%)，純標準庫、不需 torch、幾秒。
+  - `tiny_eval.py`（Ch5）：亂猜基準 ln65=4.174、BPC、3-seed mean±std(1.680±0.005)，~3–4分鐘。
+  - `tiny_serve.py`（Ch6）：sha256 digest 身份(認內容不認檔名)＋promotion gate(BLOCK/PROMOTE/UNREGISTERED)，~1分鐘。
+  - `tiny_dpo.py`（Ch7）：DPO loss 逐行＋兩種偏好軸示範「train-acc 騙你」（A 100%/100%、B 100%/47.7%），~2–3分鐘。
+  - 需語料的都讀 `input.txt`（= repo 的 `data/raw/input.txt`，1.1MB tiny shakespeare；examples 內已 `ln -s`）。
   - **鐵則：書裡嵌的 loss/數字/生成樣本都要「真的在 CPU 上跑過」再貼，不杜撰**（合 Ryan「如實回報 / 選對指標」）。
+  - **可重現性雷**：MinHash 別用 Python 內建 `hash()`（對字串會加鹽、跨 process 不一致）——用 `zlib.crc32`。
 - **每章 A 級配方**（套到下一章）：①開頭學習目標框（假設你已會什麼 / 學完會做什麼）②一段「逐行建起來」走讀
   ③一個 💻 CPU 最小可跑版（真跑、真數字）④章末 2–3 題（先預測 / 動手 / 弄壞，答案用 `::: {.callout-tip collapse="true"}` 摺疊）。
 - **render 驗證**：`cd book && ~/.local/quarto/bin/quarto render 0X-xxx.qmd --to html`（quarto 在非系統 PATH）。
@@ -71,12 +86,12 @@ tags: [book, plan, handoff, quarto]
 | 前言 | 完整 | 加「受眾 + 假設知識」段（#4）|
 | Ch1 最小 GPT | **✅ A 級（範本）** | 已補：學習目標框、attention 逐行走讀（@sec-build-attention）、💻 CPU 版自包含 `tiny_gpt.py`（真跑、真數字 val 1.59、莎士比亞 wow 對照）、章末 3 題（預測/動手/弄壞，答案摺疊）。**其他章照這個範本套** |
 | Ch2 現代零件 | **✅ A 級** | 已補：學習目標框、💻 CPU 對照（`tiny_modern.py` 一鍵切 RMSNorm/SwiGLU/RoPE，真跑 5 配置驗「準/省」：RMSNorm +0.003 持平、SwiGLU −0.019、RoPE −0.007、全開 −0.025 且省參數）、章末 3 題（預測 GQA/對答案/弄壞）。保留準vs省主線+repo 表+RoPE 外推圖 |
-| Ch3 效率取樣 | 寫滿（偏摘要）| #2 CPU 版 KV-cache 量測、#5 習題 |
-| Ch4 真實資料 | 寫滿（偏摘要）| #7 生成對照 wow、#8 小資料版 |
-| Ch5 評估 | 寫滿（偏摘要）| #5 習題、#1 BPC 親手算一次 |
-| Ch6 部署治理 | 寫滿（偏摘要）| #2 內嵌 serve 程式碼、#5 習題 |
-| Ch7 對齊 | 較完整（皇冠）| #3 DPO loss 走讀、#5 習題 |
-| Ch8 數學附錄 | 較完整 | 補直覺、連到章末習題 |
+| Ch3 效率取樣 | **✅ A 級** | 已補：學習框、KV-cache 逐行走讀(@sec-build-kvcache)、💻 `tiny_kvcache.py`(先對拍證對再計時 9.58×)、章末 3 題 |
+| Ch4 真實資料 | **✅ A 級** | 已補：學習框、MinHash/LSH 去重管線逐行(@sec-build-dedup)、💻 `tiny_dedup.py`(聚合盲點20.7%＋LSH候選1.9%)、章末 3 題 |
+| Ch5 評估 | **✅ A 級** | 已補：學習框、BPC 逐行換算(@sec-build-bpc)、💻 `tiny_eval.py`(亂猜基準＋BPC＋3-seed std=0.005)、章末 3 題 |
+| Ch6 部署治理 | **✅ A 級** | 已補：學習框、digest+gate 逐行(@sec-build-governance)、💻 `tiny_serve.py`(digest不認檔名＋gate 真擋)、章末 3 題 |
+| Ch7 對齊 | **✅ A 級（皇冠）** | 已補：學習框、DPO loss 逐行從 seq_logprob 建起(@sec-build-dpo)、💻 `tiny_dpo.py`(train-acc騙你的最小重現)、章末 3 題 |
+| Ch8 數學附錄 | 較完整（已改為有編號）| 補直覺、連到章末習題；`.unnumbered` 已移除以修交叉參照 |
 | 09 術語表 | **未建** | #6 新增 |
 
 ## 下一步（建議）
@@ -84,9 +99,9 @@ tags: [book, plan, handoff, quarto]
 **✅ Ch1 已深耕成 A 級範本**（見上表）。配套程式 `book/examples/tiny_gpt.py`——自包含、純 CPU、
 真跑過（0.62M 參數、3000 步、val loss 1.59、生成出有莎士比亞形狀的對白）。**接續者照這個範本套下一章。**
 
-**已完成**：Ch1（範本）、Ch2（現代零件）。
-**建議順序**：Ch7（對齊，皇冠章，已較完整→補 DPO loss 走讀 + 章末題最划算）→ 之後 Ch3/4/5/6。
-一次一章、對檢查表逐項打勾、`quarto render` 驗證、commit。
+**已完成**：Ch1–Ch7 全部深耕成 A 級（見上表）。內容主體收口，剩 09 術語表(#6)、前言受眾段(#4)、Ch8 補直覺。
+**驗證方式**：每章 `~/.local/quarto/bin/quarto render --to html`（或全書 render）→ 確認零 error、
+零 `Unable to resolve crossref`、新 anchor 都在、嵌入數字與 examples 真跑輸出一致。本波已驗過。
 範本要點：每章都該有①學習目標框 ②一段逐行走讀 ③一個 💻 CPU 最小可跑版（真跑、真數字）
 ④章末 2–3 題（預測/動手/弄壞，`::: {.callout-tip collapse="true"}` 摺疊答案）。
 
