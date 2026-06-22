@@ -12,6 +12,21 @@ tags: [book, plan, handoff, quarto]
 > 從「B+ 的延伸技術敘事」提升到「A 級成書」的計畫。包含現狀評論、每個缺點的**具體補法**、
 > 一份「A 級章節檢查表」、各章現況、和下一步。
 
+## ⏩ 目前狀態（最後更新 2026-06-22，接續者先看這格）
+
+- **已深耕到 A 級**：✅ Ch1（最小 GPT，範本）、✅ Ch2（現代零件）。
+- **下一章**：➡️ **Ch7（對齊，皇冠章）**——已較完整，補 DPO loss 走讀 + 章末題最划算。
+- **本機 commit 但⚠️尚未 push**：`5f4962b`(Ch1)、`394f2d6`(Ch2)。Ryan 還沒決定要不要 push + 重部署 GitHub Pages。
+- **配套程式新慣例**：A 級章節的「💻 在你的機器上」對應 `book/examples/*.py`——
+  - `tiny_gpt.py`（Ch1）：自包含 char-level 小 GPT，純 CPU，~1分50秒，val 1.59。
+  - `tiny_modern.py`（Ch2）：一鍵切 RMSNorm/SwiGLU/RoPE 的對照，純 CPU ~7分鐘。
+  - 都讀 `input.txt`（= repo 的 `data/raw/input.txt`，1.1MB tiny shakespeare；examples 內可 `ln -s`）。
+  - **鐵則：書裡嵌的 loss/數字/生成樣本都要「真的在 CPU 上跑過」再貼，不杜撰**（合 Ryan「如實回報 / 選對指標」）。
+- **每章 A 級配方**（套到下一章）：①開頭學習目標框（假設你已會什麼 / 學完會做什麼）②一段「逐行建起來」走讀
+  ③一個 💻 CPU 最小可跑版（真跑、真數字）④章末 2–3 題（先預測 / 動手 / 弄壞，答案用 `::: {.callout-tip collapse="true"}` 摺疊）。
+- **render 驗證**：`cd book && ~/.local/quarto/bin/quarto render 0X-xxx.qmd --to html`（quarto 在非系統 PATH）。
+- **本機預覽**：`~/.local/quarto/bin/quarto preview --no-browser --port 4321`（改檔自動刷新）。
+
 ## 目前定位（誠實評論）
 
 **B+ 的「作品集深水區 / 延伸技術敘事」，不是 A 的「成書」。** 當作品集/履歷非常夠用；當要出版
