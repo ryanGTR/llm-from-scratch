@@ -125,7 +125,8 @@ if __name__ == "__main__":
         print(f"  seed {s:>4}: val loss {vl:.4f}   BPC {vl/math.log(2):.3f} bits/char")
 
     t = torch.tensor(losses)
-    mean, std = t.mean().item(), t.std().item()
+    mean = t.mean().item()
+    std = t.std().item() if len(losses) > 1 else 0.0    # 單一 seed（如 CI smoke）不算 std
     print(f"\n{len(seeds)} seeds: val loss {mean:.4f} ± {std:.4f}"
           f"   BPC {mean/math.log(2):.3f} ± {std/math.log(2):.3f} bits/char")
     print(f"相對亂猜基準 {baseline:.3f}，模型把不確定性砍了 "

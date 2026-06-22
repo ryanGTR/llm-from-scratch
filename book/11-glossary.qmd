@@ -31,7 +31,9 @@
 | **Bradley-Terry 模型** | 把「A 勝 B 的機率」寫成 $\sigma(r_A-r_B)$，DPO 損失的出發點 | @sec-dpo-math |
 | **因果遮罩（causal mask）** | 把未來位置填 $-\infty$，讓第 $i$ 個 token 只能看 $\le i$ | @sec-build-attention |
 | **Cross-entropy（交叉熵）** | 「預測下一字」的 loss；亂猜時 $=\ln V$ | @sec-eval |
-| **資料漂移（data drift）** | 線上流量分布偏離訓練分布，是模型「會腐壞」的原因 | @sec-governance |
+| **資料漂移（data drift）** | 線上流量分布偏離訓練分布，是模型「會腐壞」的原因；用 PSI 量化 | @sec-drift |
+| **PSI（population stability index）** | 把「線上分布 vs 訓練分布」量化成一個數字，設門檻自動觸發重訓 | @sec-build-drift |
+| **可觀測性（observability）** | 把模糊變事實：冷啟動、尾延遲 p95 都是「不量就不知道、量了立刻看到」 | @sec-serving |
 | **去重（dedup）** | 移除近似重複文件；用 MinHash + LSH 從 $O(n^2)$ 降到接近 $O(n)$ | @sec-build-dedup |
 | **Digest（sha256 內容指紋）** | 模型身份「認內容不認檔名」——改名不變、改一個權重就變 | @sec-build-governance |
 | **DPO（直接偏好優化）** | 用一條封閉式損失直接學偏好，免 reward model、免 RL | @sec-build-dpo |

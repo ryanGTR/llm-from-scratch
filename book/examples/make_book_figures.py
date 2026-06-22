@@ -128,9 +128,56 @@ def fig_gate():
     print("  -> governance_gate.png")
 
 
+# ---- Ch6：可觀測性——冷啟動 + 尾延遲（tiny_observability）----
+def fig_latency():
+    import tiny_observability as ob
+    svc = ob.Service()
+    prompt = torch.randint(0, ob.vocab_size, (1, 8))
+    for _ in range(30):
+        svc.generate(prompt)
+    cold, warm = svc.latencies[0], svc.latencies[1:]
+    p50, p95 = ob.pct(warm, 50), ob.pct(warm, 95)
+    print(f"  cold {cold:.1f}  p50 {p50:.1f}  p95 {p95:.1f}")
+
+    fig, ax = plt.subplots(figsize=(6.0, 3.8))
+    bars = ax.bar(["cold start\n(1st request)", "warm p50", "warm p95"],
+                  [cold, p50, p95], color=["#c0392b", "#27ae60", "#e67e22"])
+    ax.bar_label(bars, fmt="%.1f ms", padding=3)
+    ax.set_ylabel("latency (ms)"); ax.set_ylim(0, cold * 1.3)
+    ax.set_title("Observability: cold start & tail latency you'd miss with an average")
+    fig.tight_layout(); fig.savefig(f"{IMG}/serving_latency.png", dpi=120)
+    print("  -> serving_latency.png")
+
+
+# ---- Ch8：PSI 抓資料漂移（tiny_drift）----
+def fig_drift():
+    import tiny_drift as dr
+    rand = dr.make_rng()
+    edges = list(range(0, 61, 5)) + [1e9]
+    train = dr.sample_lengths(rand, 5000, 25, 6)
+    scen = [("in-dist\n(healthy)", dr.sample_lengths(rand, 2000, 25, 6)),
+            ("mild drift", dr.sample_lengths(rand, 2000, 28, 6)),
+            ("severe drift", dr.sample_lengths(rand, 2000, 32, 7))]
+    vals = [dr.psi(train, s, edges) for _, s in scen]
+    print(f"  PSI: {[round(v,3) for v in vals]}")
+
+    fig, ax = plt.subplots(figsize=(6.2, 3.8))
+    colors = ["#27ae60" if v < 0.1 else "#e67e22" if v < 0.25 else "#c0392b" for v in vals]
+    bars = ax.bar([s for s, _ in scen], vals, color=colors)
+    ax.bar_label(bars, fmt="%.3f", padding=3)
+    ax.axhline(0.1, ls="--", color="#7f8c8d", lw=1); ax.text(2.4, 0.11, "0.10 watch", fontsize=8, ha="right", color="#7f8c8d")
+    ax.axhline(0.25, ls="--", color="#c0392b", lw=1); ax.text(2.4, 0.27, "0.25 retrain", fontsize=8, ha="right", color="#c0392b")
+    ax.set_ylabel("PSI (online vs training)")
+    ax.set_title("Data drift: one number triggers retraining")
+    fig.tight_layout(); fig.savefig(f"{IMG}/drift_psi.png", dpi=120)
+    print("  -> drift_psi.png")
+
+
 if __name__ == "__main__":
-    print("Ch3 kvcache:");    fig_kvcache()
-    print("Ch4 dedup:");      fig_dedup()
-    print("Ch6 governance:"); fig_gate()
-    print("Ch7 dpo (~3min):"); fig_dpo()
+    print("Ch3 kvcache:");       fig_kvcache()
+    print("Ch4 dedup:");         fig_dedup()
+    print("Ch6 latency:");       fig_latency()
+    print("Ch6 governance:");    fig_gate()
+    print("Ch8 drift:");         fig_drift()
+    print("Ch7 dpo (~3min):");   fig_dpo()
     print("done.")

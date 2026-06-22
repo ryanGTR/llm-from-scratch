@@ -56,5 +56,26 @@ class TestDedupInvariants(unittest.TestCase):
         self.assertGreaterEqual(found, len(self.dup_truth) - 2)
 
 
+class TestDriftPSI(unittest.TestCase):
+    def setUp(self):
+        import tiny_drift as dr
+        self.dr = dr
+        self.edges = list(range(0, 61, 5)) + [1e9]
+        rand = dr.make_rng()
+        self.train = dr.sample_lengths(rand, 3000, 25, 6)
+        self.same = dr.sample_lengths(rand, 1500, 25, 6)
+        self.shifted = dr.sample_lengths(rand, 1500, 35, 8)
+
+    def test_same_distribution_psi_near_zero(self):
+        v = self.dr.psi(self.train, self.same, self.edges)
+        self.assertLess(v, 0.1, "同分布 PSI 應落在『穩定』(<0.1)")
+
+    def test_shift_raises_psi_above_same(self):
+        same_v = self.dr.psi(self.train, self.same, self.edges)
+        shift_v = self.dr.psi(self.train, self.shifted, self.edges)
+        self.assertGreater(shift_v, same_v)
+        self.assertGreater(shift_v, 0.25, "明顯漂移 PSI 應越過重訓門檻(0.25)")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -66,7 +66,9 @@ book-smoke: $(INPUT)
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_kvcache.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_dedup.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_eval.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_observability.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_serve.py
+	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_drift.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_dpo.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_gpt.py
 	cd book/examples && BOOK_SMOKE=1 $(PY) tiny_modern.py

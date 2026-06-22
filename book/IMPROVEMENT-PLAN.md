@@ -14,10 +14,21 @@ tags: [book, plan, handoff, quarto]
 
 ## ⏩ 目前狀態（最後更新 2026-06-22，接續者先看這格）
 
-- **已深耕到 A 級**：✅ Ch1–Ch7 全部完成（Ch1 最小 GPT＝範本、Ch2 現代零件、Ch3 效率、
-  Ch4 真實資料、Ch5 評估、Ch6 部署治理、Ch7 對齊）。每章都有：學習目標框＋一段逐行走讀＋
+- **🆕 重大重構（第四段）：MLOps 變成書的主軸。** Ryan 點出「專案主軸是 MLOps，但書裡只佔 Ch6
+  一章、變配角」。已重排成四部、把原 Ch6 一章拆成三章、MLOps 升為「第三部（重心）」：
+  - 第一部 原理：01 最小GPT・02 現代零件・03 效率
+  - 第二部 資料與評估：04 真實資料・05 評估
+  - **第三部 維運 / MLOps（重心）：06 服務化與可觀測・07 模型治理・08 會腐壞的系統**
+  - 第四部 對齊：09 對齊（原 07）
+  - 附錄：10 數學（原 08）・11 術語表（原 09）・99 references
+  - 新增 2 支 example：`tiny_observability.py`（冷啟動/p50/p95）、`tiny_drift.py`（PSI 抓漂移）；
+    新增 2 張真跑插圖：`serving_latency.png`、`drift_psi.png`。前言加「這本書的重心：MLOps」段。
+  - 交叉參照用 label 不靠檔名，改檔名/拆章後 render 仍零 unresolved；新章標籤：`#sec-serving`
+    `#sec-build-service` `#sec-tiny-observability` / `#sec-governance`(沿用) `#sec-build-governance`
+    `#sec-tiny-serve` / `#sec-drift` `#sec-build-drift` `#sec-tiny-drift`。
+- **已深耕到 A 級**：✅ 全 9 章（01–09）+ 附錄 + 術語表。每章都有：學習目標框＋一段逐行走讀＋
   一個 💻 純 CPU 真跑範例（真數字）＋章末 3 題（預測/動手/弄壞，答案摺疊）。
-- **下一步**：➡️ 全書主體 + 收口 + 插圖 + CI 都完成。剩 Ryan 拍板 push + 重部署 GitHub Pages。
+- **下一步**：➡️ 全書主體 + 收口 + 插圖 + CI + MLOps 重構都完成。剩 Ryan 拍板 push + 重部署 GitHub Pages。
 - **✅ 本波（2026-06-22 第三段）插圖 + CI**：
   - **插圖**（4 張，全部由真跑數據產生、可重現）：`make_book_figures.py` 產出 →
     Ch3 `kvcache_speedup.png`、Ch4 `dedup_blindspot.png`、Ch6 `governance_gate.png`、
@@ -103,13 +114,15 @@ tags: [book, plan, handoff, quarto]
 | 前言 | **✅** | 已加「受眾＋假設知識」段（#4）|
 | Ch1 最小 GPT | **✅ A 級（範本）** | 已補：學習目標框、attention 逐行走讀（@sec-build-attention）、💻 CPU 版自包含 `tiny_gpt.py`（真跑、真數字 val 1.59、莎士比亞 wow 對照）、章末 3 題（預測/動手/弄壞，答案摺疊）。**其他章照這個範本套** |
 | Ch2 現代零件 | **✅ A 級** | 已補：學習目標框、💻 CPU 對照（`tiny_modern.py` 一鍵切 RMSNorm/SwiGLU/RoPE，真跑 5 配置驗「準/省」：RMSNorm +0.003 持平、SwiGLU −0.019、RoPE −0.007、全開 −0.025 且省參數）、章末 3 題（預測 GQA/對答案/弄壞）。保留準vs省主線+repo 表+RoPE 外推圖 |
-| Ch3 效率取樣 | **✅ A 級** | 已補：學習框、KV-cache 逐行走讀(@sec-build-kvcache)、💻 `tiny_kvcache.py`(先對拍證對再計時 9.58×)、章末 3 題 |
-| Ch4 真實資料 | **✅ A 級** | 已補：學習框、MinHash/LSH 去重管線逐行(@sec-build-dedup)、💻 `tiny_dedup.py`(聚合盲點20.7%＋LSH候選1.9%)、章末 3 題 |
-| Ch5 評估 | **✅ A 級** | 已補：學習框、BPC 逐行換算(@sec-build-bpc)、💻 `tiny_eval.py`(亂猜基準＋BPC＋3-seed std=0.005)、章末 3 題 |
-| Ch6 部署治理 | **✅ A 級** | 已補：學習框、digest+gate 逐行(@sec-build-governance)、💻 `tiny_serve.py`(digest不認檔名＋gate 真擋)、章末 3 題 |
-| Ch7 對齊 | **✅ A 級（皇冠）** | 已補：學習框、DPO loss 逐行從 seq_logprob 建起(@sec-build-dpo)、💻 `tiny_dpo.py`(train-acc騙你的最小重現)、章末 3 題 |
-| Ch8 數學附錄 | **✅** | 已補：四條推導各加直覺 callout + 政策梯度補 `{#sec-pg-math}` + 交叉連到章末習題；`.unnumbered` 已移除修交叉參照 |
-| 09 術語表 | **✅ 已建** | `09-glossary.qmd`：符號約定 + ~50 條術語（#6）|
+| 03 效率取樣 | **✅ A 級** | 學習框、KV-cache 逐行(@sec-build-kvcache)、💻 `tiny_kvcache.py`(對拍證對再計時 10.13×)、章末 3 題、`kvcache_speedup.png` |
+| 04 真實資料 | **✅ A 級** | 學習框、MinHash/LSH 逐行(@sec-build-dedup)、💻 `tiny_dedup.py`(聚合盲點20.7%＋LSH候選1.9%)、章末 3 題、`dedup_blindspot.png` |
+| 05 評估 | **✅ A 級** | 學習框、BPC 逐行(@sec-build-bpc)、💻 `tiny_eval.py`(亂猜基準＋BPC＋3-seed std=0.005)、章末 3 題 |
+| **06 服務化與可觀測** | **✅ A 級（新，MLOps）** | 學習框、帶 metrics 服務逐行(@sec-build-service)、💻 `tiny_observability.py`(冷啟動+p50/p95)、章末 3 題、`serving_latency.png` |
+| **07 模型治理** | **✅ A 級（moat，MLOps）** | 稽核四問、digest+gate 逐行(@sec-build-governance)、💻 `tiny_serve.py`(digest不認檔名＋gate 真擋)、章末 3 題、`governance_gate.png` |
+| **08 會腐壞的系統** | **✅ A 級（新，MLOps）** | drift/重訓/canary/shadow/放量、PSI 逐行(@sec-build-drift)、💻 `tiny_drift.py`(PSI 抓漂移+放量坑)、章末 3 題、`drift_psi.png` |
+| 09 對齊（原 07）| **✅ A 級（皇冠）** | 學習框、DPO loss 逐行從 seq_logprob(@sec-build-dpo)、💻 `tiny_dpo.py`(train-acc騙你)、章末 3 題、`dpo_trainvsheldout.png` |
+| 10 數學附錄（原 08）| **✅** | 四條推導各加直覺 callout + 政策梯度補 `{#sec-pg-math}` + 交叉連到章末習題；`.unnumbered` 已移除修交叉參照 |
+| 11 術語表（原 09）| **✅ 已建** | 符號約定 + ~50 條術語（含 PSI/observability/data drift→新 MLOps 章）（#6）|
 
 ## 下一步（建議）
 

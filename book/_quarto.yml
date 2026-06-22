@@ -22,18 +22,22 @@ book:
         - 01-minimal-gpt.qmd
         - 02-modern-components.qmd
         - 03-efficiency.qmd
-    - part: "第二部　工程"
+    - part: "第二部　資料與評估"
       chapters:
         - 04-real-data.qmd
         - 05-evaluation.qmd
-        - 06-deploy-governance.qmd
-    - part: "第三部　對齊"
+    - part: "第三部　維運 / MLOps"
       chapters:
-        - 07-alignment.qmd
+        - 06-serving.qmd
+        - 07-governance.qmd
+        - 08-drift-retrain.qmd
+    - part: "第四部　對齊"
+      chapters:
+        - 09-alignment.qmd
     - part: "附錄"
       chapters:
-        - 08-math-appendix.qmd
-        - 09-glossary.qmd
+        - 10-math-appendix.qmd
+        - 11-glossary.qmd
         - 99-references.qmd
 
 bibliography: references.bib
