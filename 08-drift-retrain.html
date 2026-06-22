@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hant" xml:lang="zh-Hant"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; 會腐壞的系統：drift、重訓、放量 – 從零打造並對齊一個 LLM</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./09-alignment.html" rel="next">
+<link href="./07-governance.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-639d468870d77206aa4a86877949ccee.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-94e84ed9b82d5d1d9342ea61bad04538.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./06-serving.html">第三部　維運 / MLOps</a></li><li class="breadcrumb-item"><a href="./08-drift-retrain.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">從零打造並對齊一個 LLM</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/ryanGTR/llm-from-scratch" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言：一個銀行 IT 為什麼從零刻 LLM</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">第一部　原理</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-minimal-gpt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">最小的 GPT：從 attention 到自回歸</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-modern-components.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-efficiency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">跑多快：FlashAttention、KV-cache、取樣</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">第二部　資料與評估</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-real-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">第四部　對齊</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">參考文獻</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#模型上線不是終點" id="toc-模型上線不是終點" class="nav-link active" data-scroll-target="#模型上線不是終點"><span class="header-section-number">8.1</span> 模型上線不是終點</a></li>
+  <li><a href="#sec-build-drift" id="toc-sec-build-drift" class="nav-link" data-scroll-target="#sec-build-drift"><span class="header-section-number">8.2</span> 逐行把資料漂移指標（PSI）建起來</a></li>
+  <li><a href="#sec-tiny-drift" id="toc-sec-tiny-drift" class="nav-link" data-scroll-target="#sec-tiny-drift"><span class="header-section-number">8.3</span> 💻 在你的機器上：PSI 抓漂移 + 放量的坑</a></li>
+  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">8.4</span> 帶走什麼</a></li>
+  <li><a href="#sec-drift-exercises" id="toc-sec-drift-exercises" class="nav-link" data-scroll-target="#sec-drift-exercises"><span class="header-section-number">8.5</span> 練習</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/08-drift-retrain.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./06-serving.html">第三部　維運 / MLOps</a></li><li class="breadcrumb-item"><a href="./08-drift-retrain.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-drift" class="quarto-section-identifier"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>一句話</strong>：MLOps 比 DevOps 多兩個變數——<strong>資料</strong>，和<strong>模型會腐壞</strong>。所以模型永遠不算「做完」： 世界會漂移，你要持續監控、必要時重訓，而放量的決策又是一個「別用錯指標」的陷阱。</p>
+</blockquote>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class H here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：讓上線的系統持續不腐壞（drift、重訓、放量）。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：第 7 章的治理與 promotion gate（<a href="07-governance.html" class="quarto-xref"><span>章节 7</span></a>）、第 5 章「選對指標」。</p>
+<p><strong>學完你會</strong>：(1) 講清楚為什麼模型上線後會「腐壞」、要靠什麼持續顧；(2) <strong>逐行</strong>把 <strong>PSI（資料漂移 指標）</strong> 算出來、設門檻自動觸發重訓；(3) 在<strong>你自己的 CPU 上</strong>親手量 PSI 抓出漂移，並體會放量決策的 坑——<strong>低一致率不一定是壞事</strong>。本章 💻 配套程式 <code>tiny_drift.py</code> 純標準庫、不需 torch、瞬間跑完。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意（風險 / 成本 / 治理）。</p>
+<ul>
+<li><strong>data drift（資料漂移）</strong>：線上流量的分布慢慢偏離訓練時的分布。<em>在意它</em>：模型會<strong>悄悄變差</strong>，這是「上線後還要持續顧」的根本原因。</li>
+<li><strong>PSI（漂移指標）</strong>：把漂移量化成一個數字（&lt;0.1 穩定 / 0.1–0.25 留意 / &gt;0.25 建議重訓）。<em>在意它</em>：可設門檻自動示警，不必靠人盯著儀表板。</li>
+<li><strong>重訓迴圈（retrain loop）</strong>：資料→訓練→評估→gate→上線 的自動外圈。<em>在意它</em>：把「模型維護」變成可重複、可稽核的流程，而非每次手動救火。</li>
+<li><strong>canary / A-B</strong>：先導一小部分流量到新模型試水溫。<em>在意它</em>：<strong>控制風險地放量</strong>，出事的影響面小、可快速回退。</li>
+<li><strong>shadow（影子比對）</strong>：新模型在背景跟著算同一批輸入、不影響線上、回報一致率。<em>在意它</em>：上線前的<strong>零風險</strong>驗證。</li>
+<li><strong>promotion gate（促上線閘）</strong>：沒過品質 / 資料檢查就擋下上線。<em>在意它</em>：上線是被程式 enforce，不是「誰想推就推」——這是治理重點（見 <a href="07-governance.html" class="quarto-xref"><span>章节 7</span></a>）。</li>
+<li><strong>放量別只看一致率</strong>：新舊一致率低 ≠ 壞，更好的模型本來就該不一樣。<em>在意它</em>：用錯指標當門檻，會擋掉每一次真進步。</li>
+</ul>
+</div>
+</div>
+</div>
+<section id="模型上線不是終點" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="模型上線不是終點"><span class="header-section-number">8.1</span> 模型上線不是終點</h2>
+<p>DevOps 的 ML 版（MLOps）比 DevOps 多了兩個變數：<strong>資料</strong>，和<strong>模型會腐壞（data drift）</strong>。所以模型 永遠不算「做完」——要持續監控、必要時重訓。我做了嬰兒版但完整的迴圈：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>項</th>
+<th>做什麼</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>漂移監控</td>
+<td>線上請求分布 vs 訓練分布（OOV + 分箱 PSI），偏離就建議重訓</td>
+</tr>
+<tr class="even">
+<td>重訓迴圈</td>
+<td>資料→訓練→評估→註冊→gate→promote 的自動外圈，含<strong>回歸檢查</strong>（新模型比現行差就擋下）</td>
+</tr>
+<tr class="odd">
+<td>金絲雀 / A-B</td>
+<td>同時載兩顆模型、導 N% 流量到候選、按版本分標比較</td>
+</tr>
+<tr class="even">
+<td>shadow 比對</td>
+<td>候選在「影子」裡跟著算同一輸入、回報與現行的一致率（不拖延遲）</td>
+</tr>
+<tr class="odd">
+<td>量化壓縮</td>
+<td>fp16 / int8，量「大小 vs 品質」的取捨</td>
+</tr>
+</tbody>
+</table>
+<p>這條外圈跟前一章的 promotion gate 接在一起：漂移觸發重訓 → 訓出候選 → 過 gate（<a href="07-governance.html" class="quarto-xref"><span>章节 7</span></a>）才 放行。重訓迴圈裡的<strong>回歸檢查</strong>就是 gate 的「沒比現行更好就擋下」。</p>
+</section>
+<section id="sec-build-drift" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="sec-build-drift"><span class="header-section-number">8.2</span> 逐行把資料漂移指標（PSI）建起來</h2>
+<p>「模型會腐壞」聽起來抽象，但漂移可以<strong>量化成一個數字</strong>。最常用的是 PSI（population stability index）， 我們用 <code>tiny_drift.py</code> 逐行把它建出來。</p>
+<p><strong>第 0 步——把分布切成箱、數比例。</strong> 線上請求的某個特徵（這裡用「請求長度」）落進各個區間的比例， 就是它的分布。加一點 Laplace 平滑避免空箱讓對數爆掉：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">def</span> histogram(xs, edges):</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    counts <span class="op">=</span> [...]                       <span class="co"># 每個區間落幾筆</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>    tot <span class="op">=</span> <span class="bu">sum</span>(counts)</span>
+<span id="cb1-4"><a href="#cb1-4"></a>    <span class="cf">return</span> [(c <span class="op">+</span> <span class="fl">0.5</span>) <span class="op">/</span> (tot <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> nb) <span class="cf">for</span> c <span class="kw">in</span> counts]   <span class="co"># 平滑後的機率</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——PSI 比兩個分布差多少。</strong> 對每個箱，看「線上比例 vs 訓練比例」差多少、乘上對數比，加總：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> psi(ref, new, edges):</span>
+<span id="cb2-2"><a href="#cb2-2"></a>    p_ref, p_new <span class="op">=</span> histogram(ref, edges), histogram(new, edges)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="cf">return</span> <span class="bu">sum</span>((pn <span class="op">-</span> pr) <span class="op">*</span> math.log(pn <span class="op">/</span> pr) <span class="cf">for</span> pr, pn <span class="kw">in</span> <span class="bu">zip</span>(p_ref, p_new))</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——用業界門檻判讀。</strong> PSI 是有公認門檻的：&lt;0.1 穩定、0.1–0.25 留意、&gt;0.25 顯著漂移。 把它接成自動規則，就是「偏離就建議重訓」：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">def</span> classify(v):</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    <span class="cf">return</span> <span class="st">"穩定"</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="fl">0.1</span> <span class="cf">else</span> <span class="st">"留意"</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="fl">0.25</span> <span class="cf">else</span> <span class="st">"顯著漂移 → 建議重訓"</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-tiny-drift" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="sec-tiny-drift"><span class="header-section-number">8.3</span> 💻 在你的機器上：PSI 抓漂移 + 放量的坑</h2>
+<p>配套程式 <code>tiny_drift.py</code>（純標準庫、瞬間跑完）模擬「訓練時的請求長度分布」，再丟三種線上情境進去：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">python</span> tiny_drift.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16 上：</p>
+<pre><code>=== drift 監控：PSI（線上請求長度 vs 訓練分布）===
+情境                         PSI   判讀
+----------------------------------------------------
+同分布（健康）                  0.009   穩定（不必動）
+輕微漂移（變長一點）               0.250   留意（持續監控）
+嚴重漂移（換了流量）               1.096   顯著漂移 → 建議重訓
+
+=== shadow 一致率（候選 vs 現行，同一批輸入）===
+  一致率：724/1000 = 72.4%
+  低一致率不一定是壞事——更好的模型本來就該跟舊的不一樣。</code></pre>
+<p><strong>怎麼讀</strong>：</p>
+<ol type="1">
+<li><strong>漂移變成一個數字</strong>：同分布 PSI≈0（穩定）、輕微漂移踩到 0.25 門檻（留意）、嚴重漂移 1.1 （顯著，建議重訓）。一個數字就能設門檻、自動觸發重訓——不用人盯著看（<a href="#fig-drift" class="quarto-xref">图&nbsp;<span>8.1</span></a>）。</li>
+<li><strong>放量別只看一致率</strong>：候選跟現行只有 72% 一致——但這<strong>不是壞事</strong>。</li>
+</ol>
+<div id="fig-drift" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/drift_psi.png" class="img-fluid figure-img" style="width:70.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-drift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;8.1: 資料漂移（純 CPU 真跑）：PSI 把「線上 vs 訓練」的偏離量化成一個數字。健康≈0、輕微漂移踩到 0.25 門檻、嚴重漂移衝到 1.1，越過紅線就自動建議重訓。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>放量決策別只看一個數字
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>我訓了一顆真候選（8000 步，test_loss 3.46 &lt; 現行 3.70），但它跟現行的輸出一致率只有 <strong>67.5%</strong>。 低一致率「不是壞事」——是它真的學到更好的東西，<strong>更好的模型本來就該跟舊的不一樣</strong>。所以放行的硬條件 是「品質 gate（更好就放行）」，一致率只告訴你「改動多大、要多謹慎驗」。把一致率當硬門檻，會擋掉每一次 真進步。這又是一個「選對指標」的例子（呼應 <a href="05-evaluation.html" class="quarto-xref"><span>章节 5</span></a>）。</p>
+</div>
+</div>
+</section>
+<section id="帶走什麼" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">8.4</span> 帶走什麼</h2>
+<ul>
+<li>模型會腐壞，所以永遠不算「做完」：要持續監控（drift）+ 必要時重訓。</li>
+<li><strong>漂移可量化</strong>：PSI 把「線上 vs 訓練」變成一個數字、設門檻自動觸發重訓。</li>
+<li>重訓迴圈 + 回歸檢查 + canary/shadow 把「換模型」變成可控、可比較、可回退的流程，接回上一章的 gate。</li>
+<li><strong>放量決策的硬條件是品質 gate，別把「改動幅度（一致率）」當門檻</strong>——那會擋掉每一次真進步。</li>
+</ul>
+</section>
+<section id="sec-drift-exercises" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="sec-drift-exercises"><span class="header-section-number">8.5</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：把線上分布調回跟訓練一樣，PSI 會怎樣？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>tiny_drift.py</code> 的「嚴重漂移」用 <code>mean=32</code>。<strong>先寫下你的預測</strong>：把它改回 <code>mean=25</code>（跟訓練一樣）， PSI 會落在哪一檔？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>PSI 會掉到接近 0（「穩定」）——兩個分布幾乎一樣，逐箱比例差≈0。剩下的一點點是抽樣雜訊。這也說明 PSI 的門檻（0.1 / 0.25）是為了把「雜訊」和「真漂移」分開——跟第 5 章「先有雜訊尺度再判顯著」同一個思路。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：換一個漂移特徵
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PSI 量的是任一個分布。把「請求長度」換成別的特徵（例如 OOV 比例、某類請求佔比），重算 PSI。 不同特徵會抓到不同的漂移嗎？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>會——漂移可能只出現在某些特徵上（例如長度沒變、但主題分布變了）。所以真實監控會同時盯<strong>多個</strong>信號 （OOV + 多個分箱 PSI），任一個越線就示警。單一指標會漏掉它沒在看的那種漂移——又是「選對（夠多）指標」。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：把「一致率」當放量硬門檻
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>假設你規定「候選跟現行一致率要 ≥ 95% 才放量」。用 <code>tiny_drift.py</code> 那個 72% 一致率的候選，會發生什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>它會被擋下——即使它在品質 gate 上其實更好。<strong>把一致率當硬門檻，等於規定「新模型必須跟舊的幾乎一樣」， 那就擋掉了每一次真進步</strong>。一致率該當「改動多大、要多謹慎驗」的參考，放行的硬條件是品質 gate。 這正是本章最重要的「選對指標」：用錯尺，你會把進步當成風險擋掉。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./07-governance.html" class="pagination-link" aria-label="模型治理：把稽核接到 ML">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./09-alignment.html" class="pagination-link" aria-label="對齊：把「接龍機器」教成「會聽話、有偏好」">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu"># 會腐壞的系統：drift、重訓、放量 {#sec-drift}</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="at">&gt; **一句話**：MLOps 比 DevOps 多兩個變數——**資料**，和**模型會腐壞**。所以模型永遠不算「做完」：</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="at">&gt; 世界會漂移，你要持續監控、必要時重訓，而放量的決策又是一個「別用錯指標」的陷阱。</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="in">```{mermaid}</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：讓上線的系統持續不腐壞（drift、重訓、放量）。</span><span class="ot">"</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a>flowchart LR</span>
+<span id="cb6-11"><a href="#cb6-11"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb6-12"><a href="#cb6-12"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb6-13"><a href="#cb6-13"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a>  class H here</span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="in">```</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a></span>
+<span id="cb6-17"><a href="#cb6-17"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a>**假設你已經會**：第 7 章的治理與 promotion gate（@sec-governance）、第 5 章「選對指標」。</span>
+<span id="cb6-20"><a href="#cb6-20"></a></span>
+<span id="cb6-21"><a href="#cb6-21"></a>**學完你會**：(1) 講清楚為什麼模型上線後會「腐壞」、要靠什麼持續顧；(2) **逐行**把 **PSI（資料漂移</span>
+<span id="cb6-22"><a href="#cb6-22"></a>指標）** 算出來、設門檻自動觸發重訓；(3) 在**你自己的 CPU 上**親手量 PSI 抓出漂移，並體會放量決策的</span>
+<span id="cb6-23"><a href="#cb6-23"></a>坑——**低一致率不一定是壞事**。本章 💻 配套程式 <span class="in">`tiny_drift.py`</span> 純標準庫、不需 torch、瞬間跑完。</span>
+<span id="cb6-24"><a href="#cb6-24"></a>:::</span>
+<span id="cb6-25"><a href="#cb6-25"></a></span>
+<span id="cb6-26"><a href="#cb6-26"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-27"><a href="#cb6-27"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb6-28"><a href="#cb6-28"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意（風險 / 成本 / 治理）。</span>
+<span id="cb6-29"><a href="#cb6-29"></a></span>
+<span id="cb6-30"><a href="#cb6-30"></a><span class="ss">- </span>**data drift（資料漂移）**：線上流量的分布慢慢偏離訓練時的分布。*在意它*：模型會**悄悄變差**，這是「上線後還要持續顧」的根本原因。</span>
+<span id="cb6-31"><a href="#cb6-31"></a><span class="ss">- </span>**PSI（漂移指標）**：把漂移量化成一個數字（&lt;0.1 穩定 / 0.1–0.25 留意 / &gt;0.25 建議重訓）。*在意它*：可設門檻自動示警，不必靠人盯著儀表板。</span>
+<span id="cb6-32"><a href="#cb6-32"></a><span class="ss">- </span>**重訓迴圈（retrain loop）**：資料→訓練→評估→gate→上線 的自動外圈。*在意它*：把「模型維護」變成可重複、可稽核的流程，而非每次手動救火。</span>
+<span id="cb6-33"><a href="#cb6-33"></a><span class="ss">- </span>**canary / A-B**：先導一小部分流量到新模型試水溫。*在意它*：**控制風險地放量**，出事的影響面小、可快速回退。</span>
+<span id="cb6-34"><a href="#cb6-34"></a><span class="ss">- </span>**shadow（影子比對）**：新模型在背景跟著算同一批輸入、不影響線上、回報一致率。*在意它*：上線前的**零風險**驗證。</span>
+<span id="cb6-35"><a href="#cb6-35"></a><span class="ss">- </span>**promotion gate（促上線閘）**：沒過品質 / 資料檢查就擋下上線。*在意它*：上線是被程式 enforce，不是「誰想推就推」——這是治理重點（見 @sec-governance）。</span>
+<span id="cb6-36"><a href="#cb6-36"></a><span class="ss">- </span>**放量別只看一致率**：新舊一致率低 ≠ 壞，更好的模型本來就該不一樣。*在意它*：用錯指標當門檻，會擋掉每一次真進步。</span>
+<span id="cb6-37"><a href="#cb6-37"></a>:::</span>
+<span id="cb6-38"><a href="#cb6-38"></a></span>
+<span id="cb6-39"><a href="#cb6-39"></a><span class="fu">## 模型上線不是終點</span></span>
+<span id="cb6-40"><a href="#cb6-40"></a></span>
+<span id="cb6-41"><a href="#cb6-41"></a>DevOps 的 ML 版（MLOps）比 DevOps 多了兩個變數：**資料**，和**模型會腐壞（data drift）**。所以模型</span>
+<span id="cb6-42"><a href="#cb6-42"></a>永遠不算「做完」——要持續監控、必要時重訓。我做了嬰兒版但完整的迴圈：</span>
+<span id="cb6-43"><a href="#cb6-43"></a></span>
+<span id="cb6-44"><a href="#cb6-44"></a><span class="pp">|</span> 項 <span class="pp">|</span> 做什麼 <span class="pp">|</span></span>
+<span id="cb6-45"><a href="#cb6-45"></a><span class="pp">|---|---|</span></span>
+<span id="cb6-46"><a href="#cb6-46"></a><span class="pp">|</span> 漂移監控 <span class="pp">|</span> 線上請求分布 vs 訓練分布（OOV + 分箱 PSI），偏離就建議重訓 <span class="pp">|</span></span>
+<span id="cb6-47"><a href="#cb6-47"></a><span class="pp">|</span> 重訓迴圈 <span class="pp">|</span> 資料→訓練→評估→註冊→gate→promote 的自動外圈，含**回歸檢查**（新模型比現行差就擋下）<span class="pp">|</span></span>
+<span id="cb6-48"><a href="#cb6-48"></a><span class="pp">|</span> 金絲雀 / A-B <span class="pp">|</span> 同時載兩顆模型、導 N% 流量到候選、按版本分標比較 <span class="pp">|</span></span>
+<span id="cb6-49"><a href="#cb6-49"></a><span class="pp">|</span> shadow 比對 <span class="pp">|</span> 候選在「影子」裡跟著算同一輸入、回報與現行的一致率（不拖延遲）<span class="pp">|</span></span>
+<span id="cb6-50"><a href="#cb6-50"></a><span class="pp">|</span> 量化壓縮 <span class="pp">|</span> fp16 / int8，量「大小 vs 品質」的取捨 <span class="pp">|</span></span>
+<span id="cb6-51"><a href="#cb6-51"></a></span>
+<span id="cb6-52"><a href="#cb6-52"></a>這條外圈跟前一章的 promotion gate 接在一起：漂移觸發重訓 → 訓出候選 → 過 gate（@sec-governance）才</span>
+<span id="cb6-53"><a href="#cb6-53"></a>放行。重訓迴圈裡的**回歸檢查**就是 gate 的「沒比現行更好就擋下」。</span>
+<span id="cb6-54"><a href="#cb6-54"></a></span>
+<span id="cb6-55"><a href="#cb6-55"></a><span class="fu">## 逐行把資料漂移指標（PSI）建起來 {#sec-build-drift}</span></span>
+<span id="cb6-56"><a href="#cb6-56"></a></span>
+<span id="cb6-57"><a href="#cb6-57"></a>「模型會腐壞」聽起來抽象，但漂移可以**量化成一個數字**。最常用的是 PSI（population stability index），</span>
+<span id="cb6-58"><a href="#cb6-58"></a>我們用 <span class="in">`tiny_drift.py`</span> 逐行把它建出來。</span>
+<span id="cb6-59"><a href="#cb6-59"></a></span>
+<span id="cb6-60"><a href="#cb6-60"></a>**第 0 步——把分布切成箱、數比例。** 線上請求的某個特徵（這裡用「請求長度」）落進各個區間的比例，</span>
+<span id="cb6-61"><a href="#cb6-61"></a>就是它的分布。加一點 Laplace 平滑避免空箱讓對數爆掉：</span>
+<span id="cb6-62"><a href="#cb6-62"></a></span>
+<span id="cb6-63"><a href="#cb6-63"></a><span class="in">```python</span></span>
+<span id="cb6-64"><a href="#cb6-64"></a><span class="kw">def</span> histogram(xs, edges):</span>
+<span id="cb6-65"><a href="#cb6-65"></a>    counts <span class="op">=</span> [...]                       <span class="co"># 每個區間落幾筆</span></span>
+<span id="cb6-66"><a href="#cb6-66"></a>    tot <span class="op">=</span> <span class="bu">sum</span>(counts)</span>
+<span id="cb6-67"><a href="#cb6-67"></a>    <span class="cf">return</span> [(c <span class="op">+</span> <span class="fl">0.5</span>) <span class="op">/</span> (tot <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> nb) <span class="cf">for</span> c <span class="kw">in</span> counts]   <span class="co"># 平滑後的機率</span></span>
+<span id="cb6-68"><a href="#cb6-68"></a><span class="in">```</span></span>
+<span id="cb6-69"><a href="#cb6-69"></a></span>
+<span id="cb6-70"><a href="#cb6-70"></a>**第 1 步——PSI 比兩個分布差多少。** 對每個箱，看「線上比例 vs 訓練比例」差多少、乘上對數比，加總：</span>
+<span id="cb6-71"><a href="#cb6-71"></a></span>
+<span id="cb6-72"><a href="#cb6-72"></a><span class="in">```python</span></span>
+<span id="cb6-73"><a href="#cb6-73"></a><span class="kw">def</span> psi(ref, new, edges):</span>
+<span id="cb6-74"><a href="#cb6-74"></a>    p_ref, p_new <span class="op">=</span> histogram(ref, edges), histogram(new, edges)</span>
+<span id="cb6-75"><a href="#cb6-75"></a>    <span class="cf">return</span> <span class="bu">sum</span>((pn <span class="op">-</span> pr) <span class="op">*</span> math.log(pn <span class="op">/</span> pr) <span class="cf">for</span> pr, pn <span class="kw">in</span> <span class="bu">zip</span>(p_ref, p_new))</span>
+<span id="cb6-76"><a href="#cb6-76"></a><span class="in">```</span></span>
+<span id="cb6-77"><a href="#cb6-77"></a></span>
+<span id="cb6-78"><a href="#cb6-78"></a>**第 2 步——用業界門檻判讀。** PSI 是有公認門檻的：&lt;0.1 穩定、0.1–0.25 留意、&gt;0.25 顯著漂移。</span>
+<span id="cb6-79"><a href="#cb6-79"></a>把它接成自動規則，就是「偏離就建議重訓」：</span>
+<span id="cb6-80"><a href="#cb6-80"></a></span>
+<span id="cb6-81"><a href="#cb6-81"></a><span class="in">```python</span></span>
+<span id="cb6-82"><a href="#cb6-82"></a><span class="kw">def</span> classify(v):</span>
+<span id="cb6-83"><a href="#cb6-83"></a>    <span class="cf">return</span> <span class="st">"穩定"</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="fl">0.1</span> <span class="cf">else</span> <span class="st">"留意"</span> <span class="cf">if</span> v <span class="op">&lt;</span> <span class="fl">0.25</span> <span class="cf">else</span> <span class="st">"顯著漂移 → 建議重訓"</span></span>
+<span id="cb6-84"><a href="#cb6-84"></a><span class="in">```</span></span>
+<span id="cb6-85"><a href="#cb6-85"></a></span>
+<span id="cb6-86"><a href="#cb6-86"></a><span class="fu">## 💻 在你的機器上：PSI 抓漂移 + 放量的坑 {#sec-tiny-drift}</span></span>
+<span id="cb6-87"><a href="#cb6-87"></a></span>
+<span id="cb6-88"><a href="#cb6-88"></a>配套程式 <span class="in">`tiny_drift.py`</span>（純標準庫、瞬間跑完）模擬「訓練時的請求長度分布」，再丟三種線上情境進去：</span>
+<span id="cb6-89"><a href="#cb6-89"></a></span>
+<span id="cb6-90"><a href="#cb6-90"></a><span class="in">```bash</span></span>
+<span id="cb6-91"><a href="#cb6-91"></a><span class="ex">python</span> tiny_drift.py</span>
+<span id="cb6-92"><a href="#cb6-92"></a><span class="in">```</span></span>
+<span id="cb6-93"><a href="#cb6-93"></a></span>
+<span id="cb6-94"><a href="#cb6-94"></a>在我的 Framework 16 上：</span>
+<span id="cb6-95"><a href="#cb6-95"></a></span>
+<span id="cb6-96"><a href="#cb6-96"></a><span class="in">```</span></span>
+<span id="cb6-97"><a href="#cb6-97"></a><span class="in">=== drift 監控：PSI（線上請求長度 vs 訓練分布）===</span></span>
+<span id="cb6-98"><a href="#cb6-98"></a><span class="in">情境                         PSI   判讀</span></span>
+<span id="cb6-99"><a href="#cb6-99"></a><span class="in">----------------------------------------------------</span></span>
+<span id="cb6-100"><a href="#cb6-100"></a><span class="in">同分布（健康）                  0.009   穩定（不必動）</span></span>
+<span id="cb6-101"><a href="#cb6-101"></a><span class="in">輕微漂移（變長一點）               0.250   留意（持續監控）</span></span>
+<span id="cb6-102"><a href="#cb6-102"></a><span class="in">嚴重漂移（換了流量）               1.096   顯著漂移 → 建議重訓</span></span>
+<span id="cb6-103"><a href="#cb6-103"></a></span>
+<span id="cb6-104"><a href="#cb6-104"></a><span class="in">=== shadow 一致率（候選 vs 現行，同一批輸入）===</span></span>
+<span id="cb6-105"><a href="#cb6-105"></a><span class="in">  一致率：724/1000 = 72.4%</span></span>
+<span id="cb6-106"><a href="#cb6-106"></a><span class="in">  低一致率不一定是壞事——更好的模型本來就該跟舊的不一樣。</span></span>
+<span id="cb6-107"><a href="#cb6-107"></a><span class="in">```</span></span>
+<span id="cb6-108"><a href="#cb6-108"></a></span>
+<span id="cb6-109"><a href="#cb6-109"></a>**怎麼讀**：</span>
+<span id="cb6-110"><a href="#cb6-110"></a></span>
+<span id="cb6-111"><a href="#cb6-111"></a><span class="ss">1. </span>**漂移變成一個數字**：同分布 PSI≈0（穩定）、輕微漂移踩到 0.25 門檻（留意）、嚴重漂移 1.1</span>
+<span id="cb6-112"><a href="#cb6-112"></a>   （顯著，建議重訓）。一個數字就能設門檻、自動觸發重訓——不用人盯著看（@fig-drift）。</span>
+<span id="cb6-113"><a href="#cb6-113"></a><span class="ss">2. </span>**放量別只看一致率**：候選跟現行只有 72% 一致——但這**不是壞事**。</span>
+<span id="cb6-114"><a href="#cb6-114"></a></span>
+<span id="cb6-115"><a href="#cb6-115"></a><span class="al">![資料漂移（純 CPU 真跑）：PSI 把「線上 vs 訓練」的偏離量化成一個數字。健康≈0、輕微漂移踩到 0.25 門檻、嚴重漂移衝到 1.1，越過紅線就自動建議重訓。](images/drift_psi.png)</span>{#fig-drift width=70%}</span>
+<span id="cb6-116"><a href="#cb6-116"></a></span>
+<span id="cb6-117"><a href="#cb6-117"></a>::: {.callout-warning}</span>
+<span id="cb6-118"><a href="#cb6-118"></a><span class="fu">## 放量決策別只看一個數字</span></span>
+<span id="cb6-119"><a href="#cb6-119"></a>我訓了一顆真候選（8000 步，test_loss 3.46 &lt; 現行 3.70），但它跟現行的輸出一致率只有 **67.5%**。</span>
+<span id="cb6-120"><a href="#cb6-120"></a>低一致率「不是壞事」——是它真的學到更好的東西，**更好的模型本來就該跟舊的不一樣**。所以放行的硬條件</span>
+<span id="cb6-121"><a href="#cb6-121"></a>是「品質 gate（更好就放行）」，一致率只告訴你「改動多大、要多謹慎驗」。把一致率當硬門檻，會擋掉每一次</span>
+<span id="cb6-122"><a href="#cb6-122"></a>真進步。這又是一個「選對指標」的例子（呼應 @sec-eval）。</span>
+<span id="cb6-123"><a href="#cb6-123"></a>:::</span>
+<span id="cb6-124"><a href="#cb6-124"></a></span>
+<span id="cb6-125"><a href="#cb6-125"></a><span class="fu">## 帶走什麼</span></span>
+<span id="cb6-126"><a href="#cb6-126"></a></span>
+<span id="cb6-127"><a href="#cb6-127"></a><span class="ss">- </span>模型會腐壞，所以永遠不算「做完」：要持續監控（drift）+ 必要時重訓。</span>
+<span id="cb6-128"><a href="#cb6-128"></a><span class="ss">- </span>**漂移可量化**：PSI 把「線上 vs 訓練」變成一個數字、設門檻自動觸發重訓。</span>
+<span id="cb6-129"><a href="#cb6-129"></a><span class="ss">- </span>重訓迴圈 + 回歸檢查 + canary/shadow 把「換模型」變成可控、可比較、可回退的流程，接回上一章的 gate。</span>
+<span id="cb6-130"><a href="#cb6-130"></a><span class="ss">- </span>**放量決策的硬條件是品質 gate，別把「改動幅度（一致率）」當門檻**——那會擋掉每一次真進步。</span>
+<span id="cb6-131"><a href="#cb6-131"></a></span>
+<span id="cb6-132"><a href="#cb6-132"></a><span class="fu">## 練習 {#sec-drift-exercises}</span></span>
+<span id="cb6-133"><a href="#cb6-133"></a></span>
+<span id="cb6-134"><a href="#cb6-134"></a>::: {.callout-note}</span>
+<span id="cb6-135"><a href="#cb6-135"></a><span class="fu">## 1（先預測）：把線上分布調回跟訓練一樣，PSI 會怎樣？</span></span>
+<span id="cb6-136"><a href="#cb6-136"></a><span class="in">`tiny_drift.py`</span> 的「嚴重漂移」用 <span class="in">`mean=32`</span>。**先寫下你的預測**：把它改回 <span class="in">`mean=25`</span>（跟訓練一樣），</span>
+<span id="cb6-137"><a href="#cb6-137"></a>PSI 會落在哪一檔？</span>
+<span id="cb6-138"><a href="#cb6-138"></a></span>
+<span id="cb6-139"><a href="#cb6-139"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-140"><a href="#cb6-140"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-141"><a href="#cb6-141"></a>PSI 會掉到接近 0（「穩定」）——兩個分布幾乎一樣，逐箱比例差≈0。剩下的一點點是抽樣雜訊。這也說明</span>
+<span id="cb6-142"><a href="#cb6-142"></a>PSI 的門檻（0.1 / 0.25）是為了把「雜訊」和「真漂移」分開——跟第 5 章「先有雜訊尺度再判顯著」同一個思路。</span>
+<span id="cb6-143"><a href="#cb6-143"></a>:::</span>
+<span id="cb6-144"><a href="#cb6-144"></a>:::</span>
+<span id="cb6-145"><a href="#cb6-145"></a></span>
+<span id="cb6-146"><a href="#cb6-146"></a>::: {.callout-note}</span>
+<span id="cb6-147"><a href="#cb6-147"></a><span class="fu">## 2（動手）：換一個漂移特徵</span></span>
+<span id="cb6-148"><a href="#cb6-148"></a>PSI 量的是任一個分布。把「請求長度」換成別的特徵（例如 OOV 比例、某類請求佔比），重算 PSI。</span>
+<span id="cb6-149"><a href="#cb6-149"></a>不同特徵會抓到不同的漂移嗎？</span>
+<span id="cb6-150"><a href="#cb6-150"></a></span>
+<span id="cb6-151"><a href="#cb6-151"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-152"><a href="#cb6-152"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-153"><a href="#cb6-153"></a>會——漂移可能只出現在某些特徵上（例如長度沒變、但主題分布變了）。所以真實監控會同時盯**多個**信號</span>
+<span id="cb6-154"><a href="#cb6-154"></a>（OOV + 多個分箱 PSI），任一個越線就示警。單一指標會漏掉它沒在看的那種漂移——又是「選對（夠多）指標」。</span>
+<span id="cb6-155"><a href="#cb6-155"></a>:::</span>
+<span id="cb6-156"><a href="#cb6-156"></a>:::</span>
+<span id="cb6-157"><a href="#cb6-157"></a></span>
+<span id="cb6-158"><a href="#cb6-158"></a>::: {.callout-warning}</span>
+<span id="cb6-159"><a href="#cb6-159"></a><span class="fu">## 3（弄壞）：把「一致率」當放量硬門檻</span></span>
+<span id="cb6-160"><a href="#cb6-160"></a>假設你規定「候選跟現行一致率要 ≥ 95% 才放量」。用 <span class="in">`tiny_drift.py`</span> 那個 72% 一致率的候選，會發生什麼？</span>
+<span id="cb6-161"><a href="#cb6-161"></a></span>
+<span id="cb6-162"><a href="#cb6-162"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-163"><a href="#cb6-163"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-164"><a href="#cb6-164"></a>它會被擋下——即使它在品質 gate 上其實更好。**把一致率當硬門檻，等於規定「新模型必須跟舊的幾乎一樣」，</span>
+<span id="cb6-165"><a href="#cb6-165"></a>那就擋掉了每一次真進步**。一致率該當「改動多大、要多謹慎驗」的參考，放行的硬條件是品質 gate。</span>
+<span id="cb6-166"><a href="#cb6-166"></a>這正是本章最重要的「選對指標」：用錯尺，你會把進步當成風險擋掉。</span>
+<span id="cb6-167"><a href="#cb6-167"></a>:::</span>
+<span id="cb6-168"><a href="#cb6-168"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/08-drift-retrain.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></div></div></footer></body></html>

@@ -107,6 +107,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "搜索"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
@@ -229,7 +232,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
- <span class="menu-text">第二部　工程</span></a>
+ <span class="menu-text">第二部　資料與評估</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -247,18 +250,12 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./06-deploy-governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">上線與治理：把稽核接到 ML</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
- <span class="menu-text">第三部　對齊</span></a>
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -266,8 +263,20 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./07-alignment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
   </div>
 </li>
       </ul>
@@ -275,7 +284,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
- <span class="menu-text">附錄</span></a>
+ <span class="menu-text">第四部　對齊</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -283,8 +292,31 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-math-appendix.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">附錄：數學推導</span></a>
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -306,9 +338,14 @@ window.Quarto = {
    
   <ul>
   <li><a href="#flashattention同樣的數學更省的算法" id="toc-flashattention同樣的數學更省的算法" class="nav-link active" data-scroll-target="#flashattention同樣的數學更省的算法"><span class="header-section-number">3.1</span> FlashAttention：同樣的數學，更省的算法</a></li>
-  <li><a href="#sec-kvcache" id="toc-sec-kvcache" class="nav-link" data-scroll-target="#sec-kvcache"><span class="header-section-number">3.2</span> KV-cache：一個「不一定更快」的反例</a></li>
-  <li><a href="#取樣從機率分布裡怎麼抽下一個字" id="toc-取樣從機率分布裡怎麼抽下一個字" class="nav-link" data-scroll-target="#取樣從機率分布裡怎麼抽下一個字"><span class="header-section-number">3.3</span> 取樣：從機率分布裡怎麼抽下一個字</a></li>
-  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">3.4</span> 帶走什麼</a></li>
+  <li><a href="#sec-kvcache" id="toc-sec-kvcache" class="nav-link" data-scroll-target="#sec-kvcache"><span class="header-section-number">3.2</span> KV-cache：一個「不一定更快」的反例</a>
+  <ul class="collapse">
+  <li><a href="#sec-build-kvcache" id="toc-sec-build-kvcache" class="nav-link" data-scroll-target="#sec-build-kvcache"><span class="header-section-number">3.2.1</span> 逐行把 KV-cache 建起來</a></li>
+  </ul></li>
+  <li><a href="#sec-tiny-kvcache" id="toc-sec-tiny-kvcache" class="nav-link" data-scroll-target="#sec-tiny-kvcache"><span class="header-section-number">3.3</span> 💻 在你的機器上：先證它沒算錯，再看它快多少</a></li>
+  <li><a href="#取樣從機率分布裡怎麼抽下一個字" id="toc-取樣從機率分布裡怎麼抽下一個字" class="nav-link" data-scroll-target="#取樣從機率分布裡怎麼抽下一個字"><span class="header-section-number">3.4</span> 取樣：從機率分布裡怎麼抽下一個字</a></li>
+  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">3.5</span> 帶走什麼</a></li>
+  <li><a href="#sec-ch3-exercises" id="toc-sec-ch3-exercises" class="nav-link" data-scroll-target="#sec-ch3-exercises"><span class="header-section-number">3.6</span> 練習</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/03-efficiency.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
     </div>
@@ -338,6 +375,63 @@ window.Quarto = {
 <p><strong>一句話</strong>：效率技巧能省記憶體、加速生成——但「省」不等於「一定更快」。這一章有一個我親手量到、 跟直覺相反的反例。</p>
 </blockquote>
 <p>第 2 章的零件多半在改「準」或改架構。這一章我們看純粹的「跑得快、佔得少」——以及一個重要的教訓： 效率技巧的好處<strong>跟你的 regime 強相關</strong>，不能照搬論文結論。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class C here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：讓模型跑得快、佔得少（FlashAttention、KV-cache、取樣）。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：第 1 章的 attention（<span class="math inline">O(T^2)</span> 的分數矩陣）與自回歸生成。不需要任何 CUDA / 系統優化背景。</p>
+<p><strong>學完你會</strong>：(1) 講清楚 FlashAttention（省記憶體）與 KV-cache（省重算）各自省的是什麼、為什麼； (2) <strong>逐行</strong>把 KV-cache 的生成迴圈建起來；(3) 在<strong>你自己的 CPU 上</strong>親手量到 KV-cache 的加速、 並<strong>先證明它沒算錯</strong>（逐 token 對拍）。最重要的是學到一個習慣：<strong>別信「一定更快」，去量你自己的 workload。</strong> 本章 💻 配套程式 <code>tiny_kvcache.py</code> 純 CPU、十幾秒、不需語料。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意（成本 / 延遲 / 風險）。</p>
+<ul>
+<li><strong>context 長度（T）</strong>：模型一次能看多少 token。<em>在意它</em>：決定能塞多長的輸入，也是算力與記憶體成本的主因（隨 <span class="math inline">T</span> <strong>平方</strong>成長）。</li>
+<li><strong><span class="math inline">O(T^2)</span></strong>：成本隨長度平方膨脹的記號。<em>在意它</em>：這就是長文場景延遲與帳單暴衝的來源。</li>
+<li><strong>FlashAttention</strong>：數學等價、但更省記憶體的 attention 算法。<em>在意它</em>：同一張 GPU 能吃更長 context＝直接省成本 / 擴容，零品質代價。</li>
+<li><strong>KV-cache</strong>：生成時快取算過的中間值、每步只算新 token。<em>在意它</em>：長生成的速度關鍵——但<strong>「省」不等於「快」</strong>，划不划算要看場景。</li>
+<li><strong>取樣（top-k / top-p / min-p）</strong>：從模型輸出挑下一個字的策略。<em>在意它</em>：決定輸出是保守還是有創意；品質要用「人讀」評，不是看 loss。</li>
+<li><strong>regime（場景）</strong>：硬體 × 模型大小 × 序列長度的組合。<em>在意它</em>：同一個優化在不同 regime 結論可能相反——別照搬論文，要量自己的 workload。</li>
+</ul>
+</div>
+</div>
+</div>
 <section id="flashattention同樣的數學更省的算法" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="flashattention同樣的數學更省的算法"><span class="header-section-number">3.1</span> FlashAttention：同樣的數學，更省的算法</h2>
 <p>回想第 1 章的 attention：它會把整個 <span class="math inline">T\times T</span> 的分數矩陣 <span class="math inline">\frac{QK^\top}{\sqrt d}</span> 攤出來、做 softmax、 再乘 <span class="math inline">V</span>。問題是那個矩陣是 <span class="math inline">O(T^2)</span> 的記憶體——序列一長就爆。</p>
@@ -378,28 +472,100 @@ window.Quarto = {
 <li><strong>想懂為什麼</strong>：平行度浪費 + per-step 開銷 &gt; 省下的重算，在小模型短生成的 regime 裡。</li>
 </ol>
 <p>如果只信直覺、不去量，你會在錯的地方優化。</p>
+<section id="sec-build-kvcache" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="sec-build-kvcache"><span class="header-section-number">3.2.1</span> 逐行把 KV-cache 建起來</h3>
+<p>樸素生成每一步都把「越來越長的整段」重餵一次（第 1 章那個 <code>generate</code>）。KV-cache 的差別只有一句話： <strong>把算過的 key/value 留著，每步只算新 token 那一個</strong>。我們把它逐行建出來。</p>
+<p><strong>第 0 步——樸素版在浪費什麼。</strong> 生第 <span class="math inline">t</span> 個字時，樸素版重算位置 <span class="math inline">0..t</span> 全部的 q/k/v，但其中 <span class="math inline">0..t{-}1</span> 的 k/v 跟上一步<strong>一模一樣</strong>。這就是 <span class="math inline">O(T^2)</span> 的重複勞動：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">def</span> generate_naive(<span class="va">self</span>, idx, n):</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb1-3"><a href="#cb1-3"></a>        logits <span class="op">=</span> <span class="va">self</span>(idx[:, <span class="op">-</span>block_size:])      <span class="co"># 整段重跑一次（含已算過的 k/v）</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>        nxt <span class="op">=</span> logits[:, <span class="op">-</span><span class="dv">1</span>, :].argmax(<span class="op">-</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>        idx <span class="op">=</span> torch.cat([idx, nxt], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-6"><a href="#cb1-6"></a>    <span class="cf">return</span> idx</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——一個能吃 cache 的 attention step。</strong> 改寫 attention：只收「新 token」一個 <code>(B,1,C)</code>， 把它的 k/v <strong>接到歷史 cache 後面</strong>，再讓新 query 對「整段歷史 + 自己」算 attention。注意 <strong>不需要因果遮罩</strong>了——cache 裡全是過去，本來就看得到：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> step(<span class="va">self</span>, x_t, cache):                       <span class="co"># x_t 只有新 token：(B,1,C)</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>    q, k, v <span class="op">=</span> <span class="va">self</span>.qkv(x_t).split(n_embd, dim<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="co"># ...reshape 成多頭...</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>    <span class="cf">if</span> cache <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb2-5"><a href="#cb2-5"></a>        k_all, v_all <span class="op">=</span> k, v</span>
+<span id="cb2-6"><a href="#cb2-6"></a>    <span class="cf">else</span>:</span>
+<span id="cb2-7"><a href="#cb2-7"></a>        k_all <span class="op">=</span> torch.cat([cache[<span class="dv">0</span>], k], dim<span class="op">=</span><span class="dv">2</span>)   <span class="co"># 接上歷史 key</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>        v_all <span class="op">=</span> torch.cat([cache[<span class="dv">1</span>], v], dim<span class="op">=</span><span class="dv">2</span>)   <span class="co"># 接上歷史 value</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a>    att <span class="op">=</span> q <span class="op">@</span> k_all.transpose(<span class="op">-</span><span class="dv">2</span>, <span class="op">-</span><span class="dv">1</span>) <span class="op">/</span> math.sqrt(head_dim)  <span class="co"># 不必遮罩：cache 全是過去</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a>    y <span class="op">=</span> F.softmax(att, dim<span class="op">=-</span><span class="dv">1</span>) <span class="op">@</span> v_all</span>
+<span id="cb2-11"><a href="#cb2-11"></a>    <span class="cf">return</span> <span class="va">self</span>.proj(...), (k_all, v_all)         <span class="co"># 回傳輸出 + 更新後的 cache</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——生成迴圈：先灌 prompt、之後每步一個 token。</strong> 把每層的 cache 串起來，每步只前傳 一個新 token，<span class="math inline">O(T^2)\to O(T)</span>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">def</span> generate_cached(<span class="va">self</span>, idx, n):</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    caches <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> n_layer</span>
+<span id="cb3-3"><a href="#cb3-3"></a>    <span class="co"># 先把 prompt 逐 token 灌進 cache（略）...</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb3-5"><a href="#cb3-5"></a>        nxt <span class="op">=</span> logits[:, <span class="op">-</span><span class="dv">1</span>, :].argmax(<span class="op">-</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-6"><a href="#cb3-6"></a>        x <span class="op">=</span> <span class="va">self</span>.tok(nxt) <span class="op">+</span> <span class="va">self</span>.pos(...)</span>
+<span id="cb3-7"><a href="#cb3-7"></a>        <span class="cf">for</span> i, b <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="va">self</span>.blocks):</span>
+<span id="cb3-8"><a href="#cb3-8"></a>            x, caches[i] <span class="op">=</span> b.step(x, caches[i])   <span class="co"># 每步只算新 token 那一個</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>        logits <span class="op">=</span> <span class="va">self</span>.head(<span class="va">self</span>.lnf(x))</span>
+<span id="cb3-10"><a href="#cb3-10"></a>    <span class="cf">return</span> out</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="取樣從機率分布裡怎麼抽下一個字" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="取樣從機率分布裡怎麼抽下一個字"><span class="header-section-number">3.3</span> 取樣：從機率分布裡怎麼抽下一個字</h2>
+</section>
+<section id="sec-tiny-kvcache" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="sec-tiny-kvcache"><span class="header-section-number">3.3</span> 💻 在你的機器上：先證它沒算錯，再看它快多少</h2>
+<p>效率優化最容易犯的錯，是「優化完忘了驗證結果還對不對」。配套程式 <code>tiny_kvcache.py</code>（純 CPU、 十幾秒、不需語料）刻意把順序倒過來：<strong>先證對、再看快</strong>。</p>
+<p>模型用隨機初始化即可——<strong>計時跟模型好不好無關，只跟「算多少」有關</strong>。用 greedy 解碼讓兩條路徑 可以逐 token 對拍：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">python</span> tiny_kvcache.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16（純 CPU）上：</p>
+<pre><code>參數 0.95M，context 上限 1024，生成 500 token，device=cpu
+
+逐 token 完全相同？ True（KV-cache 是省、不是近似）
+naive  （每步重算全序列）：  1.48 s
+cached （每步只算新 token）：  0.15 s
+加速：10.13×</code></pre>
+<p><strong>怎麼讀</strong>：第一行最重要——cached 與 naive 的輸出<strong>逐 token 完全相同</strong>，證明 KV-cache 是 數學等價的「省」，不是會改變結果的近似。確認對了，才看第二件事：CPU 上長生成快了約 10 倍。 這正好對上前面那個 regime 故事的另一面——<strong>KV-cache 在「CPU 長生成」這個 regime 是大勝</strong>， 在「GPU 小模型短生成」反而會輸。同一個技巧，兩個相反結論，全看 regime。</p>
+<p>把不同生成長度跑一輪、畫出來，就看到那條 <span class="math inline">O(T^2)</span> vs <span class="math inline">O(T)</span> 的差距隨長度張開（<a href="#fig-kvcache" class="quarto-xref">图&nbsp;<span>3.1</span></a>）：</p>
+<div id="fig-kvcache" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kvcache-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/kvcache_speedup.png" class="img-fluid figure-img" style="width:92.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kvcache-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3.1: KV-cache 計時（純 CPU 真跑）：左圖 naive 的牆鐘時間隨生成長度呈 <span class="math inline">O(T^2)</span> 飆升、cached 近線性；右圖加速倍率隨長度從 2× 一路張到 17×。生成越長、cached 贏越多。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>加速倍率會隨設定變——這正是重點
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>你跑出來的倍率不會剛好是 10×：它隨<strong>生成長度</strong>（越長，naive 的 <span class="math inline">O(T^2)</span> 浪費越多、cached 贏越多）、 層數、執行緒數而變。把 <code>n_new</code> 從 500 改成 100 再改成 1000，看倍率怎麼動——你會親手畫出 「<span class="math inline">O(T^2)</span> vs <span class="math inline">O(T)</span>」這條差距隨長度張開的曲線。</p>
+</div>
+</div>
+</section>
+<section id="取樣從機率分布裡怎麼抽下一個字" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="取樣從機率分布裡怎麼抽下一個字"><span class="header-section-number">3.4</span> 取樣：從機率分布裡怎麼抽下一個字</h2>
 <p>模型每一步輸出的是「下一個字的機率分布」。怎麼從這個分布抽一個字出來，決定了輸出的風格—— 保守正確 vs 大膽創意。常見三招：</p>
 <ul>
 <li><strong>top-k</strong>：只留機率最高的 <span class="math inline">k</span> 個候選，固定數量。</li>
 <li><strong>top-p（nucleus）</strong>：從高到低累積機率到 <span class="math inline">p</span> 為止——候選<strong>數量會自適應</strong>（分布尖時少、平時多）。</li>
 <li><strong>min-p</strong>：相對於峰值的門檻（低於「最高機率 × min_p」的都砍掉），2024 年提出，高溫下比 top-p 更穩。</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="annotated-cell-2"><pre class="sourceCode numberSource python code-annotation-code number-lines code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-2-1" class="code-annotation-target"><a href="#annotated-cell-2-1"></a><span class="cf">if</span> top_p <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="annotated-cell-2-2"><a href="#annotated-cell-2-2"></a>    s_logits, s_idx <span class="op">=</span> torch.sort(logits, descending<span class="op">=</span><span class="va">True</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="annotated-cell-2-3"><a href="#annotated-cell-2-3"></a>    cum <span class="op">=</span> torch.cumsum(F.softmax(s_logits, dim<span class="op">=-</span><span class="dv">1</span>), dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<a class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-2-4" class="code-annotation-target"><a href="#annotated-cell-2-4"></a>    remove <span class="op">=</span> cum <span class="op">&gt;</span> top_p</span>
-<span id="annotated-cell-2-5"><a href="#annotated-cell-2-5"></a>    ...</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="annotated-cell-7"><pre class="sourceCode numberSource python code-annotation-code number-lines code-with-copy code-annotated"><code class="sourceCode python"><a class="code-annotation-anchor" data-target-cell="annotated-cell-7" data-target-annotation="1" onclick="event.preventDefault();">1</a><span id="annotated-cell-7-1" class="code-annotation-target"><a href="#annotated-cell-7-1"></a><span class="cf">if</span> top_p <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="annotated-cell-7-2"><a href="#annotated-cell-7-2"></a>    s_logits, s_idx <span class="op">=</span> torch.sort(logits, descending<span class="op">=</span><span class="va">True</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="annotated-cell-7-3"><a href="#annotated-cell-7-3"></a>    cum <span class="op">=</span> torch.cumsum(F.softmax(s_logits, dim<span class="op">=-</span><span class="dv">1</span>), dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<a class="code-annotation-anchor" data-target-cell="annotated-cell-7" data-target-annotation="2" onclick="event.preventDefault();">2</a><span id="annotated-cell-7-4" class="code-annotation-target"><a href="#annotated-cell-7-4"></a>    remove <span class="op">=</span> cum <span class="op">&gt;</span> top_p</span>
+<span id="annotated-cell-7-5"><a href="#annotated-cell-7-5"></a>    ...</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <dl class="code-annotation-container-grid">
-<dt data-target-cell="annotated-cell-2" data-target-annotation="1">1</dt>
+<dt data-target-cell="annotated-cell-7" data-target-annotation="1">1</dt>
 <dd>
-<span data-code-cell="annotated-cell-2" data-code-lines="1" data-code-annotation="1">top-k 是「固定數量」、top-p 和 min-p 是「自適應截斷」——同一類、差在累積 vs 相對峰值。</span>
+<span data-code-cell="annotated-cell-7" data-code-lines="1" data-code-annotation="1">top-k 是「固定數量」、top-p 和 min-p 是「自適應截斷」——同一類、差在累積 vs 相對峰值。</span>
 </dd>
-<dt data-target-cell="annotated-cell-2" data-target-annotation="2">2</dt>
+<dt data-target-cell="annotated-cell-7" data-target-annotation="2">2</dt>
 <dd>
-<span data-code-cell="annotated-cell-2" data-code-lines="4" data-code-annotation="2">累積機率超過 <span class="math inline">p</span> 的尾巴砍掉，只在「核心 (nucleus)」裡抽。</span>
+<span data-code-cell="annotated-cell-7" data-code-lines="4" data-code-annotation="2">累積機率超過 <span class="math inline">p</span> 的尾巴砍掉，只在「核心 (nucleus)」裡抽。</span>
 </dd>
 </dl>
 <div class="callout callout-style-simple callout-tip callout-titled">
@@ -416,14 +582,104 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="帶走什麼" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">3.4</span> 帶走什麼</h2>
+<section id="帶走什麼" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">3.5</span> 帶走什麼</h2>
 <ul>
 <li>FlashAttention：數學等價、記憶體 <span class="math inline">O(T^2)\to O(T)</span>，同卡 context ×4——純粹的省。</li>
 <li>KV-cache <strong>不一定更快</strong>：小模型短生成的 GPU 上反而慢 18%。省的技巧是否真省，看你的 regime、量你的 workload。</li>
 <li>取樣方法（top-k/top-p/min-p）的選擇由任務決定，用人讀來判斷，不是 loss。</li>
 <li>這一章的核心不是某個技巧，是一個習慣：<strong>別信「一定更快」，去量。</strong></li>
 </ul>
+</section>
+<section id="sec-ch3-exercises" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="sec-ch3-exercises"><span class="header-section-number">3.6</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：加速倍率隨生成長度怎麼變？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>在 <code>tiny_kvcache.py</code> 把 <code>n_new</code> 依序設成 100、500、1000。<strong>先寫下你的預測</strong>：加速倍率會往哪個方向走？ 為什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>倍率隨生成長度<strong>變大</strong>。naive 的總成本是 <span class="math inline">O(T^2)</span>（每步重算越來越長的序列），cached 是 <span class="math inline">O(T)</span>； 序列越長，naive 浪費的重算越多、差距張得越開。短生成時 cached 的好處還不明顯，這也呼應「GPU 小模型 短生成反而慢」——在那個 regime，per-step 開銷大過省下的重算。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：算一次記憶體帳
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>FlashAttention 把 attention 的記憶體從 <span class="math inline">O(T^2)</span> 降到 <span class="math inline">O(T)</span>。假設 context 從 1024 變 4096（×4）， 樸素 attention 的分數矩陣記憶體變幾倍？這跟本章「同卡 context ×4」的實測怎麼對上？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>分數矩陣是 <span class="math inline">T\times T</span>，<span class="math inline">T</span> ×4 → 記憶體 ×16。所以在固定顯存下，省掉這塊 <span class="math inline">O(T^2)</span> 正是讓你能把 context 拉長好幾倍的原因；本章「同卡 1024→4096」的實測就是這個帳的具體結果。FlashAttention 是 數學等價的「省」——記憶體省下來，數字不變。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：拔掉 KV-cache 的「接歷史」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>把 <code>Attn.step</code> 裡 <code>torch.cat([cache[0], k], ...)</code> 改成只用當前的 <code>k</code>（不接歷史），重跑對拍。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>「逐 token 完全相同？」會變成 <code>False</code>——少了歷史 key/value，每個新 token 只能注意到自己，等於 把因果上下文整個丟掉，生成立刻走樣。這證明 cache 不是「順便快取」，它<strong>承載了全部歷史脈絡</strong>； 也是為什麼第 0 步要先確認「對不對」再談「快不快」。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 <!-- -->
@@ -894,93 +1150,256 @@ window.Quarto = {
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu"># 跑多快：FlashAttention、KV-cache、取樣 {#sec-efficiency}</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="at">&gt; **一句話**：效率技巧能省記憶體、加速生成——但「省」不等於「一定更快」。這一章有一個我親手量到、</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="at">&gt; 跟直覺相反的反例。</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a>第 2 章的零件多半在改「準」或改架構。這一章我們看純粹的「跑得快、佔得少」——以及一個重要的教訓：</span>
-<span id="cb1-7"><a href="#cb1-7"></a>效率技巧的好處**跟你的 regime 強相關**，不能照搬論文結論。</span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="fu">## FlashAttention：同樣的數學，更省的算法</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a></span>
-<span id="cb1-11"><a href="#cb1-11"></a>回想第 1 章的 attention：它會把整個 $T\times T$ 的分數矩陣 $\frac{QK^\top}{\sqrt d}$ 攤出來、做 softmax、</span>
-<span id="cb1-12"><a href="#cb1-12"></a>再乘 $V$。問題是那個矩陣是 $O(T^2)$ 的記憶體——序列一長就爆。</span>
-<span id="cb1-13"><a href="#cb1-13"></a></span>
-<span id="cb1-14"><a href="#cb1-14"></a>FlashAttention 的洞見是：**最終結果不需要把整個矩陣存下來**。它把計算分塊（tiling），邊算邊累加，</span>
-<span id="cb1-15"><a href="#cb1-15"></a>用一個數值穩定的線上 softmax，讓記憶體從 $O(T^2)$ 降到 $O(T)$。關鍵是——**數學上完全一樣**，不是近似。</span>
-<span id="cb1-16"><a href="#cb1-16"></a></span>
-<span id="cb1-17"><a href="#cb1-17"></a>在程式碼裡，這甚至只是換一個呼叫：</span>
-<span id="cb1-18"><a href="#cb1-18"></a></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="in">```python</span></span>
-<span id="cb1-20"><a href="#cb1-20"></a>y <span class="op">=</span> F.scaled_dot_product_attention(q, k, v, is_causal<span class="op">=</span><span class="va">True</span>)  <span class="co"># &lt;1&gt;</span></span>
-<span id="cb1-21"><a href="#cb1-21"></a><span class="in">```</span></span>
-<span id="cb1-22"><a href="#cb1-22"></a><span class="ss">1. </span>PyTorch 內建的 FlashAttention。<span class="in">`is_causal=True`</span> 幫忙做因果遮罩。結果跟第 1 章那個樸素版「逐位相等」，</span>
-<span id="cb1-23"><a href="#cb1-23"></a>   我寫了測試驗證兩者 logits 差只有 $6\times10^{-7}$。</span>
-<span id="cb1-24"><a href="#cb1-24"></a></span>
-<span id="cb1-25"><a href="#cb1-25"></a>**實測**：同一台機器（RTX 5070、8 GB），樸素 attention 的 context 上限約 1024，換 FlashAttention 後</span>
-<span id="cb1-26"><a href="#cb1-26"></a>約 4096——**同樣的卡，4 倍**。這是純粹的「省」（記憶體），讓你能訓更長的 context。</span>
-<span id="cb1-27"><a href="#cb1-27"></a></span>
-<span id="cb1-28"><a href="#cb1-28"></a><span class="fu">## KV-cache：一個「不一定更快」的反例 {#sec-kvcache}</span></span>
-<span id="cb1-29"><a href="#cb1-29"></a></span>
-<span id="cb1-30"><a href="#cb1-30"></a>生成是自回歸的：吐一個 token、接回去、再吐下一個。問題是每多一個 token，attention 就要重算前面**所有**</span>
-<span id="cb1-31"><a href="#cb1-31"></a>token 的 key 和 value——這是 $O(T^2)$ 的重複勞動。KV-cache 的點子很直觀：把算過的 key/value 快取起來，</span>
-<span id="cb1-32"><a href="#cb1-32"></a>每步只算「新 token」那一個，理論上 $O(T^2)\to O(T)$。</span>
-<span id="cb1-33"><a href="#cb1-33"></a></span>
-<span id="cb1-34"><a href="#cb1-34"></a>聽起來一定更快，對吧？我也這麼以為。然後我去量了。</span>
-<span id="cb1-35"><a href="#cb1-35"></a></span>
-<span id="cb1-36"><a href="#cb1-36"></a>::: {.callout-warning}</span>
-<span id="cb1-37"><a href="#cb1-37"></a><span class="fu">## 「省」不等於「快」——要看 regime</span></span>
-<span id="cb1-38"><a href="#cb1-38"></a>我實測 KV-cache 在 **CPU 長生成**快 2.2×（符合預期）。但在我的 **GPU + 小模型（8M）+ 短生成**，</span>
-<span id="cb1-39"><a href="#cb1-39"></a>反而**慢約 18%**。為什麼？</span>
-<span id="cb1-40"><a href="#cb1-40"></a></span>
-<span id="cb1-41"><a href="#cb1-41"></a>KV-cache 讓你「一次只算一個 token」。在 GPU 上，一次算一個 token **浪費了 GPU 的平行度**——GPU 喜歡</span>
-<span id="cb1-42"><a href="#cb1-42"></a>一次算一大批。再加上每步都有固定的啟動開銷（kernel launch、Python 迴圈）。當模型小、序列短時，這些</span>
-<span id="cb1-43"><a href="#cb1-43"></a>per-step 開銷**超過**了省下來的 $O(T^2)$ 重算。</span>
-<span id="cb1-44"><a href="#cb1-44"></a></span>
-<span id="cb1-45"><a href="#cb1-45"></a>**結論：一個技巧是否真的省/快，取決於你的 regime（硬體 × 模型大小 × 序列長度），別照搬論文結論——</span>
-<span id="cb1-46"><a href="#cb1-46"></a>量你自己的 workload。**</span>
-<span id="cb1-47"><a href="#cb1-47"></a>:::</span>
-<span id="cb1-48"><a href="#cb1-48"></a></span>
-<span id="cb1-49"><a href="#cb1-49"></a>這個反例是整本書方法論的縮影，值得停下來體會一下這個形狀：</span>
-<span id="cb1-50"><a href="#cb1-50"></a></span>
-<span id="cb1-51"><a href="#cb1-51"></a><span class="ss">1. </span>**先預測**：KV-cache 一定更快（理論上 $O(T^2)\to O(T)$）。</span>
-<span id="cb1-52"><a href="#cb1-52"></a><span class="ss">2. </span>**親手量**：在我的 GPU 上反而慢 18%。</span>
-<span id="cb1-53"><a href="#cb1-53"></a><span class="ss">3. </span>**想懂為什麼**：平行度浪費 + per-step 開銷 &gt; 省下的重算，在小模型短生成的 regime 裡。</span>
-<span id="cb1-54"><a href="#cb1-54"></a></span>
-<span id="cb1-55"><a href="#cb1-55"></a>如果只信直覺、不去量，你會在錯的地方優化。</span>
-<span id="cb1-56"><a href="#cb1-56"></a></span>
-<span id="cb1-57"><a href="#cb1-57"></a><span class="fu">## 取樣：從機率分布裡怎麼抽下一個字</span></span>
-<span id="cb1-58"><a href="#cb1-58"></a></span>
-<span id="cb1-59"><a href="#cb1-59"></a>模型每一步輸出的是「下一個字的機率分布」。怎麼從這個分布抽一個字出來，決定了輸出的風格——</span>
-<span id="cb1-60"><a href="#cb1-60"></a>保守正確 vs 大膽創意。常見三招：</span>
-<span id="cb1-61"><a href="#cb1-61"></a></span>
-<span id="cb1-62"><a href="#cb1-62"></a><span class="ss">- </span>**top-k**：只留機率最高的 $k$ 個候選，固定數量。</span>
-<span id="cb1-63"><a href="#cb1-63"></a><span class="ss">- </span>**top-p（nucleus）**：從高到低累積機率到 $p$ 為止——候選**數量會自適應**（分布尖時少、平時多）。</span>
-<span id="cb1-64"><a href="#cb1-64"></a><span class="ss">- </span>**min-p**：相對於峰值的門檻（低於「最高機率 × min_p」的都砍掉），2024 年提出，高溫下比 top-p 更穩。</span>
-<span id="cb1-65"><a href="#cb1-65"></a></span>
-<span id="cb1-66"><a href="#cb1-66"></a><span class="in">```python</span></span>
-<span id="cb1-67"><a href="#cb1-67"></a><span class="cf">if</span> top_p <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:                                  <span class="co"># &lt;1&gt;</span></span>
-<span id="cb1-68"><a href="#cb1-68"></a>    s_logits, s_idx <span class="op">=</span> torch.sort(logits, descending<span class="op">=</span><span class="va">True</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb1-69"><a href="#cb1-69"></a>    cum <span class="op">=</span> torch.cumsum(F.softmax(s_logits, dim<span class="op">=-</span><span class="dv">1</span>), dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb1-70"><a href="#cb1-70"></a>    remove <span class="op">=</span> cum <span class="op">&gt;</span> top_p                               <span class="co"># &lt;2&gt;</span></span>
-<span id="cb1-71"><a href="#cb1-71"></a>    ...</span>
-<span id="cb1-72"><a href="#cb1-72"></a><span class="in">```</span></span>
-<span id="cb1-73"><a href="#cb1-73"></a><span class="ss">1. </span>top-k 是「固定數量」、top-p 和 min-p 是「自適應截斷」——同一類、差在累積 vs 相對峰值。</span>
-<span id="cb1-74"><a href="#cb1-74"></a><span class="ss">2. </span>累積機率超過 $p$ 的尾巴砍掉，只在「核心 (nucleus)」裡抽。</span>
-<span id="cb1-75"><a href="#cb1-75"></a></span>
-<span id="cb1-76"><a href="#cb1-76"></a>::: {.callout-tip}</span>
-<span id="cb1-77"><a href="#cb1-77"></a><span class="fu">## 取樣方法用「人讀」選，不是用 loss</span></span>
-<span id="cb1-78"><a href="#cb1-78"></a>選哪個由**任務**決定：要正確的答案就用冷一點、低溫；要創意就用暖一點、min-p。而且評估取樣品質要</span>
-<span id="cb1-79"><a href="#cb1-79"></a>用「人讀起來如何」，不是用 loss——loss 量的是「對不對」，不是「好不好讀」。這呼應第 5 章「選對指標」。</span>
-<span id="cb1-80"><a href="#cb1-80"></a>:::</span>
-<span id="cb1-81"><a href="#cb1-81"></a></span>
-<span id="cb1-82"><a href="#cb1-82"></a><span class="fu">## 帶走什麼</span></span>
-<span id="cb1-83"><a href="#cb1-83"></a></span>
-<span id="cb1-84"><a href="#cb1-84"></a><span class="ss">- </span>FlashAttention：數學等價、記憶體 $O(T^2)\to O(T)$，同卡 context ×4——純粹的省。</span>
-<span id="cb1-85"><a href="#cb1-85"></a><span class="ss">- </span>KV-cache **不一定更快**：小模型短生成的 GPU 上反而慢 18%。省的技巧是否真省，看你的 regime、量你的 workload。</span>
-<span id="cb1-86"><a href="#cb1-86"></a><span class="ss">- </span>取樣方法（top-k/top-p/min-p）的選擇由任務決定，用人讀來判斷，不是 loss。</span>
-<span id="cb1-87"><a href="#cb1-87"></a><span class="ss">- </span>這一章的核心不是某個技巧，是一個習慣：**別信「一定更快」，去量。**</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu"># 跑多快：FlashAttention、KV-cache、取樣 {#sec-efficiency}</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="at">&gt; **一句話**：效率技巧能省記憶體、加速生成——但「省」不等於「一定更快」。這一章有一個我親手量到、</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="at">&gt; 跟直覺相反的反例。</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a>第 2 章的零件多半在改「準」或改架構。這一章我們看純粹的「跑得快、佔得少」——以及一個重要的教訓：</span>
+<span id="cb6-7"><a href="#cb6-7"></a>效率技巧的好處**跟你的 regime 強相關**，不能照搬論文結論。</span>
+<span id="cb6-8"><a href="#cb6-8"></a></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="in">```{mermaid}</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：讓模型跑得快、佔得少（FlashAttention、KV-cache、取樣）。</span><span class="ot">"</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a>flowchart LR</span>
+<span id="cb6-14"><a href="#cb6-14"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb6-15"><a href="#cb6-15"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb6-16"><a href="#cb6-16"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a>  class C here</span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="in">```</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a></span>
+<span id="cb6-20"><a href="#cb6-20"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a>**假設你已經會**：第 1 章的 attention（$O(T^2)$ 的分數矩陣）與自回歸生成。不需要任何</span>
+<span id="cb6-23"><a href="#cb6-23"></a>CUDA / 系統優化背景。</span>
+<span id="cb6-24"><a href="#cb6-24"></a></span>
+<span id="cb6-25"><a href="#cb6-25"></a>**學完你會**：(1) 講清楚 FlashAttention（省記憶體）與 KV-cache（省重算）各自省的是什麼、為什麼；</span>
+<span id="cb6-26"><a href="#cb6-26"></a>(2) **逐行**把 KV-cache 的生成迴圈建起來；(3) 在**你自己的 CPU 上**親手量到 KV-cache 的加速、</span>
+<span id="cb6-27"><a href="#cb6-27"></a>並**先證明它沒算錯**（逐 token 對拍）。最重要的是學到一個習慣：**別信「一定更快」，去量你自己的</span>
+<span id="cb6-28"><a href="#cb6-28"></a>workload。** 本章 💻 配套程式 <span class="in">`tiny_kvcache.py`</span> 純 CPU、十幾秒、不需語料。</span>
+<span id="cb6-29"><a href="#cb6-29"></a>:::</span>
+<span id="cb6-30"><a href="#cb6-30"></a></span>
+<span id="cb6-31"><a href="#cb6-31"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-32"><a href="#cb6-32"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb6-33"><a href="#cb6-33"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意（成本 / 延遲 / 風險）。</span>
+<span id="cb6-34"><a href="#cb6-34"></a></span>
+<span id="cb6-35"><a href="#cb6-35"></a><span class="ss">- </span>**context 長度（T）**：模型一次能看多少 token。*在意它*：決定能塞多長的輸入，也是算力與記憶體成本的主因（隨 $T$ **平方**成長）。</span>
+<span id="cb6-36"><a href="#cb6-36"></a><span class="ss">- </span>**$O(T^2)$**：成本隨長度平方膨脹的記號。*在意它*：這就是長文場景延遲與帳單暴衝的來源。</span>
+<span id="cb6-37"><a href="#cb6-37"></a><span class="ss">- </span>**FlashAttention**：數學等價、但更省記憶體的 attention 算法。*在意它*：同一張 GPU 能吃更長 context＝直接省成本 / 擴容，零品質代價。</span>
+<span id="cb6-38"><a href="#cb6-38"></a><span class="ss">- </span>**KV-cache**：生成時快取算過的中間值、每步只算新 token。*在意它*：長生成的速度關鍵——但**「省」不等於「快」**，划不划算要看場景。</span>
+<span id="cb6-39"><a href="#cb6-39"></a><span class="ss">- </span>**取樣（top-k / top-p / min-p）**：從模型輸出挑下一個字的策略。*在意它*：決定輸出是保守還是有創意；品質要用「人讀」評，不是看 loss。</span>
+<span id="cb6-40"><a href="#cb6-40"></a><span class="ss">- </span>**regime（場景）**：硬體 × 模型大小 × 序列長度的組合。*在意它*：同一個優化在不同 regime 結論可能相反——別照搬論文，要量自己的 workload。</span>
+<span id="cb6-41"><a href="#cb6-41"></a>:::</span>
+<span id="cb6-42"><a href="#cb6-42"></a></span>
+<span id="cb6-43"><a href="#cb6-43"></a><span class="fu">## FlashAttention：同樣的數學，更省的算法</span></span>
+<span id="cb6-44"><a href="#cb6-44"></a></span>
+<span id="cb6-45"><a href="#cb6-45"></a>回想第 1 章的 attention：它會把整個 $T\times T$ 的分數矩陣 $\frac{QK^\top}{\sqrt d}$ 攤出來、做 softmax、</span>
+<span id="cb6-46"><a href="#cb6-46"></a>再乘 $V$。問題是那個矩陣是 $O(T^2)$ 的記憶體——序列一長就爆。</span>
+<span id="cb6-47"><a href="#cb6-47"></a></span>
+<span id="cb6-48"><a href="#cb6-48"></a>FlashAttention 的洞見是：**最終結果不需要把整個矩陣存下來**。它把計算分塊（tiling），邊算邊累加，</span>
+<span id="cb6-49"><a href="#cb6-49"></a>用一個數值穩定的線上 softmax，讓記憶體從 $O(T^2)$ 降到 $O(T)$。關鍵是——**數學上完全一樣**，不是近似。</span>
+<span id="cb6-50"><a href="#cb6-50"></a></span>
+<span id="cb6-51"><a href="#cb6-51"></a>在程式碼裡，這甚至只是換一個呼叫：</span>
+<span id="cb6-52"><a href="#cb6-52"></a></span>
+<span id="cb6-53"><a href="#cb6-53"></a><span class="in">```python</span></span>
+<span id="cb6-54"><a href="#cb6-54"></a>y <span class="op">=</span> F.scaled_dot_product_attention(q, k, v, is_causal<span class="op">=</span><span class="va">True</span>)  <span class="co"># &lt;1&gt;</span></span>
+<span id="cb6-55"><a href="#cb6-55"></a><span class="in">```</span></span>
+<span id="cb6-56"><a href="#cb6-56"></a><span class="ss">1. </span>PyTorch 內建的 FlashAttention。<span class="in">`is_causal=True`</span> 幫忙做因果遮罩。結果跟第 1 章那個樸素版「逐位相等」，</span>
+<span id="cb6-57"><a href="#cb6-57"></a>   我寫了測試驗證兩者 logits 差只有 $6\times10^{-7}$。</span>
+<span id="cb6-58"><a href="#cb6-58"></a></span>
+<span id="cb6-59"><a href="#cb6-59"></a>**實測**：同一台機器（RTX 5070、8 GB），樸素 attention 的 context 上限約 1024，換 FlashAttention 後</span>
+<span id="cb6-60"><a href="#cb6-60"></a>約 4096——**同樣的卡，4 倍**。這是純粹的「省」（記憶體），讓你能訓更長的 context。</span>
+<span id="cb6-61"><a href="#cb6-61"></a></span>
+<span id="cb6-62"><a href="#cb6-62"></a><span class="fu">## KV-cache：一個「不一定更快」的反例 {#sec-kvcache}</span></span>
+<span id="cb6-63"><a href="#cb6-63"></a></span>
+<span id="cb6-64"><a href="#cb6-64"></a>生成是自回歸的：吐一個 token、接回去、再吐下一個。問題是每多一個 token，attention 就要重算前面**所有**</span>
+<span id="cb6-65"><a href="#cb6-65"></a>token 的 key 和 value——這是 $O(T^2)$ 的重複勞動。KV-cache 的點子很直觀：把算過的 key/value 快取起來，</span>
+<span id="cb6-66"><a href="#cb6-66"></a>每步只算「新 token」那一個，理論上 $O(T^2)\to O(T)$。</span>
+<span id="cb6-67"><a href="#cb6-67"></a></span>
+<span id="cb6-68"><a href="#cb6-68"></a>聽起來一定更快，對吧？我也這麼以為。然後我去量了。</span>
+<span id="cb6-69"><a href="#cb6-69"></a></span>
+<span id="cb6-70"><a href="#cb6-70"></a>::: {.callout-warning}</span>
+<span id="cb6-71"><a href="#cb6-71"></a><span class="fu">## 「省」不等於「快」——要看 regime</span></span>
+<span id="cb6-72"><a href="#cb6-72"></a>我實測 KV-cache 在 **CPU 長生成**快 2.2×（符合預期）。但在我的 **GPU + 小模型（8M）+ 短生成**，</span>
+<span id="cb6-73"><a href="#cb6-73"></a>反而**慢約 18%**。為什麼？</span>
+<span id="cb6-74"><a href="#cb6-74"></a></span>
+<span id="cb6-75"><a href="#cb6-75"></a>KV-cache 讓你「一次只算一個 token」。在 GPU 上，一次算一個 token **浪費了 GPU 的平行度**——GPU 喜歡</span>
+<span id="cb6-76"><a href="#cb6-76"></a>一次算一大批。再加上每步都有固定的啟動開銷（kernel launch、Python 迴圈）。當模型小、序列短時，這些</span>
+<span id="cb6-77"><a href="#cb6-77"></a>per-step 開銷**超過**了省下來的 $O(T^2)$ 重算。</span>
+<span id="cb6-78"><a href="#cb6-78"></a></span>
+<span id="cb6-79"><a href="#cb6-79"></a>**結論：一個技巧是否真的省/快，取決於你的 regime（硬體 × 模型大小 × 序列長度），別照搬論文結論——</span>
+<span id="cb6-80"><a href="#cb6-80"></a>量你自己的 workload。**</span>
+<span id="cb6-81"><a href="#cb6-81"></a>:::</span>
+<span id="cb6-82"><a href="#cb6-82"></a></span>
+<span id="cb6-83"><a href="#cb6-83"></a>這個反例是整本書方法論的縮影，值得停下來體會一下這個形狀：</span>
+<span id="cb6-84"><a href="#cb6-84"></a></span>
+<span id="cb6-85"><a href="#cb6-85"></a><span class="ss">1. </span>**先預測**：KV-cache 一定更快（理論上 $O(T^2)\to O(T)$）。</span>
+<span id="cb6-86"><a href="#cb6-86"></a><span class="ss">2. </span>**親手量**：在我的 GPU 上反而慢 18%。</span>
+<span id="cb6-87"><a href="#cb6-87"></a><span class="ss">3. </span>**想懂為什麼**：平行度浪費 + per-step 開銷 &gt; 省下的重算，在小模型短生成的 regime 裡。</span>
+<span id="cb6-88"><a href="#cb6-88"></a></span>
+<span id="cb6-89"><a href="#cb6-89"></a>如果只信直覺、不去量，你會在錯的地方優化。</span>
+<span id="cb6-90"><a href="#cb6-90"></a></span>
+<span id="cb6-91"><a href="#cb6-91"></a><span class="fu">### 逐行把 KV-cache 建起來 {#sec-build-kvcache}</span></span>
+<span id="cb6-92"><a href="#cb6-92"></a></span>
+<span id="cb6-93"><a href="#cb6-93"></a>樸素生成每一步都把「越來越長的整段」重餵一次（第 1 章那個 <span class="in">`generate`</span>）。KV-cache 的差別只有一句話：</span>
+<span id="cb6-94"><a href="#cb6-94"></a>**把算過的 key/value 留著，每步只算新 token 那一個**。我們把它逐行建出來。</span>
+<span id="cb6-95"><a href="#cb6-95"></a></span>
+<span id="cb6-96"><a href="#cb6-96"></a>**第 0 步——樸素版在浪費什麼。** 生第 $t$ 個字時，樸素版重算位置 $0..t$ 全部的 q/k/v，但其中</span>
+<span id="cb6-97"><a href="#cb6-97"></a>$0..t{-}1$ 的 k/v 跟上一步**一模一樣**。這就是 $O(T^2)$ 的重複勞動：</span>
+<span id="cb6-98"><a href="#cb6-98"></a></span>
+<span id="cb6-99"><a href="#cb6-99"></a><span class="in">```python</span></span>
+<span id="cb6-100"><a href="#cb6-100"></a><span class="kw">def</span> generate_naive(<span class="va">self</span>, idx, n):</span>
+<span id="cb6-101"><a href="#cb6-101"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb6-102"><a href="#cb6-102"></a>        logits <span class="op">=</span> <span class="va">self</span>(idx[:, <span class="op">-</span>block_size:])      <span class="co"># 整段重跑一次（含已算過的 k/v）</span></span>
+<span id="cb6-103"><a href="#cb6-103"></a>        nxt <span class="op">=</span> logits[:, <span class="op">-</span><span class="dv">1</span>, :].argmax(<span class="op">-</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-104"><a href="#cb6-104"></a>        idx <span class="op">=</span> torch.cat([idx, nxt], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-105"><a href="#cb6-105"></a>    <span class="cf">return</span> idx</span>
+<span id="cb6-106"><a href="#cb6-106"></a><span class="in">```</span></span>
+<span id="cb6-107"><a href="#cb6-107"></a></span>
+<span id="cb6-108"><a href="#cb6-108"></a>**第 1 步——一個能吃 cache 的 attention step。** 改寫 attention：只收「新 token」一個 <span class="in">`(B,1,C)`</span>，</span>
+<span id="cb6-109"><a href="#cb6-109"></a>把它的 k/v **接到歷史 cache 後面**，再讓新 query 對「整段歷史 + 自己」算 attention。注意</span>
+<span id="cb6-110"><a href="#cb6-110"></a>**不需要因果遮罩**了——cache 裡全是過去，本來就看得到：</span>
+<span id="cb6-111"><a href="#cb6-111"></a></span>
+<span id="cb6-112"><a href="#cb6-112"></a><span class="in">```python</span></span>
+<span id="cb6-113"><a href="#cb6-113"></a><span class="kw">def</span> step(<span class="va">self</span>, x_t, cache):                       <span class="co"># x_t 只有新 token：(B,1,C)</span></span>
+<span id="cb6-114"><a href="#cb6-114"></a>    q, k, v <span class="op">=</span> <span class="va">self</span>.qkv(x_t).split(n_embd, dim<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb6-115"><a href="#cb6-115"></a>    <span class="co"># ...reshape 成多頭...</span></span>
+<span id="cb6-116"><a href="#cb6-116"></a>    <span class="cf">if</span> cache <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb6-117"><a href="#cb6-117"></a>        k_all, v_all <span class="op">=</span> k, v</span>
+<span id="cb6-118"><a href="#cb6-118"></a>    <span class="cf">else</span>:</span>
+<span id="cb6-119"><a href="#cb6-119"></a>        k_all <span class="op">=</span> torch.cat([cache[<span class="dv">0</span>], k], dim<span class="op">=</span><span class="dv">2</span>)   <span class="co"># 接上歷史 key</span></span>
+<span id="cb6-120"><a href="#cb6-120"></a>        v_all <span class="op">=</span> torch.cat([cache[<span class="dv">1</span>], v], dim<span class="op">=</span><span class="dv">2</span>)   <span class="co"># 接上歷史 value</span></span>
+<span id="cb6-121"><a href="#cb6-121"></a>    att <span class="op">=</span> q <span class="op">@</span> k_all.transpose(<span class="op">-</span><span class="dv">2</span>, <span class="op">-</span><span class="dv">1</span>) <span class="op">/</span> math.sqrt(head_dim)  <span class="co"># 不必遮罩：cache 全是過去</span></span>
+<span id="cb6-122"><a href="#cb6-122"></a>    y <span class="op">=</span> F.softmax(att, dim<span class="op">=-</span><span class="dv">1</span>) <span class="op">@</span> v_all</span>
+<span id="cb6-123"><a href="#cb6-123"></a>    <span class="cf">return</span> <span class="va">self</span>.proj(...), (k_all, v_all)         <span class="co"># 回傳輸出 + 更新後的 cache</span></span>
+<span id="cb6-124"><a href="#cb6-124"></a><span class="in">```</span></span>
+<span id="cb6-125"><a href="#cb6-125"></a></span>
+<span id="cb6-126"><a href="#cb6-126"></a>**第 2 步——生成迴圈：先灌 prompt、之後每步一個 token。** 把每層的 cache 串起來，每步只前傳</span>
+<span id="cb6-127"><a href="#cb6-127"></a>一個新 token，$O(T^2)\to O(T)$：</span>
+<span id="cb6-128"><a href="#cb6-128"></a></span>
+<span id="cb6-129"><a href="#cb6-129"></a><span class="in">```python</span></span>
+<span id="cb6-130"><a href="#cb6-130"></a><span class="kw">def</span> generate_cached(<span class="va">self</span>, idx, n):</span>
+<span id="cb6-131"><a href="#cb6-131"></a>    caches <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> n_layer</span>
+<span id="cb6-132"><a href="#cb6-132"></a>    <span class="co"># 先把 prompt 逐 token 灌進 cache（略）...</span></span>
+<span id="cb6-133"><a href="#cb6-133"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb6-134"><a href="#cb6-134"></a>        nxt <span class="op">=</span> logits[:, <span class="op">-</span><span class="dv">1</span>, :].argmax(<span class="op">-</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-135"><a href="#cb6-135"></a>        x <span class="op">=</span> <span class="va">self</span>.tok(nxt) <span class="op">+</span> <span class="va">self</span>.pos(...)</span>
+<span id="cb6-136"><a href="#cb6-136"></a>        <span class="cf">for</span> i, b <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="va">self</span>.blocks):</span>
+<span id="cb6-137"><a href="#cb6-137"></a>            x, caches[i] <span class="op">=</span> b.step(x, caches[i])   <span class="co"># 每步只算新 token 那一個</span></span>
+<span id="cb6-138"><a href="#cb6-138"></a>        logits <span class="op">=</span> <span class="va">self</span>.head(<span class="va">self</span>.lnf(x))</span>
+<span id="cb6-139"><a href="#cb6-139"></a>    <span class="cf">return</span> out</span>
+<span id="cb6-140"><a href="#cb6-140"></a><span class="in">```</span></span>
+<span id="cb6-141"><a href="#cb6-141"></a></span>
+<span id="cb6-142"><a href="#cb6-142"></a><span class="fu">## 💻 在你的機器上：先證它沒算錯，再看它快多少 {#sec-tiny-kvcache}</span></span>
+<span id="cb6-143"><a href="#cb6-143"></a></span>
+<span id="cb6-144"><a href="#cb6-144"></a>效率優化最容易犯的錯，是「優化完忘了驗證結果還對不對」。配套程式 <span class="in">`tiny_kvcache.py`</span>（純 CPU、</span>
+<span id="cb6-145"><a href="#cb6-145"></a>十幾秒、不需語料）刻意把順序倒過來：**先證對、再看快**。</span>
+<span id="cb6-146"><a href="#cb6-146"></a></span>
+<span id="cb6-147"><a href="#cb6-147"></a>模型用隨機初始化即可——**計時跟模型好不好無關，只跟「算多少」有關**。用 greedy 解碼讓兩條路徑</span>
+<span id="cb6-148"><a href="#cb6-148"></a>可以逐 token 對拍：</span>
+<span id="cb6-149"><a href="#cb6-149"></a></span>
+<span id="cb6-150"><a href="#cb6-150"></a><span class="in">```bash</span></span>
+<span id="cb6-151"><a href="#cb6-151"></a><span class="ex">python</span> tiny_kvcache.py</span>
+<span id="cb6-152"><a href="#cb6-152"></a><span class="in">```</span></span>
+<span id="cb6-153"><a href="#cb6-153"></a></span>
+<span id="cb6-154"><a href="#cb6-154"></a>在我的 Framework 16（純 CPU）上：</span>
+<span id="cb6-155"><a href="#cb6-155"></a></span>
+<span id="cb6-156"><a href="#cb6-156"></a><span class="in">```</span></span>
+<span id="cb6-157"><a href="#cb6-157"></a><span class="in">參數 0.95M，context 上限 1024，生成 500 token，device=cpu</span></span>
+<span id="cb6-158"><a href="#cb6-158"></a></span>
+<span id="cb6-159"><a href="#cb6-159"></a><span class="in">逐 token 完全相同？ True（KV-cache 是省、不是近似）</span></span>
+<span id="cb6-160"><a href="#cb6-160"></a><span class="in">naive  （每步重算全序列）：  1.48 s</span></span>
+<span id="cb6-161"><a href="#cb6-161"></a><span class="in">cached （每步只算新 token）：  0.15 s</span></span>
+<span id="cb6-162"><a href="#cb6-162"></a><span class="in">加速：10.13×</span></span>
+<span id="cb6-163"><a href="#cb6-163"></a><span class="in">```</span></span>
+<span id="cb6-164"><a href="#cb6-164"></a></span>
+<span id="cb6-165"><a href="#cb6-165"></a>**怎麼讀**：第一行最重要——cached 與 naive 的輸出**逐 token 完全相同**，證明 KV-cache 是</span>
+<span id="cb6-166"><a href="#cb6-166"></a>數學等價的「省」，不是會改變結果的近似。確認對了，才看第二件事：CPU 上長生成快了約 10 倍。</span>
+<span id="cb6-167"><a href="#cb6-167"></a>這正好對上前面那個 regime 故事的另一面——**KV-cache 在「CPU 長生成」這個 regime 是大勝**，</span>
+<span id="cb6-168"><a href="#cb6-168"></a>在「GPU 小模型短生成」反而會輸。同一個技巧，兩個相反結論，全看 regime。</span>
+<span id="cb6-169"><a href="#cb6-169"></a></span>
+<span id="cb6-170"><a href="#cb6-170"></a>把不同生成長度跑一輪、畫出來，就看到那條 $O(T^2)$ vs $O(T)$ 的差距隨長度張開（@fig-kvcache）：</span>
+<span id="cb6-171"><a href="#cb6-171"></a></span>
+<span id="cb6-172"><a href="#cb6-172"></a><span class="al">![KV-cache 計時（純 CPU 真跑）：左圖 naive 的牆鐘時間隨生成長度呈 $O(T^2)$ 飆升、cached 近線性；右圖加速倍率隨長度從 2× 一路張到 17×。生成越長、cached 贏越多。](images/kvcache_speedup.png)</span>{#fig-kvcache width=92%}</span>
+<span id="cb6-173"><a href="#cb6-173"></a></span>
+<span id="cb6-174"><a href="#cb6-174"></a>::: {.callout-tip}</span>
+<span id="cb6-175"><a href="#cb6-175"></a><span class="fu">## 加速倍率會隨設定變——這正是重點</span></span>
+<span id="cb6-176"><a href="#cb6-176"></a>你跑出來的倍率不會剛好是 10×：它隨**生成長度**（越長，naive 的 $O(T^2)$ 浪費越多、cached 贏越多）、</span>
+<span id="cb6-177"><a href="#cb6-177"></a>層數、執行緒數而變。把 <span class="in">`n_new`</span> 從 500 改成 100 再改成 1000，看倍率怎麼動——你會親手畫出</span>
+<span id="cb6-178"><a href="#cb6-178"></a>「$O(T^2)$ vs $O(T)$」這條差距隨長度張開的曲線。</span>
+<span id="cb6-179"><a href="#cb6-179"></a>:::</span>
+<span id="cb6-180"><a href="#cb6-180"></a></span>
+<span id="cb6-181"><a href="#cb6-181"></a><span class="fu">## 取樣：從機率分布裡怎麼抽下一個字</span></span>
+<span id="cb6-182"><a href="#cb6-182"></a></span>
+<span id="cb6-183"><a href="#cb6-183"></a>模型每一步輸出的是「下一個字的機率分布」。怎麼從這個分布抽一個字出來，決定了輸出的風格——</span>
+<span id="cb6-184"><a href="#cb6-184"></a>保守正確 vs 大膽創意。常見三招：</span>
+<span id="cb6-185"><a href="#cb6-185"></a></span>
+<span id="cb6-186"><a href="#cb6-186"></a><span class="ss">- </span>**top-k**：只留機率最高的 $k$ 個候選，固定數量。</span>
+<span id="cb6-187"><a href="#cb6-187"></a><span class="ss">- </span>**top-p（nucleus）**：從高到低累積機率到 $p$ 為止——候選**數量會自適應**（分布尖時少、平時多）。</span>
+<span id="cb6-188"><a href="#cb6-188"></a><span class="ss">- </span>**min-p**：相對於峰值的門檻（低於「最高機率 × min_p」的都砍掉），2024 年提出，高溫下比 top-p 更穩。</span>
+<span id="cb6-189"><a href="#cb6-189"></a></span>
+<span id="cb6-190"><a href="#cb6-190"></a><span class="in">```python</span></span>
+<span id="cb6-191"><a href="#cb6-191"></a><span class="cf">if</span> top_p <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:                                  <span class="co"># &lt;1&gt;</span></span>
+<span id="cb6-192"><a href="#cb6-192"></a>    s_logits, s_idx <span class="op">=</span> torch.sort(logits, descending<span class="op">=</span><span class="va">True</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb6-193"><a href="#cb6-193"></a>    cum <span class="op">=</span> torch.cumsum(F.softmax(s_logits, dim<span class="op">=-</span><span class="dv">1</span>), dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb6-194"><a href="#cb6-194"></a>    remove <span class="op">=</span> cum <span class="op">&gt;</span> top_p                               <span class="co"># &lt;2&gt;</span></span>
+<span id="cb6-195"><a href="#cb6-195"></a>    ...</span>
+<span id="cb6-196"><a href="#cb6-196"></a><span class="in">```</span></span>
+<span id="cb6-197"><a href="#cb6-197"></a><span class="ss">1. </span>top-k 是「固定數量」、top-p 和 min-p 是「自適應截斷」——同一類、差在累積 vs 相對峰值。</span>
+<span id="cb6-198"><a href="#cb6-198"></a><span class="ss">2. </span>累積機率超過 $p$ 的尾巴砍掉，只在「核心 (nucleus)」裡抽。</span>
+<span id="cb6-199"><a href="#cb6-199"></a></span>
+<span id="cb6-200"><a href="#cb6-200"></a>::: {.callout-tip}</span>
+<span id="cb6-201"><a href="#cb6-201"></a><span class="fu">## 取樣方法用「人讀」選，不是用 loss</span></span>
+<span id="cb6-202"><a href="#cb6-202"></a>選哪個由**任務**決定：要正確的答案就用冷一點、低溫；要創意就用暖一點、min-p。而且評估取樣品質要</span>
+<span id="cb6-203"><a href="#cb6-203"></a>用「人讀起來如何」，不是用 loss——loss 量的是「對不對」，不是「好不好讀」。這呼應第 5 章「選對指標」。</span>
+<span id="cb6-204"><a href="#cb6-204"></a>:::</span>
+<span id="cb6-205"><a href="#cb6-205"></a></span>
+<span id="cb6-206"><a href="#cb6-206"></a><span class="fu">## 帶走什麼</span></span>
+<span id="cb6-207"><a href="#cb6-207"></a></span>
+<span id="cb6-208"><a href="#cb6-208"></a><span class="ss">- </span>FlashAttention：數學等價、記憶體 $O(T^2)\to O(T)$，同卡 context ×4——純粹的省。</span>
+<span id="cb6-209"><a href="#cb6-209"></a><span class="ss">- </span>KV-cache **不一定更快**：小模型短生成的 GPU 上反而慢 18%。省的技巧是否真省，看你的 regime、量你的 workload。</span>
+<span id="cb6-210"><a href="#cb6-210"></a><span class="ss">- </span>取樣方法（top-k/top-p/min-p）的選擇由任務決定，用人讀來判斷，不是 loss。</span>
+<span id="cb6-211"><a href="#cb6-211"></a><span class="ss">- </span>這一章的核心不是某個技巧，是一個習慣：**別信「一定更快」，去量。**</span>
+<span id="cb6-212"><a href="#cb6-212"></a></span>
+<span id="cb6-213"><a href="#cb6-213"></a><span class="fu">## 練習 {#sec-ch3-exercises}</span></span>
+<span id="cb6-214"><a href="#cb6-214"></a></span>
+<span id="cb6-215"><a href="#cb6-215"></a>::: {.callout-note}</span>
+<span id="cb6-216"><a href="#cb6-216"></a><span class="fu">## 1（先預測）：加速倍率隨生成長度怎麼變？</span></span>
+<span id="cb6-217"><a href="#cb6-217"></a>在 <span class="in">`tiny_kvcache.py`</span> 把 <span class="in">`n_new`</span> 依序設成 100、500、1000。**先寫下你的預測**：加速倍率會往哪個方向走？</span>
+<span id="cb6-218"><a href="#cb6-218"></a>為什麼？</span>
+<span id="cb6-219"><a href="#cb6-219"></a></span>
+<span id="cb6-220"><a href="#cb6-220"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-221"><a href="#cb6-221"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-222"><a href="#cb6-222"></a>倍率隨生成長度**變大**。naive 的總成本是 $O(T^2)$（每步重算越來越長的序列），cached 是 $O(T)$；</span>
+<span id="cb6-223"><a href="#cb6-223"></a>序列越長，naive 浪費的重算越多、差距張得越開。短生成時 cached 的好處還不明顯，這也呼應「GPU 小模型</span>
+<span id="cb6-224"><a href="#cb6-224"></a>短生成反而慢」——在那個 regime，per-step 開銷大過省下的重算。</span>
+<span id="cb6-225"><a href="#cb6-225"></a>:::</span>
+<span id="cb6-226"><a href="#cb6-226"></a>:::</span>
+<span id="cb6-227"><a href="#cb6-227"></a></span>
+<span id="cb6-228"><a href="#cb6-228"></a>::: {.callout-note}</span>
+<span id="cb6-229"><a href="#cb6-229"></a><span class="fu">## 2（動手）：算一次記憶體帳</span></span>
+<span id="cb6-230"><a href="#cb6-230"></a>FlashAttention 把 attention 的記憶體從 $O(T^2)$ 降到 $O(T)$。假設 context 從 1024 變 4096（×4），</span>
+<span id="cb6-231"><a href="#cb6-231"></a>樸素 attention 的分數矩陣記憶體變幾倍？這跟本章「同卡 context ×4」的實測怎麼對上？</span>
+<span id="cb6-232"><a href="#cb6-232"></a></span>
+<span id="cb6-233"><a href="#cb6-233"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-234"><a href="#cb6-234"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-235"><a href="#cb6-235"></a>分數矩陣是 $T\times T$，$T$ ×4 → 記憶體 ×16。所以在固定顯存下，省掉這塊 $O(T^2)$ 正是讓你能把</span>
+<span id="cb6-236"><a href="#cb6-236"></a>context 拉長好幾倍的原因；本章「同卡 1024→4096」的實測就是這個帳的具體結果。FlashAttention 是</span>
+<span id="cb6-237"><a href="#cb6-237"></a>數學等價的「省」——記憶體省下來，數字不變。</span>
+<span id="cb6-238"><a href="#cb6-238"></a>:::</span>
+<span id="cb6-239"><a href="#cb6-239"></a>:::</span>
+<span id="cb6-240"><a href="#cb6-240"></a></span>
+<span id="cb6-241"><a href="#cb6-241"></a>::: {.callout-warning}</span>
+<span id="cb6-242"><a href="#cb6-242"></a><span class="fu">## 3（弄壞）：拔掉 KV-cache 的「接歷史」</span></span>
+<span id="cb6-243"><a href="#cb6-243"></a>把 <span class="in">`Attn.step`</span> 裡 <span class="in">`torch.cat([cache[0], k], ...)`</span> 改成只用當前的 <span class="in">`k`</span>（不接歷史），重跑對拍。</span>
+<span id="cb6-244"><a href="#cb6-244"></a></span>
+<span id="cb6-245"><a href="#cb6-245"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-246"><a href="#cb6-246"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-247"><a href="#cb6-247"></a>「逐 token 完全相同？」會變成 <span class="in">`False`</span>——少了歷史 key/value，每個新 token 只能注意到自己，等於</span>
+<span id="cb6-248"><a href="#cb6-248"></a>把因果上下文整個丟掉，生成立刻走樣。這證明 cache 不是「順便快取」，它**承載了全部歷史脈絡**；</span>
+<span id="cb6-249"><a href="#cb6-249"></a>也是為什麼第 0 步要先確認「對不對」再談「快不快」。</span>
+<span id="cb6-250"><a href="#cb6-250"></a>:::</span>
+<span id="cb6-251"><a href="#cb6-251"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

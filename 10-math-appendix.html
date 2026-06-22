@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>附錄：數學推導 – 從零打造並對齊一個 LLM</title>
+<title>10&nbsp; 附錄：數學推導 – 從零打造並對齊一個 LLM</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./99-references.html" rel="next">
-<link href="./07-alignment.html" rel="prev">
+<link href="./11-glossary.html" rel="next">
+<link href="./09-alignment.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -163,7 +163,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08-math-appendix.html">附錄</a></li><li class="breadcrumb-item"><a href="./08-math-appendix.html">附錄：數學推導</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10-math-appendix.html">附錄</a></li><li class="breadcrumb-item"><a href="./10-math-appendix.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
@@ -229,7 +229,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
- <span class="menu-text">第二部　工程</span></a>
+ <span class="menu-text">第二部　資料與評估</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -247,18 +247,12 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./06-deploy-governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">上線與治理：把稽核接到 ML</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
- <span class="menu-text">第三部　對齊</span></a>
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -266,25 +260,60 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./07-alignment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
   </div>
 </li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">附錄</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">第四部　對齊</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-math-appendix.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">附錄：數學推導</span></a>
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -305,20 +334,20 @@ window.Quarto = {
     <h2 id="toc-title">目录</h2>
    
   <ul>
-  <li><a href="#sec-dpo-math" id="toc-sec-dpo-math" class="nav-link active" data-scroll-target="#sec-dpo-math">RLHF → DPO 封閉式</a></li>
-  <li><a href="#sec-margin-math" id="toc-sec-margin-math" class="nav-link" data-scroll-target="#sec-margin-math">為什麼 margin 尺度 ≈ <span class="math inline">1/\beta</span></a></li>
-  <li><a href="#sec-rope-math" id="toc-sec-rope-math" class="nav-link" data-scroll-target="#sec-rope-math">RoPE：旋轉 = 相對位置</a></li>
-  <li><a href="#sec-minhash-math" id="toc-sec-minhash-math" class="nav-link" data-scroll-target="#sec-minhash-math">MinHash 碰撞 = Jaccard；LSH 的 S 曲線</a></li>
-  <li><a href="#政策梯度-grpo-的-baseline-為何不偏" id="toc-政策梯度-grpo-的-baseline-為何不偏" class="nav-link" data-scroll-target="#政策梯度-grpo-的-baseline-為何不偏">政策梯度 + GRPO 的 baseline 為何不偏</a></li>
+  <li><a href="#sec-dpo-math" id="toc-sec-dpo-math" class="nav-link active" data-scroll-target="#sec-dpo-math"><span class="header-section-number">10.1</span> RLHF → DPO 封閉式</a></li>
+  <li><a href="#sec-margin-math" id="toc-sec-margin-math" class="nav-link" data-scroll-target="#sec-margin-math"><span class="header-section-number">10.2</span> 為什麼 margin 尺度 ≈ <span class="math inline">1/\beta</span></a></li>
+  <li><a href="#sec-rope-math" id="toc-sec-rope-math" class="nav-link" data-scroll-target="#sec-rope-math"><span class="header-section-number">10.3</span> RoPE：旋轉 = 相對位置</a></li>
+  <li><a href="#sec-minhash-math" id="toc-sec-minhash-math" class="nav-link" data-scroll-target="#sec-minhash-math"><span class="header-section-number">10.4</span> MinHash 碰撞 = Jaccard；LSH 的 S 曲線</a></li>
+  <li><a href="#sec-pg-math" id="toc-sec-pg-math" class="nav-link" data-scroll-target="#sec-pg-math"><span class="header-section-number">10.5</span> 政策梯度 + GRPO 的 baseline 為何不偏</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/08-math-appendix.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/10-math-appendix.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08-math-appendix.html">附錄</a></li><li class="breadcrumb-item"><a href="./08-math-appendix.html">附錄：數學推導</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10-math-appendix.html">附錄</a></li><li class="breadcrumb-item"><a href="./10-math-appendix.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span id="sec-math" class="quarto-section-identifier">附錄：數學推導</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-math" class="quarto-section-identifier"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
 </div>
 
 
@@ -338,8 +367,8 @@ window.Quarto = {
 <blockquote class="blockquote">
 <p>這個附錄把書裡幾條「推導本身有 aha」的數學寫清楚。每條的格式：<strong>命題 → 推導 → 它在說什麼</strong>。</p>
 </blockquote>
-<section id="sec-dpo-math" class="level2">
-<h2 class="anchored" data-anchor-id="sec-dpo-math">RLHF → DPO 封閉式</h2>
+<section id="sec-dpo-math" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="sec-dpo-math"><span class="header-section-number">10.1</span> RLHF → DPO 封閉式</h2>
 <p><strong>命題.</strong> RLHF 的約束最佳化</p>
 <p><span class="math display">\max_{\pi}\ \mathbb{E}_{y\sim\pi(\cdot|x)}[r(x,y)]-\beta\,D_{\mathrm{KL}}\big(\pi(\cdot|x)\,\|\,\pi_\text{ref}(\cdot|x)\big)</span></p>
 <p>其最優解為 <span class="math inline">\pi^*(y|x)=\frac{1}{Z(x)}\pi_\text{ref}(y|x)\exp(\frac1\beta r(x,y))</span>；由此可導出<strong>不需 reward model、 不需 RL</strong> 的 DPO 損失。</p>
@@ -348,30 +377,82 @@ window.Quarto = {
 <p>把待訓練的 <span class="math inline">\pi_\theta</span> 當成它自己隱含獎勵的最優 policy，代進 Bradley-Terry <span class="math inline">P(y_w\succ y_l)=\sigma(r_w-r_l)</span>。<span class="math inline">\beta\log Z(x)</span> 對 <span class="math inline">y_w,y_l</span> 相同，<strong>相減抵消</strong>：</p>
 <p><span class="math display">\mathcal{L}_\text{DPO}=-\mathbb{E}\Big[\log\sigma\Big(\beta\log\tfrac{\pi_\theta(y_w|x)}{\pi_\text{ref}(y_w|x)}-\beta\log\tfrac{\pi_\theta(y_l|x)}{\pi_\text{ref}(y_l|x)}\Big)\Big].\quad\square</span></p>
 <p><strong>在說什麼.</strong> 那個算不出來的配分函數 <span class="math inline">Z(x)</span> 被相減消掉了——這就是 DPO 不用跑 RL、不用 reward model 的根本原因。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>直覺：把「兩步」壓成「一條損失」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>RLHF 本來要兩步：先<strong>學</strong>一顆 reward model，再用 <strong>RL</strong> 去最大化它。上面的代數證明這兩步可以 合併——因為「最優 policy」和「reward」是一一對應的（<span class="math inline">r=\beta\log\frac{\pi}{\pi_\text{ref}}+\text{const}</span>）， 所以「優化 reward」就等於「直接優化 policy 的對數機率比」。<span class="math inline">Z(x)</span> 是那個 const，對 chosen/rejected 相同、一減就沒了。<strong>這就是為什麼第 7 章那條 <code>dpo_loss</code> 只有 4 行</strong>——逐行走讀見 <a href="09-alignment.html#sec-build-dpo" class="quarto-xref"><span>小节 9.2</span></a>， 動手把 reference 拿掉看會怎樣見 <a href="09-alignment.html#sec-ch7-exercises" class="quarto-xref"><span>小节 9.8</span></a>。</p>
+</div>
+</div>
 </section>
-<section id="sec-margin-math" class="level2">
-<h2 class="anchored" data-anchor-id="sec-margin-math">為什麼 margin 尺度 ≈ <span class="math inline">1/\beta</span></h2>
+<section id="sec-margin-math" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="sec-margin-math"><span class="header-section-number">10.2</span> 為什麼 margin 尺度 ≈ <span class="math inline">1/\beta</span></h2>
 <p><strong>命題.</strong> DPO 單筆損失 <span class="math inline">\ell=-\log\sigma(\beta m)</span> 的梯度在 <span class="math inline">m\gtrsim 1/\beta</span> 後才消失。</p>
 <p><strong>推導.</strong> <span class="math inline">\dfrac{\partial\ell}{\partial m}=-\beta\,\sigma(-\beta m)=-\beta(1-\sigma(\beta m))</span>。 當 <span class="math inline">\beta m\ll1</span> 梯度約 <span class="math inline">\beta/2</span>（還在推）；<span class="math inline">\beta m\gg1</span> 梯度 <span class="math inline">\to0</span>（飽和）。所以 DPO 把 <span class="math inline">m</span> 推到 <span class="math inline">m\sim1/\beta</span> 才鬆手。<span class="math inline">\square</span></p>
-<p><strong>在說什麼.</strong> β 越<strong>小</strong> → 飽和尺度 <span class="math inline">1/\beta</span> 越<strong>大</strong> → policy 離 <span class="math inline">\pi_\text{ref}</span> 越遠（漂移越大）。 這就是第 7 章 <a href="07-alignment.html#fig-beta" class="quarto-xref">图&nbsp;<span>7.2</span></a> 那個反直覺。誠實標注：<span class="math inline">1/\beta</span> 是「梯度消失的尺度」、非精確停點（還受 lr/步數 影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 <span class="math inline">\frac{1}{2\beta}</span>。</p>
+<p><strong>在說什麼.</strong> β 越<strong>小</strong> → 飽和尺度 <span class="math inline">1/\beta</span> 越<strong>大</strong> → policy 離 <span class="math inline">\pi_\text{ref}</span> 越遠（漂移越大）。 這就是第 7 章 <a href="09-alignment.html#fig-beta" class="quarto-xref">图&nbsp;<span>9.2</span></a> 那個反直覺。誠實標注：<span class="math inline">1/\beta</span> 是「梯度消失的尺度」、非精確停點（還受 lr/步數 影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 <span class="math inline">\frac{1}{2\beta}</span>。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>直覺：β 是「煞車」，但煞車力道不是你想的方向
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>教科書直覺「β 大＝KL 罰得重＝貼緊 reference」沒錯，但<strong>固定步數</strong>下你看到的是另一面：β 大 → 飽和尺度 <span class="math inline">1/\beta</span> 小 → margin 推一點點就鬆手 → 漂移小。所以「β 小反而漂移大」。想親手掃 β、 驗這個反直覺，見第 7 章的動手題 <a href="09-alignment.html#sec-ch7-exercises" class="quarto-xref"><span>小节 9.8</span></a>（練習 2）。</p>
+</div>
+</div>
 </section>
-<section id="sec-rope-math" class="level2">
-<h2 class="anchored" data-anchor-id="sec-rope-math">RoPE：旋轉 = 相對位置</h2>
+<section id="sec-rope-math" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="sec-rope-math"><span class="header-section-number">10.3</span> RoPE：旋轉 = 相對位置</h2>
 <p><strong>命題.</strong> 位置 <span class="math inline">m</span> 的 query 旋轉 <span class="math inline">R_m</span>、位置 <span class="math inline">n</span> 的 key 旋轉 <span class="math inline">R_n</span>，內積只跟相對位置 <span class="math inline">n-m</span> 有關：</p>
 <p><span class="math display">\langle R_m q,R_n k\rangle=q^\top R_m^\top R_n k=q^\top R_{n-m}k.</span></p>
 <p><strong>推導.</strong> 旋轉矩陣正交可加：<span class="math inline">R_a^\top=R_{-a}</span>、<span class="math inline">R_aR_b=R_{a+b}</span>，故 <span class="math inline">R_m^\top R_n=R_{n-m}</span>。<span class="math inline">\square</span></p>
 <p><strong>在說什麼.</strong> attention 分數自動變成相對距離的函數，不靠學習式位置向量——所以 RoPE 外推好 （<a href="02-modern-components.html#fig-rope" class="quarto-xref">图&nbsp;<span>2.1</span></a>）、又省參數。</p>
 </section>
-<section id="sec-minhash-math" class="level2">
-<h2 class="anchored" data-anchor-id="sec-minhash-math">MinHash 碰撞 = Jaccard；LSH 的 S 曲線</h2>
+<section id="sec-minhash-math" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="sec-minhash-math"><span class="header-section-number">10.4</span> MinHash 碰撞 = Jaccard；LSH 的 S 曲線</h2>
 <p><strong>命題.</strong> 對隨機排列 <span class="math inline">\pi</span>，<span class="math inline">\Pr[\min\pi(A)=\min\pi(B)]=\frac{|A\cap B|}{|A\cup B|}=\operatorname{Jaccard}(A,B)</span>。</p>
 <p><strong>推導.</strong> <span class="math inline">A\cup B</span> 中哪個元素被排到最小是均勻的；兩集合 minhash 相等 <span class="math inline">\iff</span> 該「全域最小」元素同時在 <span class="math inline">A,B</span>（即在 <span class="math inline">A\cap B</span>）。機率 <span class="math inline">=|A\cap B|/|A\cup B|</span>。<span class="math inline">\square</span></p>
 <p><strong>LSH banding.</strong> 把 <span class="math inline">n</span> 個 minhash 切成 <span class="math inline">b</span> 個 band、每 band <span class="math inline">r</span> 行，兩文件至少共用一個 band 的機率 <span class="math inline">P(s)=1-(1-s^{r})^{b}</span>（<span class="math inline">s</span>＝Jaccard），是一條 S 曲線、拐點約在 <span class="math inline">s\approx(1/b)^{1/r}</span>。調 <span class="math inline">b,r</span> 就能把 「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>直覺：MinHash 是「便宜的相似度估計」，LSH 是「只比可能相似的」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>MinHash 把「算兩個集合的 Jaccard」這件貴事，換成「比兩串簽章相等幾位」——而上面那條等式保證 <strong>這個便宜估計是無偏的</strong>。LSH 再加一層篩：相似度高的文件對「至少共用一個 band」的機率接近 1、 不相似的接近 0（那條 S 曲線），所以只把同桶的拿出來細比。<span class="math inline">b</span>（band 數）往上調，S 曲線左移→ recall 升、但候選變多——這正是第 4 章動手題要你親手調的取捨（<a href="04-real-data.html#sec-ch4-exercises" class="quarto-xref"><span>小节 4.7</span></a> 練習 1）， 程式版見 <a href="04-real-data.html#sec-build-dedup" class="quarto-xref"><span>小节 4.2.1</span></a>。</p>
+</div>
+</div>
 </section>
-<section id="政策梯度-grpo-的-baseline-為何不偏" class="level2">
-<h2 class="anchored" data-anchor-id="政策梯度-grpo-的-baseline-為何不偏">政策梯度 + GRPO 的 baseline 為何不偏</h2>
+<section id="sec-pg-math" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="sec-pg-math"><span class="header-section-number">10.5</span> 政策梯度 + GRPO 的 baseline 為何不偏</h2>
 <p><strong>命題.</strong> <span class="math inline">\nabla_\theta\mathbb{E}_{y\sim\pi_\theta}[R(y)]=\mathbb{E}[R\,\nabla\log\pi_\theta]</span>；且減任何與動作無關的 baseline <span class="math inline">b</span> 不改變期望（因 <span class="math inline">\mathbb{E}[\nabla\log\pi_\theta]=\sum_y\nabla\pi_\theta=\nabla\sum_y\pi_\theta=\nabla1=0</span>）。</p>
-<p><strong>在說什麼.</strong> 減 baseline 不偏、但降變異數。PPO 用學來的 critic <span class="math inline">V(x)</span> 當 baseline；GRPO 改用「同組平均 獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 <a href="07-alignment.html#fig-ppo" class="quarto-xref">图&nbsp;<span>7.5</span></a>）。</p>
+<p><strong>在說什麼.</strong> 減 baseline 不偏、但降變異數。PPO 用學來的 critic <span class="math inline">V(x)</span> 當 baseline；GRPO 改用「同組平均 獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 <a href="09-alignment.html#fig-ppo" class="quarto-xref">图&nbsp;<span>9.6</span></a>）。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>直覺：baseline 是「跟平均比」，不是「跟零比」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>與其問「這個回答的獎勵是 +7，好不好？」，不如問「它比<strong>同題其他回答的平均</strong>好還是差？」—— 高於平均才往上推、低於平均往下壓。減掉 baseline 不改變「該往哪推」（期望不偏），但讓訊號不再被 獎勵的絕對大小淹沒（變異數小）。PPO 花一顆 critic 網路去學這個平均；GRPO 發現「同組 K 個回答 當場算平均」就夠用，省掉整顆 critic——這就是第 7 章那張 PPO vs GRPO 對照表（<a href="09-alignment.html" class="quarto-xref"><span>章节 9</span></a>）的數學底。</p>
+</div>
+</div>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -845,17 +926,17 @@ window.Quarto = {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./07-alignment.html" class="pagination-link" aria-label="對齊：把「接龍機器」教成「會聽話、有偏好」">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span>
+      <a href="./09-alignment.html" class="pagination-link" aria-label="對齊：把「接龍機器」教成「會聽話、有偏好」">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./99-references.html" class="pagination-link" aria-label="參考文獻">
-        <span class="nav-page-text">參考文獻</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./11-glossary.html" class="pagination-link" aria-label="附錄：術語表與符號約定">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu"># 附錄：數學推導 {#sec-math .unnumbered}</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu"># 附錄：數學推導 {#sec-math}</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a></span>
 <span id="cb1-3"><a href="#cb1-3"></a><span class="at">&gt; 這個附錄把書裡幾條「推導本身有 aha」的數學寫清楚。每條的格式：**命題 → 推導 → 它在說什麼**。</span></span>
 <span id="cb1-4"><a href="#cb1-4"></a></span>
@@ -882,57 +963,90 @@ window.Quarto = {
 <span id="cb1-25"><a href="#cb1-25"></a>**在說什麼.** 那個算不出來的配分函數 $Z(x)$ 被相減消掉了——這就是 DPO 不用跑 RL、不用 reward model</span>
 <span id="cb1-26"><a href="#cb1-26"></a>的根本原因。</span>
 <span id="cb1-27"><a href="#cb1-27"></a></span>
-<span id="cb1-28"><a href="#cb1-28"></a><span class="fu">## 為什麼 margin 尺度 ≈ $1/\beta$ {#sec-margin-math}</span></span>
-<span id="cb1-29"><a href="#cb1-29"></a></span>
-<span id="cb1-30"><a href="#cb1-30"></a>**命題.** DPO 單筆損失 $\ell=-\log\sigma(\beta m)$ 的梯度在 $m\gtrsim 1/\beta$ 後才消失。</span>
-<span id="cb1-31"><a href="#cb1-31"></a></span>
-<span id="cb1-32"><a href="#cb1-32"></a>**推導.** $\dfrac{\partial\ell}{\partial m}=-\beta\,\sigma(-\beta m)=-\beta(1-\sigma(\beta m))$。</span>
-<span id="cb1-33"><a href="#cb1-33"></a>當 $\beta m\ll1$ 梯度約 $\beta/2$（還在推）；$\beta m\gg1$ 梯度 $\to0$（飽和）。所以 DPO 把 $m$ 推到</span>
-<span id="cb1-34"><a href="#cb1-34"></a>$m\sim1/\beta$ 才鬆手。$\square$</span>
-<span id="cb1-35"><a href="#cb1-35"></a></span>
-<span id="cb1-36"><a href="#cb1-36"></a>**在說什麼.** β 越**小** → 飽和尺度 $1/\beta$ 越**大** → policy 離 $\pi_\text{ref}$ 越遠（漂移越大）。</span>
-<span id="cb1-37"><a href="#cb1-37"></a>這就是第 7 章 @fig-beta 那個反直覺。誠實標注：$1/\beta$ 是「梯度消失的尺度」、非精確停點（還受 lr/步數</span>
-<span id="cb1-38"><a href="#cb1-38"></a>影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 $\frac{1}{2\beta}$。</span>
-<span id="cb1-39"><a href="#cb1-39"></a></span>
-<span id="cb1-40"><a href="#cb1-40"></a><span class="fu">## RoPE：旋轉 = 相對位置 {#sec-rope-math}</span></span>
-<span id="cb1-41"><a href="#cb1-41"></a></span>
-<span id="cb1-42"><a href="#cb1-42"></a>**命題.** 位置 $m$ 的 query 旋轉 $R_m$、位置 $n$ 的 key 旋轉 $R_n$，內積只跟相對位置 $n-m$ 有關：</span>
-<span id="cb1-43"><a href="#cb1-43"></a></span>
-<span id="cb1-44"><a href="#cb1-44"></a>$$\langle R_m q,R_n k\rangle=q^\top R_m^\top R_n k=q^\top R_{n-m}k.$$</span>
-<span id="cb1-45"><a href="#cb1-45"></a></span>
-<span id="cb1-46"><a href="#cb1-46"></a>**推導.** 旋轉矩陣正交可加：$R_a^\top=R_{-a}$、$R_aR_b=R_{a+b}$，故 $R_m^\top R_n=R_{n-m}$。$\square$</span>
-<span id="cb1-47"><a href="#cb1-47"></a></span>
-<span id="cb1-48"><a href="#cb1-48"></a>**在說什麼.** attention 分數自動變成相對距離的函數，不靠學習式位置向量——所以 RoPE 外推好</span>
-<span id="cb1-49"><a href="#cb1-49"></a>（@fig-rope）、又省參數。</span>
-<span id="cb1-50"><a href="#cb1-50"></a></span>
-<span id="cb1-51"><a href="#cb1-51"></a><span class="fu">## MinHash 碰撞 = Jaccard；LSH 的 S 曲線 {#sec-minhash-math}</span></span>
-<span id="cb1-52"><a href="#cb1-52"></a></span>
-<span id="cb1-53"><a href="#cb1-53"></a>**命題.** 對隨機排列 $\pi$，$\Pr<span class="co">[</span><span class="ot">\min\pi(A)=\min\pi(B)</span><span class="co">]</span>=\frac{|A\cap B|}{|A\cup B|}=\operatorname{Jaccard}(A,B)$。</span>
-<span id="cb1-54"><a href="#cb1-54"></a></span>
-<span id="cb1-55"><a href="#cb1-55"></a>**推導.** $A\cup B$ 中哪個元素被排到最小是均勻的；兩集合 minhash 相等 $\iff$ 該「全域最小」元素同時在</span>
-<span id="cb1-56"><a href="#cb1-56"></a>$A,B$（即在 $A\cap B$）。機率 $=|A\cap B|/|A\cup B|$。$\square$</span>
+<span id="cb1-28"><a href="#cb1-28"></a>::: {.callout-tip}</span>
+<span id="cb1-29"><a href="#cb1-29"></a><span class="fu">## 直覺：把「兩步」壓成「一條損失」</span></span>
+<span id="cb1-30"><a href="#cb1-30"></a>RLHF 本來要兩步：先**學**一顆 reward model，再用 **RL** 去最大化它。上面的代數證明這兩步可以</span>
+<span id="cb1-31"><a href="#cb1-31"></a>合併——因為「最優 policy」和「reward」是一一對應的（$r=\beta\log\frac{\pi}{\pi_\text{ref}}+\text{const}$），</span>
+<span id="cb1-32"><a href="#cb1-32"></a>所以「優化 reward」就等於「直接優化 policy 的對數機率比」。$Z(x)$ 是那個 const，對 chosen/rejected</span>
+<span id="cb1-33"><a href="#cb1-33"></a>相同、一減就沒了。**這就是為什麼第 7 章那條 `dpo_loss` 只有 4 行**——逐行走讀見 @sec-build-dpo，</span>
+<span id="cb1-34"><a href="#cb1-34"></a>動手把 reference 拿掉看會怎樣見 @sec-ch7-exercises。</span>
+<span id="cb1-35"><a href="#cb1-35"></a>:::</span>
+<span id="cb1-36"><a href="#cb1-36"></a></span>
+<span id="cb1-37"><a href="#cb1-37"></a><span class="fu">## 為什麼 margin 尺度 ≈ $1/\beta$ {#sec-margin-math}</span></span>
+<span id="cb1-38"><a href="#cb1-38"></a></span>
+<span id="cb1-39"><a href="#cb1-39"></a>**命題.** DPO 單筆損失 $\ell=-\log\sigma(\beta m)$ 的梯度在 $m\gtrsim 1/\beta$ 後才消失。</span>
+<span id="cb1-40"><a href="#cb1-40"></a></span>
+<span id="cb1-41"><a href="#cb1-41"></a>**推導.** $\dfrac{\partial\ell}{\partial m}=-\beta\,\sigma(-\beta m)=-\beta(1-\sigma(\beta m))$。</span>
+<span id="cb1-42"><a href="#cb1-42"></a>當 $\beta m\ll1$ 梯度約 $\beta/2$（還在推）；$\beta m\gg1$ 梯度 $\to0$（飽和）。所以 DPO 把 $m$ 推到</span>
+<span id="cb1-43"><a href="#cb1-43"></a>$m\sim1/\beta$ 才鬆手。$\square$</span>
+<span id="cb1-44"><a href="#cb1-44"></a></span>
+<span id="cb1-45"><a href="#cb1-45"></a>**在說什麼.** β 越**小** → 飽和尺度 $1/\beta$ 越**大** → policy 離 $\pi_\text{ref}$ 越遠（漂移越大）。</span>
+<span id="cb1-46"><a href="#cb1-46"></a>這就是第 7 章 @fig-beta 那個反直覺。誠實標注：$1/\beta$ 是「梯度消失的尺度」、非精確停點（還受 lr/步數</span>
+<span id="cb1-47"><a href="#cb1-47"></a>影響），但單調趨勢吻合。IPO 把這個尺度直接釘成回歸目標 $\frac{1}{2\beta}$。</span>
+<span id="cb1-48"><a href="#cb1-48"></a></span>
+<span id="cb1-49"><a href="#cb1-49"></a>::: {.callout-tip}</span>
+<span id="cb1-50"><a href="#cb1-50"></a><span class="fu">## 直覺：β 是「煞車」，但煞車力道不是你想的方向</span></span>
+<span id="cb1-51"><a href="#cb1-51"></a>教科書直覺「β 大＝KL 罰得重＝貼緊 reference」沒錯，但**固定步數**下你看到的是另一面：β 大 →</span>
+<span id="cb1-52"><a href="#cb1-52"></a>飽和尺度 $1/\beta$ 小 → margin 推一點點就鬆手 → 漂移小。所以「β 小反而漂移大」。想親手掃 β、</span>
+<span id="cb1-53"><a href="#cb1-53"></a>驗這個反直覺，見第 7 章的動手題 @sec-ch7-exercises（練習 2）。</span>
+<span id="cb1-54"><a href="#cb1-54"></a>:::</span>
+<span id="cb1-55"><a href="#cb1-55"></a></span>
+<span id="cb1-56"><a href="#cb1-56"></a><span class="fu">## RoPE：旋轉 = 相對位置 {#sec-rope-math}</span></span>
 <span id="cb1-57"><a href="#cb1-57"></a></span>
-<span id="cb1-58"><a href="#cb1-58"></a>**LSH banding.** 把 $n$ 個 minhash 切成 $b$ 個 band、每 band $r$ 行，兩文件至少共用一個 band 的機率</span>
-<span id="cb1-59"><a href="#cb1-59"></a>$P(s)=1-(1-s^{r})^{b}$（$s$＝Jaccard），是一條 S 曲線、拐點約在 $s\approx(1/b)^{1/r}$。調 $b,r$ 就能把</span>
-<span id="cb1-60"><a href="#cb1-60"></a>「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。</span>
+<span id="cb1-58"><a href="#cb1-58"></a>**命題.** 位置 $m$ 的 query 旋轉 $R_m$、位置 $n$ 的 key 旋轉 $R_n$，內積只跟相對位置 $n-m$ 有關：</span>
+<span id="cb1-59"><a href="#cb1-59"></a></span>
+<span id="cb1-60"><a href="#cb1-60"></a>$$\langle R_m q,R_n k\rangle=q^\top R_m^\top R_n k=q^\top R_{n-m}k.$$</span>
 <span id="cb1-61"><a href="#cb1-61"></a></span>
-<span id="cb1-62"><a href="#cb1-62"></a><span class="fu">## 政策梯度 + GRPO 的 baseline 為何不偏</span></span>
+<span id="cb1-62"><a href="#cb1-62"></a>**推導.** 旋轉矩陣正交可加：$R_a^\top=R_{-a}$、$R_aR_b=R_{a+b}$，故 $R_m^\top R_n=R_{n-m}$。$\square$</span>
 <span id="cb1-63"><a href="#cb1-63"></a></span>
-<span id="cb1-64"><a href="#cb1-64"></a>**命題.** $\nabla_\theta\mathbb{E}_{y\sim\pi_\theta}[R(y)]=\mathbb{E}[R\,\nabla\log\pi_\theta]$；且減任何與動作無關的</span>
-<span id="cb1-65"><a href="#cb1-65"></a>baseline $b$ 不改變期望（因 $\mathbb{E}<span class="co">[</span><span class="ot">\nabla\log\pi_\theta</span><span class="co">]</span>=\sum_y\nabla\pi_\theta=\nabla\sum_y\pi_\theta=\nabla1=0$）。</span>
+<span id="cb1-64"><a href="#cb1-64"></a>**在說什麼.** attention 分數自動變成相對距離的函數，不靠學習式位置向量——所以 RoPE 外推好</span>
+<span id="cb1-65"><a href="#cb1-65"></a>（@fig-rope）、又省參數。</span>
 <span id="cb1-66"><a href="#cb1-66"></a></span>
-<span id="cb1-67"><a href="#cb1-67"></a>**在說什麼.** 減 baseline 不偏、但降變異數。PPO 用學來的 critic $V(x)$ 當 baseline；GRPO 改用「同組平均</span>
-<span id="cb1-68"><a href="#cb1-68"></a>獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 @fig-ppo）。</span>
-<span id="cb1-69"><a href="#cb1-69"></a></span>
-<span id="cb1-70"><a href="#cb1-70"></a>::: {.callout-note}</span>
-<span id="cb1-71"><a href="#cb1-71"></a><span class="fu">## 想自己推一遍？</span></span>
-<span id="cb1-72"><a href="#cb1-72"></a>repo 的 <span class="in">`docs/exercise-dpo-derivation.md`</span> 是一份「換你來推」的練習單：每步給目標+提示、答案摺疊，</span>
-<span id="cb1-73"><a href="#cb1-73"></a>推完你就握住整個後訓練最漂亮那條數學。</span>
-<span id="cb1-74"><a href="#cb1-74"></a>:::</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-67"><a href="#cb1-67"></a><span class="fu">## MinHash 碰撞 = Jaccard；LSH 的 S 曲線 {#sec-minhash-math}</span></span>
+<span id="cb1-68"><a href="#cb1-68"></a></span>
+<span id="cb1-69"><a href="#cb1-69"></a>**命題.** 對隨機排列 $\pi$，$\Pr<span class="co">[</span><span class="ot">\min\pi(A)=\min\pi(B)</span><span class="co">]</span>=\frac{|A\cap B|}{|A\cup B|}=\operatorname{Jaccard}(A,B)$。</span>
+<span id="cb1-70"><a href="#cb1-70"></a></span>
+<span id="cb1-71"><a href="#cb1-71"></a>**推導.** $A\cup B$ 中哪個元素被排到最小是均勻的；兩集合 minhash 相等 $\iff$ 該「全域最小」元素同時在</span>
+<span id="cb1-72"><a href="#cb1-72"></a>$A,B$（即在 $A\cap B$）。機率 $=|A\cap B|/|A\cup B|$。$\square$</span>
+<span id="cb1-73"><a href="#cb1-73"></a></span>
+<span id="cb1-74"><a href="#cb1-74"></a>**LSH banding.** 把 $n$ 個 minhash 切成 $b$ 個 band、每 band $r$ 行，兩文件至少共用一個 band 的機率</span>
+<span id="cb1-75"><a href="#cb1-75"></a>$P(s)=1-(1-s^{r})^{b}$（$s$＝Jaccard），是一條 S 曲線、拐點約在 $s\approx(1/b)^{1/r}$。調 $b,r$ 就能把</span>
+<span id="cb1-76"><a href="#cb1-76"></a>「相似度高於門檻的對」幾乎全抓出來——這就是第 4 章 11k 篇 21.6 秒去完的數學原因。</span>
+<span id="cb1-77"><a href="#cb1-77"></a></span>
+<span id="cb1-78"><a href="#cb1-78"></a>::: {.callout-tip}</span>
+<span id="cb1-79"><a href="#cb1-79"></a><span class="fu">## 直覺：MinHash 是「便宜的相似度估計」，LSH 是「只比可能相似的」</span></span>
+<span id="cb1-80"><a href="#cb1-80"></a>MinHash 把「算兩個集合的 Jaccard」這件貴事，換成「比兩串簽章相等幾位」——而上面那條等式保證</span>
+<span id="cb1-81"><a href="#cb1-81"></a>**這個便宜估計是無偏的**。LSH 再加一層篩：相似度高的文件對「至少共用一個 band」的機率接近 1、</span>
+<span id="cb1-82"><a href="#cb1-82"></a>不相似的接近 0（那條 S 曲線），所以只把同桶的拿出來細比。$b$（band 數）往上調，S 曲線左移→</span>
+<span id="cb1-83"><a href="#cb1-83"></a>recall 升、但候選變多——這正是第 4 章動手題要你親手調的取捨（@sec-ch4-exercises 練習 1），</span>
+<span id="cb1-84"><a href="#cb1-84"></a>程式版見 @sec-build-dedup。</span>
+<span id="cb1-85"><a href="#cb1-85"></a>:::</span>
+<span id="cb1-86"><a href="#cb1-86"></a></span>
+<span id="cb1-87"><a href="#cb1-87"></a><span class="fu">## 政策梯度 + GRPO 的 baseline 為何不偏 {#sec-pg-math}</span></span>
+<span id="cb1-88"><a href="#cb1-88"></a></span>
+<span id="cb1-89"><a href="#cb1-89"></a>**命題.** $\nabla_\theta\mathbb{E}_{y\sim\pi_\theta}[R(y)]=\mathbb{E}[R\,\nabla\log\pi_\theta]$；且減任何與動作無關的</span>
+<span id="cb1-90"><a href="#cb1-90"></a>baseline $b$ 不改變期望（因 $\mathbb{E}<span class="co">[</span><span class="ot">\nabla\log\pi_\theta</span><span class="co">]</span>=\sum_y\nabla\pi_\theta=\nabla\sum_y\pi_\theta=\nabla1=0$）。</span>
+<span id="cb1-91"><a href="#cb1-91"></a></span>
+<span id="cb1-92"><a href="#cb1-92"></a>**在說什麼.** 減 baseline 不偏、但降變異數。PPO 用學來的 critic $V(x)$ 當 baseline；GRPO 改用「同組平均</span>
+<span id="cb1-93"><a href="#cb1-93"></a>獎勵」——也是不偏 baseline，所以省掉了 critic 這顆網路（第 7 章 @fig-ppo）。</span>
+<span id="cb1-94"><a href="#cb1-94"></a></span>
+<span id="cb1-95"><a href="#cb1-95"></a>::: {.callout-tip}</span>
+<span id="cb1-96"><a href="#cb1-96"></a><span class="fu">## 直覺：baseline 是「跟平均比」，不是「跟零比」</span></span>
+<span id="cb1-97"><a href="#cb1-97"></a>與其問「這個回答的獎勵是 +7，好不好？」，不如問「它比**同題其他回答的平均**好還是差？」——</span>
+<span id="cb1-98"><a href="#cb1-98"></a>高於平均才往上推、低於平均往下壓。減掉 baseline 不改變「該往哪推」（期望不偏），但讓訊號不再被</span>
+<span id="cb1-99"><a href="#cb1-99"></a>獎勵的絕對大小淹沒（變異數小）。PPO 花一顆 critic 網路去學這個平均；GRPO 發現「同組 K 個回答</span>
+<span id="cb1-100"><a href="#cb1-100"></a>當場算平均」就夠用，省掉整顆 critic——這就是第 7 章那張 PPO vs GRPO 對照表（@sec-alignment）的數學底。</span>
+<span id="cb1-101"><a href="#cb1-101"></a>:::</span>
+<span id="cb1-102"><a href="#cb1-102"></a></span>
+<span id="cb1-103"><a href="#cb1-103"></a>::: {.callout-note}</span>
+<span id="cb1-104"><a href="#cb1-104"></a><span class="fu">## 想自己推一遍？</span></span>
+<span id="cb1-105"><a href="#cb1-105"></a>repo 的 <span class="in">`docs/exercise-dpo-derivation.md`</span> 是一份「換你來推」的練習單：每步給目標+提示、答案摺疊，</span>
+<span id="cb1-106"><a href="#cb1-106"></a>推完你就握住整個後訓練最漂亮那條數學。</span>
+<span id="cb1-107"><a href="#cb1-107"></a>:::</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/08-math-appendix.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/10-math-appendix.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></div></div></footer></body></html>

@@ -107,6 +107,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "搜索"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
@@ -163,7 +166,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　工程</a></li><li class="breadcrumb-item"><a href="./04-real-data.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　資料與評估</a></li><li class="breadcrumb-item"><a href="./04-real-data.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
@@ -229,7 +232,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">第二部　工程</span></a>
+ <span class="menu-text">第二部　資料與評估</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -247,18 +250,12 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./06-deploy-governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">上線與治理：把稽核接到 ML</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
- <span class="menu-text">第三部　對齊</span></a>
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -266,8 +263,20 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./07-alignment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
   </div>
 </li>
       </ul>
@@ -275,7 +284,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
- <span class="menu-text">附錄</span></a>
+ <span class="menu-text">第四部　對齊</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -283,8 +292,31 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-math-appendix.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">附錄：數學推導</span></a>
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -306,17 +338,22 @@ window.Quarto = {
    
   <ul>
   <li><a href="#英文假設一個個破" id="toc-英文假設一個個破" class="nav-link active" data-scroll-target="#英文假設一個個破"><span class="header-section-number">4.1</span> 英文假設一個個破</a></li>
-  <li><a href="#minhash-lsh把去重從-on2-降到接近-on" id="toc-minhash-lsh把去重從-on2-降到接近-on" class="nav-link" data-scroll-target="#minhash-lsh把去重從-on2-降到接近-on"><span class="header-section-number">4.2</span> MinHash + LSH：把去重從 <span class="math inline">O(n^2)</span> 降到接近 <span class="math inline">O(n)</span></a></li>
+  <li><a href="#minhash-lsh把去重從-on2-降到接近-on" id="toc-minhash-lsh把去重從-on2-降到接近-on" class="nav-link" data-scroll-target="#minhash-lsh把去重從-on2-降到接近-on"><span class="header-section-number">4.2</span> MinHash + LSH：把去重從 <span class="math inline">O(n^2)</span> 降到接近 <span class="math inline">O(n)</span></a>
+  <ul class="collapse">
+  <li><a href="#sec-build-dedup" id="toc-sec-build-dedup" class="nav-link" data-scroll-target="#sec-build-dedup"><span class="header-section-number">4.2.1</span> 逐行把去重管線建起來</a></li>
+  </ul></li>
   <li><a href="#聚合指標的盲點本章的核心教訓" id="toc-聚合指標的盲點本章的核心教訓" class="nav-link" data-scroll-target="#聚合指標的盲點本章的核心教訓"><span class="header-section-number">4.3</span> 聚合指標的盲點（本章的核心教訓）</a></li>
-  <li><a href="#收成真實中文-gpt" id="toc-收成真實中文-gpt" class="nav-link" data-scroll-target="#收成真實中文-gpt"><span class="header-section-number">4.4</span> 收成：真實中文 GPT</a></li>
-  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">4.5</span> 帶走什麼</a></li>
+  <li><a href="#sec-tiny-dedup" id="toc-sec-tiny-dedup" class="nav-link" data-scroll-target="#sec-tiny-dedup"><span class="header-section-number">4.4</span> 💻 在你的機器上：聚合指標的盲點 + LSH 的速度</a></li>
+  <li><a href="#收成真實中文-gpt" id="toc-收成真實中文-gpt" class="nav-link" data-scroll-target="#收成真實中文-gpt"><span class="header-section-number">4.5</span> 收成：真實中文 GPT</a></li>
+  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">4.6</span> 帶走什麼</a></li>
+  <li><a href="#sec-ch4-exercises" id="toc-sec-ch4-exercises" class="nav-link" data-scroll-target="#sec-ch4-exercises"><span class="header-section-number">4.7</span> 練習</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/04-real-data.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　工程</a></li><li class="breadcrumb-item"><a href="./04-real-data.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　資料與評估</a></li><li class="breadcrumb-item"><a href="./04-real-data.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></a></li></ol></nav>
 <div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title"><span id="sec-data" class="quarto-section-identifier"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
 </div>
@@ -339,6 +376,62 @@ window.Quarto = {
 <p><strong>一句話</strong>：把玩具語料換成真實規模的中文維基後，原本 pipeline 的假設一個個破——而最危險的問題， 是聚合指標看不到、只有「真的去看資料」才現形的那種。</p>
 </blockquote>
 <p>模型架構是一回事，<strong>餵它什麼</strong>是另一回事——而且後者往往更決定成敗。前面幾章我用的是 1 MB 的英文 莎士比亞，乾淨、小、好懂。這一章我換成 <strong>105 MB、11,000 多篇中文維基</strong>，看看真實規模的資料會怎麼 把我原本「想當然耳」的假設一個個打破。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class D here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：進入第二部，處理真實規模的資料。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：基本集合運算與機率直覺。不需要任何 NLP 資料工程背景。</p>
+<p><strong>學完你會</strong>：(1) 說出跨語言（英→中）會打破哪些「想當然耳」的假設；(2) <strong>逐行</strong>理解 MinHash + LSH 怎麼把去重從 <span class="math inline">O(n^2)</span> 降到接近 <span class="math inline">O(n)</span>；(3) 在<strong>你自己的 CPU 上</strong>親手重現本章兩個最重要的瞬間—— <strong>聚合指標說「健康」但一條偵測器抓出 20% 髒資料</strong>，以及 <strong>LSH 只細比 ~2% 的對就找到重複</strong>。 本章 💻 配套程式 <code>tiny_dedup.py</code> 純標準庫、不需 torch、幾秒跑完。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</p>
+<ul>
+<li><strong>tokenizer（char-level / BPE）</strong>：把文字切成 token 的方式。<em>在意它</em>：影響成本、序列長度、跨語言適用性。</li>
+<li><strong>去重（dedup）／ MinHash + LSH</strong>：移除近似重複文件的演算法。<em>在意它</em>：髒/重複資料直接拖垮品質；演算法決定可不可行（<span class="math inline">O(n^2)\to</span> 近 <span class="math inline">O(n)</span>）。</li>
+<li><strong>熵 / 熵效率</strong>：資料「亂度」的量化。<em>在意它</em>：跨語言別照搬英文門檻（中文熵天生高）。</li>
+<li><strong>資料品質偵測器 / gate</strong>：把「看資料的眼睛」寫成規則擋關。<em>在意它</em>：聚合指標會說謊，偵測器才抓得到藏起來的髒資料。</li>
+<li><strong>聚合指標的盲點</strong>：總分漂亮常只是問題被平均掉。<em>在意它</em>：別只信 dashboard 的總分。</li>
+</ul>
+</div>
+</div>
+</div>
 <section id="英文假設一個個破" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="英文假設一個個破"><span class="header-section-number">4.1</span> 英文假設一個個破</h2>
 <p>我的 pipeline 是照英文資料寫的。換成中文後，第一批壞掉的是這些：</p>
@@ -364,7 +457,7 @@ window.Quarto = {
 <tr class="even">
 <td>兩兩比對 <span class="math inline">O(n^2)</span></td>
 <td>11k 篇純 Python 跑「幾小時/卡死」</td>
-<td>加 <strong>MinHash + LSH</strong>（見 <a href="08-math-appendix.html#sec-minhash-math" class="quarto-xref"><span>小节 4</span></a>）</td>
+<td>加 <strong>MinHash + LSH</strong>（見 <a href="10-math-appendix.html#sec-minhash-math" class="quarto-xref"><span>小节 10.4</span></a>）</td>
 </tr>
 <tr class="odd">
 <td>熵門檻是英文校準的（3.5–6）</td>
@@ -377,13 +470,34 @@ window.Quarto = {
 </section>
 <section id="minhash-lsh把去重從-on2-降到接近-on" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="minhash-lsh把去重從-on2-降到接近-on"><span class="header-section-number">4.2</span> MinHash + LSH：把去重從 <span class="math inline">O(n^2)</span> 降到接近 <span class="math inline">O(n)</span></h2>
-<p>近似去重的天真做法是「每兩篇算一次相似度」——<span class="math inline">O(n^2)</span>，11k 篇就是上億次比較，純 Python 跑不動。 MinHash + LSH 是經典的解法，背後有漂亮的機率論（完整推導見 <a href="08-math-appendix.html#sec-minhash-math" class="quarto-xref"><span>小节 4</span></a>），直覺是：</p>
+<p>近似去重的天真做法是「每兩篇算一次相似度」——<span class="math inline">O(n^2)</span>，11k 篇就是上億次比較，純 Python 跑不動。 MinHash + LSH 是經典的解法，背後有漂亮的機率論（完整推導見 <a href="10-math-appendix.html#sec-minhash-math" class="quarto-xref"><span>小节 10.4</span></a>），直覺是：</p>
 <ol type="1">
 <li><strong>MinHash</strong>：把每篇文件壓成一個短「簽章」，性質是——兩篇的簽章相等的機率，<strong>恰好等於</strong>它們的 Jaccard 相似度。於是「比簽章」就近似「比相似度」，但便宜得多。</li>
 <li><strong>LSH banding</strong>：把簽章切成幾個 band，只有「至少共用一個 band」的文件對才拿出來細比。這讓你 <strong>跳過絕大多數不可能相似的對</strong>，候選對數量大降。</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># src/data/dedup.py：字元 n-gram → MinHash 簽章 → LSH 找候選 → 再算真實 Jaccard 確認</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="sec-build-dedup" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="sec-build-dedup"><span class="header-section-number">4.2.1</span> 逐行把去重管線建起來</h3>
+<p>我們用 <code>tiny_dedup.py</code> 把這條管線一步步建出來——字元 n-gram → MinHash 簽章 → LSH 找候選 → 再算真實 Jaccard 確認。</p>
+<p><strong>第 0 步——shingle（字元 n-gram）。</strong> 中文沒空白，所以不切詞、改切<strong>字元 5-gram</strong>：把每篇變成 一個「片段集合」。兩篇的相似度就用集合的 Jaccard 來定義：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">def</span> shingles(s, k<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    s <span class="op">=</span> re.sub(<span class="vs">r"</span><span class="dv">\s</span><span class="op">+</span><span class="vs">"</span>, <span class="st">" "</span>, s)</span>
+<span id="cb1-3"><a href="#cb1-3"></a>    <span class="cf">return</span> {s[i:i<span class="op">+</span>k] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">max</span>(<span class="dv">1</span>, <span class="bu">len</span>(s) <span class="op">-</span> k <span class="op">+</span> <span class="dv">1</span>))}</span>
+<span id="cb1-4"><a href="#cb1-4"></a></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">def</span> jaccard(a, b):</span>
+<span id="cb1-6"><a href="#cb1-6"></a>    <span class="cf">return</span> <span class="bu">len</span>(a <span class="op">&amp;</span> b) <span class="op">/</span> <span class="bu">len</span>(a <span class="op">|</span> b)        <span class="co"># 交集 / 聯集</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——MinHash 簽章。</strong> 對每個 shingle 算一組雜湊，取<strong>最小值</strong>當一個簽章分量；換 64 組 雜湊就得到 64 維簽章。神奇性質：兩篇簽章某一維相等的機率，<strong>恰好等於</strong>它們的 Jaccard。 （雜湊用 <code>crc32</code> 而非 Python 內建 <code>hash()</code>——後者對字串會加鹽、跨 process 不可重現。）</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> minhash(shingle_set):</span>
+<span id="cb2-2"><a href="#cb2-2"></a>    base <span class="op">=</span> [zlib.crc32(x.encode()) <span class="cf">for</span> x <span class="kw">in</span> shingle_set]</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="cf">return</span> [<span class="bu">min</span>((a<span class="op">*</span>h <span class="op">+</span> b) <span class="op">%</span> PRIME <span class="cf">for</span> h <span class="kw">in</span> base) <span class="cf">for</span> a, b <span class="kw">in</span> coeffs]  <span class="co"># 64 維簽章</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——LSH banding 找候選。</strong> 把 64 維簽章切成 16 個 band（每 band 4 維），同一 band 完全 相同的文件丟進同一個桶。<strong>只有同桶的文件對</strong>才是候選——這一步把 <span class="math inline">O(n^2)</span> 砍成「只比可能相似的」：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="cf">for</span> i, sig <span class="kw">in</span> <span class="bu">enumerate</span>(sigs):</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    <span class="cf">for</span> band <span class="kw">in</span> <span class="bu">range</span>(BANDS):</span>
+<span id="cb3-3"><a href="#cb3-3"></a>        key <span class="op">=</span> (band, <span class="bu">tuple</span>(sig[band<span class="op">*</span>ROWS:(band<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span>ROWS]))</span>
+<span id="cb3-4"><a href="#cb3-4"></a>        buckets[key].append(i)            <span class="co"># 同一 band 相同 → 同桶 → 候選</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 3 步——對候選算真實 Jaccard 確認。</strong> 只對候選對算一次精確 Jaccard，超過門檻才判為重複。 LSH 負責「便宜地縮小範圍」，精確比對負責「最後確認」：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>dupes <span class="op">=</span> {(i, j) <span class="cf">for</span> (i, j) <span class="kw">in</span> candidates <span class="cf">if</span> jaccard(sh[i], sh[j]) <span class="op">&gt;</span> <span class="fl">0.5</span>}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>實測</strong>：改造後，11,126 篇中文維基 <strong>21.6 秒</strong>去完、抓出 161 篇近似重複。舊版（空白切詞 + 兩兩比） 會跑幾小時或直接卡死。這是個純粹的「省」——演算法複雜度的勝利。</p>
+</section>
 </section>
 <section id="聚合指標的盲點本章的核心教訓" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="聚合指標的盲點本章的核心教訓"><span class="header-section-number">4.3</span> 聚合指標的盲點（本章的核心教訓）</h2>
@@ -410,17 +524,140 @@ window.Quarto = {
 </blockquote>
 <p>每抓到一種新的髒資料，就多一條偵測器；久了，這套偵測器就成了「資料的回歸測試」——下次語料更新， 跑一遍就知道有沒有舊問題復發、有沒有新問題冒出來。一條來源動到 5–15 條偵測器是常態。</p>
 </section>
-<section id="收成真實中文-gpt" class="level2" data-number="4.4">
-<h2 data-number="4.4" class="anchored" data-anchor-id="收成真實中文-gpt"><span class="header-section-number">4.4</span> 收成：真實中文 GPT</h2>
+<section id="sec-tiny-dedup" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="sec-tiny-dedup"><span class="header-section-number">4.4</span> 💻 在你的機器上：聚合指標的盲點 + LSH 的速度</h2>
+<p>這兩課不必有 105 MB 中文維基也能親手摸到。配套程式 <code>tiny_dedup.py</code>（純標準庫、不需 torch、 幾秒跑完）拿莎士比亞切成「文件」，<strong>動手注入</strong>近似重複與一種藏起來的髒語法，再把兩課跑一遍：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="ex">python</span> tiny_dedup.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16 上跑出來（節錄）：</p>
+<pre><code>語料：440 篇文件（含注入的 40 組近似重複、85 篇含髒語法）
+=== 聚合指標（總分）===
+  平均文件長度：   238 字元
+  全語料字元熵：  4.72 bits/char
+  → 看起來資料健康 ✅（長度正常、熵正常）
+=== 一條偵測器（看樣本後寫成規則）===
+  命中 markup 髒語法：91/440 = 20.7% 文件     ← 聚合指標完全看不到
+=== 去重：naive vs MinHash+LSH ===
+  naive：比較  96580 對（C(N,2)，O(n²)），抓到 41 組，3446 ms
+  LSH  ：只細比    1868 個候選對，抓到 38 組，1135 ms
+  LSH 候選只佔 naive 的 1.9%</code></pre>
+<p><strong>怎麼讀——兩課各一個數字</strong>：</p>
+<ol type="1">
+<li><strong>聚合指標的盲點</strong>：平均長度、字元熵都說「健康 ✅」，但一條 regex 偵測器抓出 <strong>20.7%</strong> 的文件 殘留 markup 髒語法。為什麼總分看不到？因為髒東西只佔每篇一小段、被平均稀釋掉了——這正是真實 專案裡 <strong>21.6% 繁簡語法</strong>那一課的最小可重現版。<strong>總分漂亮，常常只是問題被平均掉了。</strong></li>
+<li><strong>LSH 的速度</strong>：naive 要比 96,580 對（<span class="math inline">O(n^2)</span>），LSH 只細比 <strong>1.9%</strong> 的候選對就找到幾乎同一批 重複。<span class="math inline">N</span> 越大這個比例越懸殊——這就是 <span class="math inline">O(n^2)\to</span> 接近 <span class="math inline">O(n)</span> 的來源。（LSH 是<strong>近似</strong>法，會 漏掉幾組卡在門檻邊界的對，是用一點 recall 換速度；要更高 recall 就加 band。）</li>
+</ol>
+<p><a href="#fig-dedup" class="quarto-xref">图&nbsp;<span>4.1</span></a> 把這兩課畫在一起：</p>
+<div id="fig-dedup" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dedup-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/dedup_blindspot.png" class="img-fluid figure-img" style="width:92.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dedup-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4.1: 去重 + 偵測器（純 CPU 真跑）：左圖——平均長度、字元熵這些聚合指標都把資料判成乾淨（0% 旗標），同一批資料一條 per-doc 偵測器卻抓出 20.7% 含髒語法；右圖——naive 要比 96,580 對，LSH 只細比 1,868 個候選（log 軸，僅 1.9%）。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="收成真實中文-gpt" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="收成真實中文-gpt"><span class="header-section-number">4.5</span> 收成：真實中文 GPT</h2>
 <p>清洗修好後重新跑完整 pipeline：collect 11,126 篇 → 清洗 → 去重 161 篇 → tokenize（字元級、vocab 14,210，全是中文字）→ pack 成 train 31.4M token。訓一個 6 層 / 256 維的現代架構模型（RoPE + GQA + SwiGLU + RMSNorm + Flash），四個成功判準全達標（細節見 <a href="05-evaluation.html" class="quarto-xref"><span>章节 5</span></a>），生成出可讀的中文片段—— 真詞、語法、標點都對，整體不連貫是 8M 小模型的預期水準。</p>
 </section>
-<section id="帶走什麼" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">4.5</span> 帶走什麼</h2>
+<section id="帶走什麼" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">4.6</span> 帶走什麼</h2>
 <ul>
 <li>跨語言別照搬假設：切詞、熵門檻、token 大小在中文都要重想。</li>
 <li>近似去重靠 MinHash + LSH 從 <span class="math inline">O(n^2)</span> 降到接近 <span class="math inline">O(n)</span>——一個有漂亮機率論證的工程勝利。</li>
 <li><strong>聚合指標必要但不夠。</strong> 一定要看樣本，並把「看資料的眼睛」寫成偵測器、累積成資料的測試套件。 21.6% 的髒資料，聚合指標全說健康——這是整本書最重要的「相信資料、不相信總分」的一課。</li>
 </ul>
+</section>
+<section id="sec-ch4-exercises" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="sec-ch4-exercises"><span class="header-section-number">4.7</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：把 LSH 的 band 數調多會怎樣？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>tiny_dedup.py</code> 用 16 個 band（每 band 4 維）。<strong>先寫下你的預測</strong>：把 <code>BANDS</code> 調大（每 band 更少維）， recall（抓到的真重複比例）和候選對數量會往哪個方向走？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>band 越多、每 band 維度越少 → 兩篇「至少共用一個 band」越容易 → <strong>recall 升高，但候選對也變多</strong> （更多誤報要細比，變慢）。這是 LSH 的核心取捨：band 配置在「漏掉真重複」與「比太多假候選」之間調。 動手把 <code>BANDS</code> 改成 32 看 recall 和候選數一起怎麼動。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：新增一條偵測器
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>照 <code>tiny_dedup.py</code> 裡那條 regex 的樣子，加一條偵測「殘留 HTML 標籤」或「URL 洗版」的規則， 注入對應的髒資料、量它的命中率。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>重點不在 regex 本身，而在養成那個循環：<strong>看樣本發現問題 → 寫成一條偵測器 → 累積成資料的回歸測試</strong>。 每多一條，下次語料更新就多一道自動關卡。這就是把「看資料的眼睛」工業化——一條來源動到 5–15 條 偵測器是常態。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：用英文校準的熵門檻去判中文
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>本章提到中文字元熵約 9.70，被英文校準的門檻（3.5–6）誤判成「不健康」。在 <code>tiny_dedup.py</code> 裡把 <code>char_entropy</code> 換算成不同單位、或想像套用英文門檻，會發生什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>直接套英文的絕對熵門檻，會把完全正常的中文語料判成異常——因為中文 vocab 大得多、單字元熵天生 就高。修法是改用<strong>熵效率</strong>（熵 / <span class="math inline">\log_2</span> vocab），把尺度正規化成跨語言通用。這呼應本章主線： <strong>跨語言別照搬假設</strong>——切詞、熵門檻、token 大小換到中文全要重想。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 <!-- -->
@@ -891,86 +1128,236 @@ window.Quarto = {
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu"># 真實資料的坑：從 1 MB 英文到 105 MB 中文 {#sec-data}</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="at">&gt; **一句話**：把玩具語料換成真實規模的中文維基後，原本 pipeline 的假設一個個破——而最危險的問題，</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="at">&gt; 是聚合指標看不到、只有「真的去看資料」才現形的那種。</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a></span>
-<span id="cb2-6"><a href="#cb2-6"></a>模型架構是一回事，**餵它什麼**是另一回事——而且後者往往更決定成敗。前面幾章我用的是 1 MB 的英文</span>
-<span id="cb2-7"><a href="#cb2-7"></a>莎士比亞，乾淨、小、好懂。這一章我換成 **105 MB、11,000 多篇中文維基**，看看真實規模的資料會怎麼</span>
-<span id="cb2-8"><a href="#cb2-8"></a>把我原本「想當然耳」的假設一個個打破。</span>
-<span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="fu">## 英文假設一個個破</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a></span>
-<span id="cb2-12"><a href="#cb2-12"></a>我的 pipeline 是照英文資料寫的。換成中文後，第一批壞掉的是這些：</span>
-<span id="cb2-13"><a href="#cb2-13"></a></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="pp">|</span> 原本（英文玩具）<span class="pp">|</span> 換成中文後壞在哪 <span class="pp">|</span> 修法 <span class="pp">|</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="pp">|---|---|---|</span></span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="pp">|</span> 用空白切詞做 shingle 去重 <span class="pp">|</span> 中文沒空白 → 整篇變成「一個詞」→ 去重失效 <span class="pp">|</span> 改用**字元 n-gram** <span class="pp">|</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="pp">|</span> 兩兩比對 $O(n^2)$ <span class="pp">|</span> 11k 篇純 Python 跑「幾小時/卡死」 <span class="pp">|</span> 加 **MinHash + LSH**（見 @sec-minhash-math）<span class="pp">|</span></span>
-<span id="cb2-18"><a href="#cb2-18"></a><span class="pp">|</span> 熵門檻是英文校準的（3.5–6）<span class="pp">|</span> 中文字元熵 9.70，被誤判成「不健康」<span class="pp">|</span> 改用**熵效率**（熵 / $\log_2$ vocab，跨語言通用）<span class="pp">|</span></span>
-<span id="cb2-19"><a href="#cb2-19"></a></span>
-<span id="cb2-20"><a href="#cb2-20"></a>每一條都是同一個教訓：**跨語言別照搬假設**。英文用空白分詞、熵的尺度、甚至「一個 token 多大」，</span>
-<span id="cb2-21"><a href="#cb2-21"></a>換到中文全都要重想。</span>
-<span id="cb2-22"><a href="#cb2-22"></a></span>
-<span id="cb2-23"><a href="#cb2-23"></a><span class="fu">## MinHash + LSH：把去重從 $O(n^2)$ 降到接近 $O(n)$</span></span>
-<span id="cb2-24"><a href="#cb2-24"></a></span>
-<span id="cb2-25"><a href="#cb2-25"></a>近似去重的天真做法是「每兩篇算一次相似度」——$O(n^2)$，11k 篇就是上億次比較，純 Python 跑不動。</span>
-<span id="cb2-26"><a href="#cb2-26"></a>MinHash + LSH 是經典的解法，背後有漂亮的機率論（完整推導見 @sec-minhash-math），直覺是：</span>
-<span id="cb2-27"><a href="#cb2-27"></a></span>
-<span id="cb2-28"><a href="#cb2-28"></a><span class="ss">1. </span>**MinHash**：把每篇文件壓成一個短「簽章」，性質是——兩篇的簽章相等的機率，**恰好等於**它們的</span>
-<span id="cb2-29"><a href="#cb2-29"></a>   Jaccard 相似度。於是「比簽章」就近似「比相似度」，但便宜得多。</span>
-<span id="cb2-30"><a href="#cb2-30"></a><span class="ss">2. </span>**LSH banding**：把簽章切成幾個 band，只有「至少共用一個 band」的文件對才拿出來細比。這讓你</span>
-<span id="cb2-31"><a href="#cb2-31"></a>   **跳過絕大多數不可能相似的對**，候選對數量大降。</span>
-<span id="cb2-32"><a href="#cb2-32"></a></span>
-<span id="cb2-33"><a href="#cb2-33"></a><span class="in">```python</span></span>
-<span id="cb2-34"><a href="#cb2-34"></a><span class="co"># src/data/dedup.py：字元 n-gram → MinHash 簽章 → LSH 找候選 → 再算真實 Jaccard 確認</span></span>
-<span id="cb2-35"><a href="#cb2-35"></a><span class="in">```</span></span>
-<span id="cb2-36"><a href="#cb2-36"></a></span>
-<span id="cb2-37"><a href="#cb2-37"></a>**實測**：改造後，11,126 篇中文維基 **21.6 秒**去完、抓出 161 篇近似重複。舊版（空白切詞 + 兩兩比）</span>
-<span id="cb2-38"><a href="#cb2-38"></a>會跑幾小時或直接卡死。這是個純粹的「省」——演算法複雜度的勝利。</span>
-<span id="cb2-39"><a href="#cb2-39"></a></span>
-<span id="cb2-40"><a href="#cb2-40"></a><span class="fu">## 聚合指標的盲點（本章的核心教訓）</span></span>
-<span id="cb2-41"><a href="#cb2-41"></a></span>
-<span id="cb2-42"><a href="#cb2-42"></a>去重做完、清洗做完，我算了一輪資料品質指標：字元熵、壓縮比、重複率——**全部顯示「資料健康 ✅」**。</span>
-<span id="cb2-43"><a href="#cb2-43"></a>照理說可以開始訓練了。但我有個從稽核帶來的本能：**不信任「總分漂亮」**。總分漂亮，常常只是因為</span>
-<span id="cb2-44"><a href="#cb2-44"></a>問題被平均掉了。</span>
-<span id="cb2-45"><a href="#cb2-45"></a></span>
-<span id="cb2-46"><a href="#cb2-46"></a>所以我做了一件事：把「看資料」這個動作**工業化**。</span>
-<span id="cb2-47"><a href="#cb2-47"></a></span>
-<span id="cb2-48"><a href="#cb2-48"></a>::: {.callout-important}</span>
-<span id="cb2-49"><a href="#cb2-49"></a><span class="fu">## 一定要「看資料」，並把眼睛固化成程式</span></span>
-<span id="cb2-50"><a href="#cb2-50"></a>我寫了一套**資料品質偵測器**：7 條規則（wiki 標記、HTML、控制字元、URL、符號洗版、重複、過短）</span>
-<span id="cb2-51"><a href="#cb2-51"></a>掃過全語料，量化每條的命中率、設門檻當資料 gate、並抽出問題片段樣本。</span>
-<span id="cb2-52"><a href="#cb2-52"></a></span>
-<span id="cb2-53"><a href="#cb2-53"></a>結果抓到 **21.6%（2,407 篇）** 文件殘留維基的繁簡轉換語法 `-{zh-tw:..;zh-cn:..}-`——這是**任何聚合</span>
-<span id="cb2-54"><a href="#cb2-54"></a>指標都看不到**的。熵、壓縮、重複率全說健康，因為這些髒東西只佔每篇的一小部分、被平均稀釋掉了。</span>
-<span id="cb2-55"><a href="#cb2-55"></a>只有「真的去看樣本 + 把問題寫成偵測器」才讓它現形。</span>
-<span id="cb2-56"><a href="#cb2-56"></a></span>
-<span id="cb2-57"><a href="#cb2-57"></a>修一條清洗規則（解析並抽取繁簡語法），21.6% → **0.05%**，整批 gate 從 ❌ 變 ✅。我用監控面板的</span>
-<span id="cb2-58"><a href="#cb2-58"></a>before/after 對照圖留下視覺證據。</span>
-<span id="cb2-59"><a href="#cb2-59"></a>:::</span>
-<span id="cb2-60"><a href="#cb2-60"></a></span>
-<span id="cb2-61"><a href="#cb2-61"></a>這套偵測器系統的心法，跟我疊稽核控制項是同一個思路：</span>
-<span id="cb2-62"><a href="#cb2-62"></a></span>
-<span id="cb2-63"><a href="#cb2-63"></a><span class="at">&gt; **看樣本發現問題 → 寫成一條偵測器 → 累積成資料的測試套件。**</span></span>
-<span id="cb2-64"><a href="#cb2-64"></a></span>
-<span id="cb2-65"><a href="#cb2-65"></a>每抓到一種新的髒資料，就多一條偵測器；久了，這套偵測器就成了「資料的回歸測試」——下次語料更新，</span>
-<span id="cb2-66"><a href="#cb2-66"></a>跑一遍就知道有沒有舊問題復發、有沒有新問題冒出來。一條來源動到 5–15 條偵測器是常態。</span>
-<span id="cb2-67"><a href="#cb2-67"></a></span>
-<span id="cb2-68"><a href="#cb2-68"></a><span class="fu">## 收成：真實中文 GPT</span></span>
-<span id="cb2-69"><a href="#cb2-69"></a></span>
-<span id="cb2-70"><a href="#cb2-70"></a>清洗修好後重新跑完整 pipeline：collect 11,126 篇 → 清洗 → 去重 161 篇 → tokenize（字元級、vocab</span>
-<span id="cb2-71"><a href="#cb2-71"></a>14,210，全是中文字）→ pack 成 train 31.4M token。訓一個 6 層 / 256 維的現代架構模型（RoPE + GQA +</span>
-<span id="cb2-72"><a href="#cb2-72"></a>SwiGLU + RMSNorm + Flash），四個成功判準全達標（細節見 @sec-eval），生成出可讀的中文片段——</span>
-<span id="cb2-73"><a href="#cb2-73"></a>真詞、語法、標點都對，整體不連貫是 8M 小模型的預期水準。</span>
-<span id="cb2-74"><a href="#cb2-74"></a></span>
-<span id="cb2-75"><a href="#cb2-75"></a><span class="fu">## 帶走什麼</span></span>
-<span id="cb2-76"><a href="#cb2-76"></a></span>
-<span id="cb2-77"><a href="#cb2-77"></a><span class="ss">- </span>跨語言別照搬假設：切詞、熵門檻、token 大小在中文都要重想。</span>
-<span id="cb2-78"><a href="#cb2-78"></a><span class="ss">- </span>近似去重靠 MinHash + LSH 從 $O(n^2)$ 降到接近 $O(n)$——一個有漂亮機率論證的工程勝利。</span>
-<span id="cb2-79"><a href="#cb2-79"></a><span class="ss">- </span>**聚合指標必要但不夠。** 一定要看樣本，並把「看資料的眼睛」寫成偵測器、累積成資料的測試套件。</span>
-<span id="cb2-80"><a href="#cb2-80"></a>  21.6% 的髒資料，聚合指標全說健康——這是整本書最重要的「相信資料、不相信總分」的一課。</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu"># 真實資料的坑：從 1 MB 英文到 105 MB 中文 {#sec-data}</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="at">&gt; **一句話**：把玩具語料換成真實規模的中文維基後，原本 pipeline 的假設一個個破——而最危險的問題，</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="at">&gt; 是聚合指標看不到、只有「真的去看資料」才現形的那種。</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a>模型架構是一回事，**餵它什麼**是另一回事——而且後者往往更決定成敗。前面幾章我用的是 1 MB 的英文</span>
+<span id="cb7-7"><a href="#cb7-7"></a>莎士比亞，乾淨、小、好懂。這一章我換成 **105 MB、11,000 多篇中文維基**，看看真實規模的資料會怎麼</span>
+<span id="cb7-8"><a href="#cb7-8"></a>把我原本「想當然耳」的假設一個個打破。</span>
+<span id="cb7-9"><a href="#cb7-9"></a></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="in">```{mermaid}</span></span>
+<span id="cb7-13"><a href="#cb7-13"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：進入第二部，處理真實規模的資料。</span><span class="ot">"</span></span>
+<span id="cb7-14"><a href="#cb7-14"></a>flowchart LR</span>
+<span id="cb7-15"><a href="#cb7-15"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb7-16"><a href="#cb7-16"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb7-17"><a href="#cb7-17"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb7-18"><a href="#cb7-18"></a>  class D here</span>
+<span id="cb7-19"><a href="#cb7-19"></a><span class="in">```</span></span>
+<span id="cb7-20"><a href="#cb7-20"></a></span>
+<span id="cb7-21"><a href="#cb7-21"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb7-22"><a href="#cb7-22"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb7-23"><a href="#cb7-23"></a>**假設你已經會**：基本集合運算與機率直覺。不需要任何 NLP 資料工程背景。</span>
+<span id="cb7-24"><a href="#cb7-24"></a></span>
+<span id="cb7-25"><a href="#cb7-25"></a>**學完你會**：(1) 說出跨語言（英→中）會打破哪些「想當然耳」的假設；(2) **逐行**理解 MinHash + LSH</span>
+<span id="cb7-26"><a href="#cb7-26"></a>怎麼把去重從 $O(n^2)$ 降到接近 $O(n)$；(3) 在**你自己的 CPU 上**親手重現本章兩個最重要的瞬間——</span>
+<span id="cb7-27"><a href="#cb7-27"></a>**聚合指標說「健康」但一條偵測器抓出 20% 髒資料**，以及 **LSH 只細比 ~2% 的對就找到重複**。</span>
+<span id="cb7-28"><a href="#cb7-28"></a>本章 💻 配套程式 <span class="in">`tiny_dedup.py`</span> 純標準庫、不需 torch、幾秒跑完。</span>
+<span id="cb7-29"><a href="#cb7-29"></a>:::</span>
+<span id="cb7-30"><a href="#cb7-30"></a></span>
+<span id="cb7-31"><a href="#cb7-31"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb7-32"><a href="#cb7-32"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb7-33"><a href="#cb7-33"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</span>
+<span id="cb7-34"><a href="#cb7-34"></a></span>
+<span id="cb7-35"><a href="#cb7-35"></a><span class="ss">- </span>**tokenizer（char-level / BPE）**：把文字切成 token 的方式。*在意它*：影響成本、序列長度、跨語言適用性。</span>
+<span id="cb7-36"><a href="#cb7-36"></a><span class="ss">- </span>**去重（dedup）／ MinHash + LSH**：移除近似重複文件的演算法。*在意它*：髒/重複資料直接拖垮品質；演算法決定可不可行（$O(n^2)\to$ 近 $O(n)$）。</span>
+<span id="cb7-37"><a href="#cb7-37"></a><span class="ss">- </span>**熵 / 熵效率**：資料「亂度」的量化。*在意它*：跨語言別照搬英文門檻（中文熵天生高）。</span>
+<span id="cb7-38"><a href="#cb7-38"></a><span class="ss">- </span>**資料品質偵測器 / gate**：把「看資料的眼睛」寫成規則擋關。*在意它*：聚合指標會說謊，偵測器才抓得到藏起來的髒資料。</span>
+<span id="cb7-39"><a href="#cb7-39"></a><span class="ss">- </span>**聚合指標的盲點**：總分漂亮常只是問題被平均掉。*在意它*：別只信 dashboard 的總分。</span>
+<span id="cb7-40"><a href="#cb7-40"></a>:::</span>
+<span id="cb7-41"><a href="#cb7-41"></a></span>
+<span id="cb7-42"><a href="#cb7-42"></a><span class="fu">## 英文假設一個個破</span></span>
+<span id="cb7-43"><a href="#cb7-43"></a></span>
+<span id="cb7-44"><a href="#cb7-44"></a>我的 pipeline 是照英文資料寫的。換成中文後，第一批壞掉的是這些：</span>
+<span id="cb7-45"><a href="#cb7-45"></a></span>
+<span id="cb7-46"><a href="#cb7-46"></a><span class="pp">|</span> 原本（英文玩具）<span class="pp">|</span> 換成中文後壞在哪 <span class="pp">|</span> 修法 <span class="pp">|</span></span>
+<span id="cb7-47"><a href="#cb7-47"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb7-48"><a href="#cb7-48"></a><span class="pp">|</span> 用空白切詞做 shingle 去重 <span class="pp">|</span> 中文沒空白 → 整篇變成「一個詞」→ 去重失效 <span class="pp">|</span> 改用**字元 n-gram** <span class="pp">|</span></span>
+<span id="cb7-49"><a href="#cb7-49"></a><span class="pp">|</span> 兩兩比對 $O(n^2)$ <span class="pp">|</span> 11k 篇純 Python 跑「幾小時/卡死」 <span class="pp">|</span> 加 **MinHash + LSH**（見 @sec-minhash-math）<span class="pp">|</span></span>
+<span id="cb7-50"><a href="#cb7-50"></a><span class="pp">|</span> 熵門檻是英文校準的（3.5–6）<span class="pp">|</span> 中文字元熵 9.70，被誤判成「不健康」<span class="pp">|</span> 改用**熵效率**（熵 / $\log_2$ vocab，跨語言通用）<span class="pp">|</span></span>
+<span id="cb7-51"><a href="#cb7-51"></a></span>
+<span id="cb7-52"><a href="#cb7-52"></a>每一條都是同一個教訓：**跨語言別照搬假設**。英文用空白分詞、熵的尺度、甚至「一個 token 多大」，</span>
+<span id="cb7-53"><a href="#cb7-53"></a>換到中文全都要重想。</span>
+<span id="cb7-54"><a href="#cb7-54"></a></span>
+<span id="cb7-55"><a href="#cb7-55"></a><span class="fu">## MinHash + LSH：把去重從 $O(n^2)$ 降到接近 $O(n)$</span></span>
+<span id="cb7-56"><a href="#cb7-56"></a></span>
+<span id="cb7-57"><a href="#cb7-57"></a>近似去重的天真做法是「每兩篇算一次相似度」——$O(n^2)$，11k 篇就是上億次比較，純 Python 跑不動。</span>
+<span id="cb7-58"><a href="#cb7-58"></a>MinHash + LSH 是經典的解法，背後有漂亮的機率論（完整推導見 @sec-minhash-math），直覺是：</span>
+<span id="cb7-59"><a href="#cb7-59"></a></span>
+<span id="cb7-60"><a href="#cb7-60"></a><span class="ss">1. </span>**MinHash**：把每篇文件壓成一個短「簽章」，性質是——兩篇的簽章相等的機率，**恰好等於**它們的</span>
+<span id="cb7-61"><a href="#cb7-61"></a>   Jaccard 相似度。於是「比簽章」就近似「比相似度」，但便宜得多。</span>
+<span id="cb7-62"><a href="#cb7-62"></a><span class="ss">2. </span>**LSH banding**：把簽章切成幾個 band，只有「至少共用一個 band」的文件對才拿出來細比。這讓你</span>
+<span id="cb7-63"><a href="#cb7-63"></a>   **跳過絕大多數不可能相似的對**，候選對數量大降。</span>
+<span id="cb7-64"><a href="#cb7-64"></a></span>
+<span id="cb7-65"><a href="#cb7-65"></a><span class="fu">### 逐行把去重管線建起來 {#sec-build-dedup}</span></span>
+<span id="cb7-66"><a href="#cb7-66"></a></span>
+<span id="cb7-67"><a href="#cb7-67"></a>我們用 <span class="in">`tiny_dedup.py`</span> 把這條管線一步步建出來——字元 n-gram → MinHash 簽章 → LSH 找候選 →</span>
+<span id="cb7-68"><a href="#cb7-68"></a>再算真實 Jaccard 確認。</span>
+<span id="cb7-69"><a href="#cb7-69"></a></span>
+<span id="cb7-70"><a href="#cb7-70"></a>**第 0 步——shingle（字元 n-gram）。** 中文沒空白，所以不切詞、改切**字元 5-gram**：把每篇變成</span>
+<span id="cb7-71"><a href="#cb7-71"></a>一個「片段集合」。兩篇的相似度就用集合的 Jaccard 來定義：</span>
+<span id="cb7-72"><a href="#cb7-72"></a></span>
+<span id="cb7-73"><a href="#cb7-73"></a><span class="in">```python</span></span>
+<span id="cb7-74"><a href="#cb7-74"></a><span class="kw">def</span> shingles(s, k<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb7-75"><a href="#cb7-75"></a>    s <span class="op">=</span> re.sub(<span class="vs">r"</span><span class="dv">\s</span><span class="op">+</span><span class="vs">"</span>, <span class="st">" "</span>, s)</span>
+<span id="cb7-76"><a href="#cb7-76"></a>    <span class="cf">return</span> {s[i:i<span class="op">+</span>k] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">max</span>(<span class="dv">1</span>, <span class="bu">len</span>(s) <span class="op">-</span> k <span class="op">+</span> <span class="dv">1</span>))}</span>
+<span id="cb7-77"><a href="#cb7-77"></a></span>
+<span id="cb7-78"><a href="#cb7-78"></a><span class="kw">def</span> jaccard(a, b):</span>
+<span id="cb7-79"><a href="#cb7-79"></a>    <span class="cf">return</span> <span class="bu">len</span>(a <span class="op">&amp;</span> b) <span class="op">/</span> <span class="bu">len</span>(a <span class="op">|</span> b)        <span class="co"># 交集 / 聯集</span></span>
+<span id="cb7-80"><a href="#cb7-80"></a><span class="in">```</span></span>
+<span id="cb7-81"><a href="#cb7-81"></a></span>
+<span id="cb7-82"><a href="#cb7-82"></a>**第 1 步——MinHash 簽章。** 對每個 shingle 算一組雜湊，取**最小值**當一個簽章分量；換 64 組</span>
+<span id="cb7-83"><a href="#cb7-83"></a>雜湊就得到 64 維簽章。神奇性質：兩篇簽章某一維相等的機率，**恰好等於**它們的 Jaccard。</span>
+<span id="cb7-84"><a href="#cb7-84"></a>（雜湊用 <span class="in">`crc32`</span> 而非 Python 內建 <span class="in">`hash()`</span>——後者對字串會加鹽、跨 process 不可重現。）</span>
+<span id="cb7-85"><a href="#cb7-85"></a></span>
+<span id="cb7-86"><a href="#cb7-86"></a><span class="in">```python</span></span>
+<span id="cb7-87"><a href="#cb7-87"></a><span class="kw">def</span> minhash(shingle_set):</span>
+<span id="cb7-88"><a href="#cb7-88"></a>    base <span class="op">=</span> [zlib.crc32(x.encode()) <span class="cf">for</span> x <span class="kw">in</span> shingle_set]</span>
+<span id="cb7-89"><a href="#cb7-89"></a>    <span class="cf">return</span> [<span class="bu">min</span>((a<span class="op">*</span>h <span class="op">+</span> b) <span class="op">%</span> PRIME <span class="cf">for</span> h <span class="kw">in</span> base) <span class="cf">for</span> a, b <span class="kw">in</span> coeffs]  <span class="co"># 64 維簽章</span></span>
+<span id="cb7-90"><a href="#cb7-90"></a><span class="in">```</span></span>
+<span id="cb7-91"><a href="#cb7-91"></a></span>
+<span id="cb7-92"><a href="#cb7-92"></a>**第 2 步——LSH banding 找候選。** 把 64 維簽章切成 16 個 band（每 band 4 維），同一 band 完全</span>
+<span id="cb7-93"><a href="#cb7-93"></a>相同的文件丟進同一個桶。**只有同桶的文件對**才是候選——這一步把 $O(n^2)$ 砍成「只比可能相似的」：</span>
+<span id="cb7-94"><a href="#cb7-94"></a></span>
+<span id="cb7-95"><a href="#cb7-95"></a><span class="in">```python</span></span>
+<span id="cb7-96"><a href="#cb7-96"></a><span class="cf">for</span> i, sig <span class="kw">in</span> <span class="bu">enumerate</span>(sigs):</span>
+<span id="cb7-97"><a href="#cb7-97"></a>    <span class="cf">for</span> band <span class="kw">in</span> <span class="bu">range</span>(BANDS):</span>
+<span id="cb7-98"><a href="#cb7-98"></a>        key <span class="op">=</span> (band, <span class="bu">tuple</span>(sig[band<span class="op">*</span>ROWS:(band<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span>ROWS]))</span>
+<span id="cb7-99"><a href="#cb7-99"></a>        buckets[key].append(i)            <span class="co"># 同一 band 相同 → 同桶 → 候選</span></span>
+<span id="cb7-100"><a href="#cb7-100"></a><span class="in">```</span></span>
+<span id="cb7-101"><a href="#cb7-101"></a></span>
+<span id="cb7-102"><a href="#cb7-102"></a>**第 3 步——對候選算真實 Jaccard 確認。** 只對候選對算一次精確 Jaccard，超過門檻才判為重複。</span>
+<span id="cb7-103"><a href="#cb7-103"></a>LSH 負責「便宜地縮小範圍」，精確比對負責「最後確認」：</span>
+<span id="cb7-104"><a href="#cb7-104"></a></span>
+<span id="cb7-105"><a href="#cb7-105"></a><span class="in">```python</span></span>
+<span id="cb7-106"><a href="#cb7-106"></a>dupes <span class="op">=</span> {(i, j) <span class="cf">for</span> (i, j) <span class="kw">in</span> candidates <span class="cf">if</span> jaccard(sh[i], sh[j]) <span class="op">&gt;</span> <span class="fl">0.5</span>}</span>
+<span id="cb7-107"><a href="#cb7-107"></a><span class="in">```</span></span>
+<span id="cb7-108"><a href="#cb7-108"></a></span>
+<span id="cb7-109"><a href="#cb7-109"></a>**實測**：改造後，11,126 篇中文維基 **21.6 秒**去完、抓出 161 篇近似重複。舊版（空白切詞 + 兩兩比）</span>
+<span id="cb7-110"><a href="#cb7-110"></a>會跑幾小時或直接卡死。這是個純粹的「省」——演算法複雜度的勝利。</span>
+<span id="cb7-111"><a href="#cb7-111"></a></span>
+<span id="cb7-112"><a href="#cb7-112"></a><span class="fu">## 聚合指標的盲點（本章的核心教訓）</span></span>
+<span id="cb7-113"><a href="#cb7-113"></a></span>
+<span id="cb7-114"><a href="#cb7-114"></a>去重做完、清洗做完，我算了一輪資料品質指標：字元熵、壓縮比、重複率——**全部顯示「資料健康 ✅」**。</span>
+<span id="cb7-115"><a href="#cb7-115"></a>照理說可以開始訓練了。但我有個從稽核帶來的本能：**不信任「總分漂亮」**。總分漂亮，常常只是因為</span>
+<span id="cb7-116"><a href="#cb7-116"></a>問題被平均掉了。</span>
+<span id="cb7-117"><a href="#cb7-117"></a></span>
+<span id="cb7-118"><a href="#cb7-118"></a>所以我做了一件事：把「看資料」這個動作**工業化**。</span>
+<span id="cb7-119"><a href="#cb7-119"></a></span>
+<span id="cb7-120"><a href="#cb7-120"></a>::: {.callout-important}</span>
+<span id="cb7-121"><a href="#cb7-121"></a><span class="fu">## 一定要「看資料」，並把眼睛固化成程式</span></span>
+<span id="cb7-122"><a href="#cb7-122"></a>我寫了一套**資料品質偵測器**：7 條規則（wiki 標記、HTML、控制字元、URL、符號洗版、重複、過短）</span>
+<span id="cb7-123"><a href="#cb7-123"></a>掃過全語料，量化每條的命中率、設門檻當資料 gate、並抽出問題片段樣本。</span>
+<span id="cb7-124"><a href="#cb7-124"></a></span>
+<span id="cb7-125"><a href="#cb7-125"></a>結果抓到 **21.6%（2,407 篇）** 文件殘留維基的繁簡轉換語法 `-{zh-tw:..;zh-cn:..}-`——這是**任何聚合</span>
+<span id="cb7-126"><a href="#cb7-126"></a>指標都看不到**的。熵、壓縮、重複率全說健康，因為這些髒東西只佔每篇的一小部分、被平均稀釋掉了。</span>
+<span id="cb7-127"><a href="#cb7-127"></a>只有「真的去看樣本 + 把問題寫成偵測器」才讓它現形。</span>
+<span id="cb7-128"><a href="#cb7-128"></a></span>
+<span id="cb7-129"><a href="#cb7-129"></a>修一條清洗規則（解析並抽取繁簡語法），21.6% → **0.05%**，整批 gate 從 ❌ 變 ✅。我用監控面板的</span>
+<span id="cb7-130"><a href="#cb7-130"></a>before/after 對照圖留下視覺證據。</span>
+<span id="cb7-131"><a href="#cb7-131"></a>:::</span>
+<span id="cb7-132"><a href="#cb7-132"></a></span>
+<span id="cb7-133"><a href="#cb7-133"></a>這套偵測器系統的心法，跟我疊稽核控制項是同一個思路：</span>
+<span id="cb7-134"><a href="#cb7-134"></a></span>
+<span id="cb7-135"><a href="#cb7-135"></a><span class="at">&gt; **看樣本發現問題 → 寫成一條偵測器 → 累積成資料的測試套件。**</span></span>
+<span id="cb7-136"><a href="#cb7-136"></a></span>
+<span id="cb7-137"><a href="#cb7-137"></a>每抓到一種新的髒資料，就多一條偵測器；久了，這套偵測器就成了「資料的回歸測試」——下次語料更新，</span>
+<span id="cb7-138"><a href="#cb7-138"></a>跑一遍就知道有沒有舊問題復發、有沒有新問題冒出來。一條來源動到 5–15 條偵測器是常態。</span>
+<span id="cb7-139"><a href="#cb7-139"></a></span>
+<span id="cb7-140"><a href="#cb7-140"></a><span class="fu">## 💻 在你的機器上：聚合指標的盲點 + LSH 的速度 {#sec-tiny-dedup}</span></span>
+<span id="cb7-141"><a href="#cb7-141"></a></span>
+<span id="cb7-142"><a href="#cb7-142"></a>這兩課不必有 105 MB 中文維基也能親手摸到。配套程式 <span class="in">`tiny_dedup.py`</span>（純標準庫、不需 torch、</span>
+<span id="cb7-143"><a href="#cb7-143"></a>幾秒跑完）拿莎士比亞切成「文件」，**動手注入**近似重複與一種藏起來的髒語法，再把兩課跑一遍：</span>
+<span id="cb7-144"><a href="#cb7-144"></a></span>
+<span id="cb7-145"><a href="#cb7-145"></a><span class="in">```bash</span></span>
+<span id="cb7-146"><a href="#cb7-146"></a><span class="ex">python</span> tiny_dedup.py</span>
+<span id="cb7-147"><a href="#cb7-147"></a><span class="in">```</span></span>
+<span id="cb7-148"><a href="#cb7-148"></a></span>
+<span id="cb7-149"><a href="#cb7-149"></a>在我的 Framework 16 上跑出來（節錄）：</span>
+<span id="cb7-150"><a href="#cb7-150"></a></span>
+<span id="cb7-151"><a href="#cb7-151"></a><span class="in">```</span></span>
+<span id="cb7-152"><a href="#cb7-152"></a><span class="in">語料：440 篇文件（含注入的 40 組近似重複、85 篇含髒語法）</span></span>
+<span id="cb7-153"><a href="#cb7-153"></a><span class="in">=== 聚合指標（總分）===</span></span>
+<span id="cb7-154"><a href="#cb7-154"></a><span class="in">  平均文件長度：   238 字元</span></span>
+<span id="cb7-155"><a href="#cb7-155"></a><span class="in">  全語料字元熵：  4.72 bits/char</span></span>
+<span id="cb7-156"><a href="#cb7-156"></a><span class="in">  → 看起來資料健康 ✅（長度正常、熵正常）</span></span>
+<span id="cb7-157"><a href="#cb7-157"></a><span class="in">=== 一條偵測器（看樣本後寫成規則）===</span></span>
+<span id="cb7-158"><a href="#cb7-158"></a><span class="in">  命中 markup 髒語法：91/440 = 20.7% 文件     ← 聚合指標完全看不到</span></span>
+<span id="cb7-159"><a href="#cb7-159"></a><span class="in">=== 去重：naive vs MinHash+LSH ===</span></span>
+<span id="cb7-160"><a href="#cb7-160"></a><span class="in">  naive：比較  96580 對（C(N,2)，O(n²)），抓到 41 組，3446 ms</span></span>
+<span id="cb7-161"><a href="#cb7-161"></a><span class="in">  LSH  ：只細比    1868 個候選對，抓到 38 組，1135 ms</span></span>
+<span id="cb7-162"><a href="#cb7-162"></a><span class="in">  LSH 候選只佔 naive 的 1.9%</span></span>
+<span id="cb7-163"><a href="#cb7-163"></a><span class="in">```</span></span>
+<span id="cb7-164"><a href="#cb7-164"></a></span>
+<span id="cb7-165"><a href="#cb7-165"></a>**怎麼讀——兩課各一個數字**：</span>
+<span id="cb7-166"><a href="#cb7-166"></a></span>
+<span id="cb7-167"><a href="#cb7-167"></a><span class="ss">1. </span>**聚合指標的盲點**：平均長度、字元熵都說「健康 ✅」，但一條 regex 偵測器抓出 **20.7%** 的文件</span>
+<span id="cb7-168"><a href="#cb7-168"></a>   殘留 markup 髒語法。為什麼總分看不到？因為髒東西只佔每篇一小段、被平均稀釋掉了——這正是真實</span>
+<span id="cb7-169"><a href="#cb7-169"></a>   專案裡 **21.6% 繁簡語法**那一課的最小可重現版。**總分漂亮，常常只是問題被平均掉了。**</span>
+<span id="cb7-170"><a href="#cb7-170"></a><span class="ss">2. </span>**LSH 的速度**：naive 要比 96,580 對（$O(n^2)$），LSH 只細比 **1.9%** 的候選對就找到幾乎同一批</span>
+<span id="cb7-171"><a href="#cb7-171"></a>   重複。$N$ 越大這個比例越懸殊——這就是 $O(n^2)\to$ 接近 $O(n)$ 的來源。（LSH 是**近似**法，會</span>
+<span id="cb7-172"><a href="#cb7-172"></a>   漏掉幾組卡在門檻邊界的對，是用一點 recall 換速度；要更高 recall 就加 band。）</span>
+<span id="cb7-173"><a href="#cb7-173"></a></span>
+<span id="cb7-174"><a href="#cb7-174"></a>@fig-dedup 把這兩課畫在一起：</span>
+<span id="cb7-175"><a href="#cb7-175"></a></span>
+<span id="cb7-176"><a href="#cb7-176"></a><span class="al">![去重 + 偵測器（純 CPU 真跑）：左圖——平均長度、字元熵這些聚合指標都把資料判成乾淨（0% 旗標），同一批資料一條 per-doc 偵測器卻抓出 20.7% 含髒語法；右圖——naive 要比 96,580 對，LSH 只細比 1,868 個候選（log 軸，僅 1.9%）。](images/dedup_blindspot.png)</span>{#fig-dedup width=92%}</span>
+<span id="cb7-177"><a href="#cb7-177"></a></span>
+<span id="cb7-178"><a href="#cb7-178"></a><span class="fu">## 收成：真實中文 GPT</span></span>
+<span id="cb7-179"><a href="#cb7-179"></a></span>
+<span id="cb7-180"><a href="#cb7-180"></a>清洗修好後重新跑完整 pipeline：collect 11,126 篇 → 清洗 → 去重 161 篇 → tokenize（字元級、vocab</span>
+<span id="cb7-181"><a href="#cb7-181"></a>14,210，全是中文字）→ pack 成 train 31.4M token。訓一個 6 層 / 256 維的現代架構模型（RoPE + GQA +</span>
+<span id="cb7-182"><a href="#cb7-182"></a>SwiGLU + RMSNorm + Flash），四個成功判準全達標（細節見 @sec-eval），生成出可讀的中文片段——</span>
+<span id="cb7-183"><a href="#cb7-183"></a>真詞、語法、標點都對，整體不連貫是 8M 小模型的預期水準。</span>
+<span id="cb7-184"><a href="#cb7-184"></a></span>
+<span id="cb7-185"><a href="#cb7-185"></a><span class="fu">## 帶走什麼</span></span>
+<span id="cb7-186"><a href="#cb7-186"></a></span>
+<span id="cb7-187"><a href="#cb7-187"></a><span class="ss">- </span>跨語言別照搬假設：切詞、熵門檻、token 大小在中文都要重想。</span>
+<span id="cb7-188"><a href="#cb7-188"></a><span class="ss">- </span>近似去重靠 MinHash + LSH 從 $O(n^2)$ 降到接近 $O(n)$——一個有漂亮機率論證的工程勝利。</span>
+<span id="cb7-189"><a href="#cb7-189"></a><span class="ss">- </span>**聚合指標必要但不夠。** 一定要看樣本，並把「看資料的眼睛」寫成偵測器、累積成資料的測試套件。</span>
+<span id="cb7-190"><a href="#cb7-190"></a>  21.6% 的髒資料，聚合指標全說健康——這是整本書最重要的「相信資料、不相信總分」的一課。</span>
+<span id="cb7-191"><a href="#cb7-191"></a></span>
+<span id="cb7-192"><a href="#cb7-192"></a><span class="fu">## 練習 {#sec-ch4-exercises}</span></span>
+<span id="cb7-193"><a href="#cb7-193"></a></span>
+<span id="cb7-194"><a href="#cb7-194"></a>::: {.callout-note}</span>
+<span id="cb7-195"><a href="#cb7-195"></a><span class="fu">## 1（先預測）：把 LSH 的 band 數調多會怎樣？</span></span>
+<span id="cb7-196"><a href="#cb7-196"></a><span class="in">`tiny_dedup.py`</span> 用 16 個 band（每 band 4 維）。**先寫下你的預測**：把 <span class="in">`BANDS`</span> 調大（每 band 更少維），</span>
+<span id="cb7-197"><a href="#cb7-197"></a>recall（抓到的真重複比例）和候選對數量會往哪個方向走？</span>
+<span id="cb7-198"><a href="#cb7-198"></a></span>
+<span id="cb7-199"><a href="#cb7-199"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb7-200"><a href="#cb7-200"></a><span class="fu">## 參考答案</span></span>
+<span id="cb7-201"><a href="#cb7-201"></a>band 越多、每 band 維度越少 → 兩篇「至少共用一個 band」越容易 → **recall 升高，但候選對也變多**</span>
+<span id="cb7-202"><a href="#cb7-202"></a>（更多誤報要細比，變慢）。這是 LSH 的核心取捨：band 配置在「漏掉真重複」與「比太多假候選」之間調。</span>
+<span id="cb7-203"><a href="#cb7-203"></a>動手把 <span class="in">`BANDS`</span> 改成 32 看 recall 和候選數一起怎麼動。</span>
+<span id="cb7-204"><a href="#cb7-204"></a>:::</span>
+<span id="cb7-205"><a href="#cb7-205"></a>:::</span>
+<span id="cb7-206"><a href="#cb7-206"></a></span>
+<span id="cb7-207"><a href="#cb7-207"></a>::: {.callout-note}</span>
+<span id="cb7-208"><a href="#cb7-208"></a><span class="fu">## 2（動手）：新增一條偵測器</span></span>
+<span id="cb7-209"><a href="#cb7-209"></a>照 <span class="in">`tiny_dedup.py`</span> 裡那條 regex 的樣子，加一條偵測「殘留 HTML 標籤」或「URL 洗版」的規則，</span>
+<span id="cb7-210"><a href="#cb7-210"></a>注入對應的髒資料、量它的命中率。</span>
+<span id="cb7-211"><a href="#cb7-211"></a></span>
+<span id="cb7-212"><a href="#cb7-212"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb7-213"><a href="#cb7-213"></a><span class="fu">## 參考答案</span></span>
+<span id="cb7-214"><a href="#cb7-214"></a>重點不在 regex 本身，而在養成那個循環：**看樣本發現問題 → 寫成一條偵測器 → 累積成資料的回歸測試**。</span>
+<span id="cb7-215"><a href="#cb7-215"></a>每多一條，下次語料更新就多一道自動關卡。這就是把「看資料的眼睛」工業化——一條來源動到 5–15 條</span>
+<span id="cb7-216"><a href="#cb7-216"></a>偵測器是常態。</span>
+<span id="cb7-217"><a href="#cb7-217"></a>:::</span>
+<span id="cb7-218"><a href="#cb7-218"></a>:::</span>
+<span id="cb7-219"><a href="#cb7-219"></a></span>
+<span id="cb7-220"><a href="#cb7-220"></a>::: {.callout-warning}</span>
+<span id="cb7-221"><a href="#cb7-221"></a><span class="fu">## 3（弄壞）：用英文校準的熵門檻去判中文</span></span>
+<span id="cb7-222"><a href="#cb7-222"></a>本章提到中文字元熵約 9.70，被英文校準的門檻（3.5–6）誤判成「不健康」。在 <span class="in">`tiny_dedup.py`</span> 裡把</span>
+<span id="cb7-223"><a href="#cb7-223"></a><span class="in">`char_entropy`</span> 換算成不同單位、或想像套用英文門檻，會發生什麼？</span>
+<span id="cb7-224"><a href="#cb7-224"></a></span>
+<span id="cb7-225"><a href="#cb7-225"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb7-226"><a href="#cb7-226"></a><span class="fu">## 參考答案</span></span>
+<span id="cb7-227"><a href="#cb7-227"></a>直接套英文的絕對熵門檻，會把完全正常的中文語料判成異常——因為中文 vocab 大得多、單字元熵天生</span>
+<span id="cb7-228"><a href="#cb7-228"></a>就高。修法是改用**熵效率**（熵 / $\log_2$ vocab），把尺度正規化成跨語言通用。這呼應本章主線：</span>
+<span id="cb7-229"><a href="#cb7-229"></a>**跨語言別照搬假設**——切詞、熵門檻、token 大小換到中文全要重想。</span>
+<span id="cb7-230"><a href="#cb7-230"></a>:::</span>
+<span id="cb7-231"><a href="#cb7-231"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

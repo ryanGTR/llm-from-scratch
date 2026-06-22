@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hant" xml:lang="zh-Hant"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>9&nbsp; 對齊：把「接龍機器」教成「會聽話、有偏好」 – 從零打造並對齊一個 LLM</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./10-math-appendix.html" rel="next">
+<link href="./08-drift-retrain.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-639d468870d77206aa4a86877949ccee.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-94e84ed9b82d5d1d9342ea61bad04538.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./09-alignment.html">第四部　對齊</a></li><li class="breadcrumb-item"><a href="./09-alignment.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">從零打造並對齊一個 LLM</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/ryanGTR/llm-from-scratch" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言：一個銀行 IT 為什麼從零刻 LLM</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">第一部　原理</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-minimal-gpt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">最小的 GPT：從 attention 到自回歸</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-modern-components.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-efficiency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">跑多快：FlashAttention、KV-cache、取樣</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">第二部　資料與評估</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-real-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部　對齊</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">參考文獻</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sft從會接話到會聽話" id="toc-sft從會接話到會聽話" class="nav-link active" data-scroll-target="#sft從會接話到會聽話"><span class="header-section-number">9.1</span> SFT：從「會接話」到「會聽話」</a></li>
+  <li><a href="#sec-build-dpo" id="toc-sec-build-dpo" class="nav-link" data-scroll-target="#sec-build-dpo"><span class="header-section-number">9.2</span> DPO：免 reward model 的捷徑，與它的封閉式</a>
+  <ul class="collapse">
+  <li><a href="#死背-vs-真學train-acc-會騙你" id="toc-死背-vs-真學train-acc-會騙你" class="nav-link" data-scroll-target="#死背-vs-真學train-acc-會騙你"><span class="header-section-number">9.2.1</span> 死背 vs 真學：train-acc 會騙你</a></li>
+  <li><a href="#精修-β一個被資料打臉的直覺" id="toc-精修-β一個被資料打臉的直覺" class="nav-link" data-scroll-target="#精修-β一個被資料打臉的直覺"><span class="header-section-number">9.2.2</span> 精修 β：一個被資料打臉的直覺</a></li>
+  </ul></li>
+  <li><a href="#sec-tiny-dpo" id="toc-sec-tiny-dpo" class="nav-link" data-scroll-target="#sec-tiny-dpo"><span class="header-section-number">9.3</span> 💻 在你的機器上：親手看 train-acc 怎麼騙你</a></li>
+  <li><a href="#ipo把margin-推到無窮改成回歸固定目標" id="toc-ipo把margin-推到無窮改成回歸固定目標" class="nav-link" data-scroll-target="#ipo把margin-推到無窮改成回歸固定目標"><span class="header-section-number">9.4</span> IPO：把「margin 推到無窮」改成「回歸固定目標」</a></li>
+  <li><a href="#rlhf-之一-grpo與招牌坑-reward-hacking" id="toc-rlhf-之一-grpo與招牌坑-reward-hacking" class="nav-link" data-scroll-target="#rlhf-之一-grpo與招牌坑-reward-hacking"><span class="header-section-number">9.5</span> RLHF 之一 — GRPO，與招牌坑 reward hacking</a></li>
+  <li><a href="#rlhf-之二-ppo與-grpo-簡化掉的兩塊" id="toc-rlhf-之二-ppo與-grpo-簡化掉的兩塊" class="nav-link" data-scroll-target="#rlhf-之二-ppo與-grpo-簡化掉的兩塊"><span class="header-section-number">9.6</span> RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊</a></li>
+  <li><a href="#帶走什麼一條貫穿四種方法的主線" id="toc-帶走什麼一條貫穿四種方法的主線" class="nav-link" data-scroll-target="#帶走什麼一條貫穿四種方法的主線"><span class="header-section-number">9.7</span> 帶走什麼：一條貫穿四種方法的主線</a></li>
+  <li><a href="#sec-ch7-exercises" id="toc-sec-ch7-exercises" class="nav-link" data-scroll-target="#sec-ch7-exercises"><span class="header-section-number">9.8</span> 練習</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/09-alignment.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./09-alignment.html">第四部　對齊</a></li><li class="breadcrumb-item"><a href="./09-alignment.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-alignment" class="quarto-section-identifier"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>一句話</strong>：預訓練只會「猜下一字」。後訓練把它對齊成助理——而每一種對齊方法，都有一個 漂亮的機制和一個會咬人的坑。</p>
+</blockquote>
+<p>我把對齊的兩個家族都親手走過：<strong>偏好優化</strong>（DPO → IPO）和 <strong>RL 對齊</strong>（GRPO → PPO）， 每個都有對照實驗。這一章是整本書的皇冠。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class I here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：皇冠——把「接龍機器」對齊成會聽話、有偏好的助理。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：第 1 章的小 GPT 與「預測下一字」的訓練、第 5 章「選對指標／看 held-out」的紀律。 不需要任何 RLHF 背景。</p>
+<p><strong>學完你會</strong>：(1) 用一句話講清楚 SFT / DPO / IPO / GRPO / PPO 各自的<strong>漂亮機制</strong>與<strong>會咬人的坑</strong>； (2) <strong>逐行</strong>把 DPO 損失從「序列對數機率」建起來，並說清楚 <code>margin</code>、<code>β</code>、<code>logsigmoid</code> 各做什麼； (3) 在<strong>你自己的 CPU 上</strong>親手重現本章最重要的一課——<strong>train-acc 衝 100%、held-out 才說真話</strong>。 本章的 💻 配套程式 <code>tiny_dpo.py</code> 完整內嵌、純 CPU 兩三分鐘可跑。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</p>
+<ul>
+<li><strong>SFT（指令微調）</strong>：教模型「會聽話、照問答格式回應」。<em>在意它</em>：從「接話機器」變「助理」的第一步。</li>
+<li><strong>偏好優化（DPO / IPO）</strong>：用「一好一壞」的比較教模型偏好。<em>在意它</em>：免 reward model 的對齊捷徑。</li>
+<li><strong>reference model / KL 錨</strong>：把新模型綁在舊模型附近。<em>在意它</em>：防止對齊把模型帶歪（過度優化）。</li>
+<li><strong>RLHF（reward model / GRPO / PPO）</strong>：用「學來的獎勵」做強化學習。<em>在意它</em>：ChatGPT 那套對齊的家族。</li>
+<li><strong>reward hacking / Goodhart</strong>：指標一旦變成目標就被鑽。<em>在意它</em>：對齊最有名的坑——代理分數暴漲、真實品質崩。</li>
+<li><strong>train-acc 騙你 / 看 held-out</strong>：訓練分數高 ≠ 真學會。<em>在意它</em>：跟第 5 章同一條鐵則。</li>
+</ul>
+</div>
+</div>
+</div>
+<section id="sft從會接話到會聽話" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="sft從會接話到會聽話"><span class="header-section-number">9.1</span> SFT：從「會接話」到「會聽話」</h2>
+<p>第一步 SFT（指令微調）很單純：在「問：…答：…」的對話格式上續訓，模型的行為就從「續寫維基」 變成「在『答：』的位置產生回應」。</p>
+<p>但<strong>評估</strong>它馬上踩到第 5 章那個坑的進階版：用維基 perplexity 量，SFT 看起來變爛了。真相是 尺被汙染（alignment tax + gold 答案洩漏進預訓練）。改量「應答行為率」，base 29% → SFT 72%—— <strong>選對指標，結論才對。</strong></p>
+</section>
+<section id="sec-build-dpo" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="sec-build-dpo"><span class="header-section-number">9.2</span> DPO：免 reward model 的捷徑，與它的封閉式</h2>
+<p>DPO（直接偏好優化）給一組「同一個問題、一好一壞」的回答，用一條封閉式損失直接優化偏好， 不需要訓練 reward model、也不需要 RL。我們從<strong>一個序列的對數機率</strong>這個積木開始，一步一步 把這條損失建起來——這就是 <code>tiny_dpo.py</code> 裡 <code>dpo_loss</code> 的逐行拆解。</p>
+<p><strong>第 0 步——一段序列的對數機率。</strong> 模型對「下一字」給機率；把一整段回答每個位置的 log p(token｜前文) 加起來，就是「這個模型有多想生出這段話」的分數：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">def</span> seq_logprob(model, seq):</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    logits <span class="op">=</span> model(seq[:, :<span class="op">-</span><span class="dv">1</span>])                 <span class="co"># 每個位置對下一字的分數</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>    logp <span class="op">=</span> F.log_softmax(logits, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a>    tgt <span class="op">=</span> seq[:, <span class="dv">1</span>:].unsqueeze(<span class="op">-</span><span class="dv">1</span>)              <span class="co"># 真正的下一字</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>    <span class="cf">return</span> logp.gather(<span class="op">-</span><span class="dv">1</span>, tgt).squeeze(<span class="op">-</span><span class="dv">1</span>).<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">1</span>)   <span class="co"># Σ_t log p：整段的對數機率</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——policy 相對 reference 漲了多少。</strong> 我們不看「絕對機率」，看「<strong>相對凍結的 reference（=SFT 後、還沒做偏好優化的那顆）漲了多少</strong>」。對 chosen 算一次、rejected 算一次：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>pol_ch,  pol_rej  <span class="op">=</span> seq_logprob(model, chosen), seq_logprob(model, rejected)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>ref_ch,  ref_rej  <span class="op">=</span> seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——margin：chosen 比 rejected 多漲多少。</strong> 把兩邊的「相對 reference 漲幅」相減。 margin &gt; 0 就代表「policy 把 chosen 推得比 rejected 高」，也就是偏好排對了：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>margin <span class="op">=</span> (pol_ch <span class="op">-</span> ref_ch) <span class="op">-</span> (pol_rej <span class="op">-</span> ref_rej)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 3 步——把 margin 推大的損失。</strong> 用 <code>logsigmoid</code> 把 margin 變成損失：margin 越大、損失越小。 <code>β</code> 是溫度，控制「推多用力 / 離 reference 多遠」（β 的反直覺行為見 <a href="10-math-appendix.html#sec-margin-math" class="quarto-xref"><span>小节 10.2</span></a>）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>loss <span class="op">=</span> <span class="op">-</span>F.logsigmoid(beta <span class="op">*</span> margin).mean()      <span class="co"># 拉高 chosen、壓低 rejected</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>acc  <span class="op">=</span> (margin <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">float</span>().mean()              <span class="co"># margin&gt;0 的比例 = 偏好排對率</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>把四步拼起來就是完整的 <code>dpo_loss</code>——<strong>沒有 reward model、沒有 RL，就一條可微的損失</strong>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">def</span> dpo_loss(model, ref, chosen, rejected, beta):</span>
+<span id="cb5-2"><a href="#cb5-2"></a>    pol_ch,  pol_rej  <span class="op">=</span> seq_logprob(model, chosen), seq_logprob(model, rejected)</span>
+<span id="cb5-3"><a href="#cb5-3"></a>    ref_ch,  ref_rej  <span class="op">=</span> seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)</span>
+<span id="cb5-4"><a href="#cb5-4"></a>    margin <span class="op">=</span> (pol_ch <span class="op">-</span> ref_ch) <span class="op">-</span> (pol_rej <span class="op">-</span> ref_rej)</span>
+<span id="cb5-5"><a href="#cb5-5"></a>    loss <span class="op">=</span> <span class="op">-</span>F.logsigmoid(beta <span class="op">*</span> margin).mean()</span>
+<span id="cb5-6"><a href="#cb5-6"></a>    acc  <span class="op">=</span> (margin <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">float</span>().mean()</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    <span class="cf">return</span> loss, acc.item()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」—— 本來 RLHF 要先學 reward、再用 RL 去最大化它，DPO 證明這兩步可以<strong>合併成上面這一條損失</strong> （完整證明見 <a href="10-math-appendix.html#sec-dpo-math" class="quarto-xref"><span>小节 10.1</span></a>）。</p>
+<section id="死背-vs-真學train-acc-會騙你" class="level3" data-number="9.2.1">
+<h3 data-number="9.2.1" class="anchored" data-anchor-id="死背-vs-真學train-acc-會騙你"><span class="header-section-number">9.2.1</span> 死背 vs 真學：train-acc 會騙你</h3>
+<p>我設了兩種偏好軸——一種模型容量內、一種超出容量——然後看它們類推得如何：</p>
+<div id="fig-dpo-gen" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dpo-gen-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/dpo_generalization.png" class="img-fluid figure-img" style="width:85.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dpo-gen-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.1: 兩種偏好軸：train-acc 都衝 100%，held-out 才說真話。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>看 held-out，不要看 train
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="#fig-dpo-gen" class="quarto-xref">图&nbsp;<span>9.1</span></a> 裡兩條 train 線（虛線）都衝到 100%——只看 train 你會說「兩個都學會了」。但 held-out （實線）一個 97%、一個只有 9%。後者需要「標題↔︎內容」的語義綁定，8M 模型學不動、只能把訓練題 <strong>背起來</strong>。<strong>這是 MLOps 鐵則：看 held-out、別看 train。</strong></p>
+</div>
+</div>
+</section>
+<section id="精修-β一個被資料打臉的直覺" class="level3" data-number="9.2.2">
+<h3 data-number="9.2.2" class="anchored" data-anchor-id="精修-β一個被資料打臉的直覺"><span class="header-section-number">9.2.2</span> 精修 β：一個被資料打臉的直覺</h3>
+<p>DPO 唯一的旋鈕是 β。教科書直覺是「β 大＝KL 罰得重＝貼緊 reference」。我掃了 β，結果<strong>固定步數下 剛好相反</strong>——β 越小，policy 漂移越大（為什麼見 <a href="10-math-appendix.html#sec-margin-math" class="quarto-xref"><span>小节 10.2</span></a>）。</p>
+<div id="fig-beta" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-beta-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/dpo_beta_sweep.png" class="img-fluid figure-img" style="width:85.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-beta-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.2: β 旋鈕：小 β 反而更激進（漂移更大）。
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="sec-tiny-dpo" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="sec-tiny-dpo"><span class="header-section-number">9.3</span> 💻 在你的機器上：親手看 train-acc 怎麼騙你</h2>
+<p>圖會說話，但自己跑過一次更難忘。配套程式 <code>tiny_dpo.py</code> 把上面那條 <code>dpo_loss</code> 接到第 1 章的 char-level 小 GPT 上，<strong>純 CPU、兩三分鐘</strong>，讓你親手重現 <a href="#fig-dpo-gen" class="quarto-xref">图&nbsp;<span>9.1</span></a> 的那一課。</p>
+<p>它先在莎士比亞上預訓練一顆 base 當 reference，複製一份當 policy，然後設<strong>兩種偏好軸</strong>做 DPO：</p>
+<ul>
+<li><strong>A 軸（可學）</strong>：chosen = 真實片段、rejected = 把同一段<strong>字元順序打亂</strong>。「真的比亂的好」是個 有語義的通則 → 模型該能<strong>類推</strong>到沒看過的片段。</li>
+<li><strong>B 軸（學不動）</strong>：chosen / rejected 都是真實片段，誰是 chosen 用<strong>擲硬幣亂指</strong>。這規則沒有 任何語義、無從類推 → 模型只能把訓練題<strong>背起來</strong>。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">curl</span> <span class="at">-o</span> input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="ex">python</span> tiny_dpo.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16（純 CPU）上跑出來：</p>
+<pre><code>偏好軸                               train-acc  held-out-acc
+---------------------------------------------------------
+A 可學（真實 vs 打亂）                       100.0%        100.0%
+B 學不動（隨機標籤）                          100.0%         47.7%</code></pre>
+<p><strong>怎麼讀</strong>：兩軸的 <strong>train-acc 都是 100%</strong>——只看 train，你會宣稱「兩個都學會了」。但 held-out 說了真話：A 軸 100%（真的學到「真&gt;亂」這個通則、能類推），B 軸掉回 <strong>47.7%≈擲硬幣</strong>（規則無從 類推，100% 只是死背訓練題）。這跟 <a href="#fig-dpo-gen" class="quarto-xref">图&nbsp;<span>9.1</span></a> 的容量內 vs 容量外是同一個形狀，只是縮到你的 筆電上、兩三分鐘就親眼看到（<a href="#fig-dpo-tiny" class="quarto-xref">图&nbsp;<span>9.3</span></a>）。</p>
+<div id="fig-dpo-tiny" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dpo-tiny-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/dpo_trainvsheldout.png" class="img-fluid figure-img" style="width:72.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dpo-tiny-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.3: tiny_dpo（純 CPU 真跑）：兩種偏好軸的 train-acc 都衝到 100%（灰），但 held-out（深藍）才說真話——A 可學的軸 100%、B 學不動的軸掉回擲硬幣線（紅虛線）。只看 train 兩個沒差，看 held-out 高下立判。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>這就是 MLOps 鐵則的最小可重現版
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>train 上漂亮的數字，可能只是背起來。</strong> 衡量「有沒有真學會」的唯一誠實方式是看 <strong>held-out</strong>。 這條鐵則在 DPO 如此、在你日後任何模型都如此——這也是為什麼第 5 章要花整章講「質疑你的尺」。</p>
+</div>
+</div>
+</section>
+<section id="ipo把margin-推到無窮改成回歸固定目標" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="ipo把margin-推到無窮改成回歸固定目標"><span class="header-section-number">9.4</span> IPO：把「margin 推到無窮」改成「回歸固定目標」</h2>
+<p>DPO 的 logistic 損失飽和後梯度雖小卻永不歸零 → margin 被一路推爆 → 過度優化。IPO 改用平方損失 <span class="math inline">(m-\frac{1}{2\beta})^2</span>，給 margin 一個<strong>有限目標</strong>，到了就停。</p>
+<div id="fig-ipo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ipo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/dpo_vs_ipo.png" class="img-fluid figure-img" style="width:85.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ipo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.4: DPO vs IPO：DPO margin 爆衝、IPO 釘在目標；但 clean 偏好上 DPO 反而較準。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>防過度優化的工具不是「無腦更好」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="#fig-ipo" class="quarto-xref">图&nbsp;<span>9.4</span></a> 右圖：clean 偏好上 IPO held-out 78% &lt; DPO 97%。IPO 拿準度換穩定，它的勝場在「過度優化 會傷」的場景（偏好含雜訊時 DPO 會死記）。<strong>煞車是保險，不是免費的。</strong></p>
+</div>
+</div>
+</section>
+<section id="rlhf-之一-grpo與招牌坑-reward-hacking" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="rlhf-之一-grpo與招牌坑-reward-hacking"><span class="header-section-number">9.5</span> RLHF 之一 — GRPO，與招牌坑 reward hacking</h2>
+<p>DPO 把 reward 隱含在 policy 裡；RLHF 把它做成一顆<strong>獨立的 reward model</strong>，再用 RL 去最大化它。 我用 GRPO（DeepSeek，不需 critic）做，並刻意演示對齊最有名的坑：</p>
+<div id="fig-hack" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/grpo_reward_hacking.png" class="img-fluid figure-img" style="width:85.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.5: reward hacking：拿掉 KL 錨，RM 分數（代理）暴漲、輸出多樣性（真實）崩潰。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>Goodhart：指標一旦變成目標，就不再是好指標
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="#fig-hack" class="quarto-xref">图&nbsp;<span>9.5</span></a>：拿掉 KL 錨，policy 把 RM 分數從 3.7 衝到 <strong>13.2</strong>，輸出卻 collapse 成「不管問什麼都吐 同一串高分垃圾」（多樣性 100%→6%）。那串垃圾落在 RM 訓練分布外、被誤判高分——policy 鑽了漏洞。 這和稽核裡「KPI 被優化就造假」是同一回事。防法＝<strong>KL 錨</strong>把 policy 綁在可信舊模型附近。</p>
+</div>
+</div>
+</section>
+<section id="rlhf-之二-ppo與-grpo-簡化掉的兩塊" class="level2" data-number="9.6">
+<h2 data-number="9.6" class="anchored" data-anchor-id="rlhf-之二-ppo與-grpo-簡化掉的兩塊"><span class="header-section-number">9.6</span> RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊</h2>
+<p>把 GRPO 的精簡還原回 PPO（InstructGPT 用的經典），就看得到 GRPO 丟掉了什麼：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>零件</th>
+<th>PPO 有</th>
+<th>GRPO 怎麼省</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Critic（value 網路）</td>
+<td>學一個基準 <span class="math inline">A=R-V(x)</span></td>
+<td>用「同組 K 個回答的平均」當基準</td>
+</tr>
+<tr class="even">
+<td>Clipped surrogate</td>
+<td>ratio 夾在 <span class="math inline">[1\pm\epsilon]</span>、可重用 rollout 多 epoch</td>
+<td>一批只訓一次，不需要</td>
+</tr>
+</tbody>
+</table>
+<div id="fig-ppo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ppo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ppo_clip_vs_noclip.png" class="img-fluid figure-img" style="width:85.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ppo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9.6: PPO clip：拿掉 clip，一步走太遠把 policy 走崩；clip 把更新夾住就穩。
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-ppo" class="quarto-xref">图&nbsp;<span>9.6</span></a>（為了隔離 clip，刻意關掉 KL 罰）：無 clip 時某一步把 policy 推太遠 → 直接走崩 （多樣性 100%→6%、RM 7.5→0.2）；clip 把 importance ratio 夾住 → 穩定改進。這就是 PPO 名字裡 <strong>Proximal（近端）</strong> 的意義：逼新 policy 待在舊的附近。</p>
+</section>
+<section id="帶走什麼一條貫穿四種方法的主線" class="level2" data-number="9.7">
+<h2 data-number="9.7" class="anchored" data-anchor-id="帶走什麼一條貫穿四種方法的主線"><span class="header-section-number">9.7</span> 帶走什麼：一條貫穿四種方法的主線</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>漂亮的機制</th>
+<th>會咬人的坑</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SFT</td>
+<td>學會應答格式</td>
+<td>評估的尺被汙染</td>
+</tr>
+<tr class="even">
+<td>DPO</td>
+<td>配分函數相消、免 RL</td>
+<td>train-acc 騙你（死背 vs 真學）</td>
+</tr>
+<tr class="odd">
+<td>IPO</td>
+<td>margin 有限目標、防過度優化</td>
+<td>不是無腦更好（拿準度換穩定）</td>
+</tr>
+<tr class="even">
+<td>GRPO</td>
+<td>不需 critic</td>
+<td>reward model 被 hack（Goodhart）</td>
+</tr>
+<tr class="odd">
+<td>PPO</td>
+<td>clip 防破壞性更新</td>
+<td>要隔離一個機制得先關掉會蓋過它的另一個</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p>五個方法，五次「換把尺、結論就翻」。<strong>永遠質疑你的指標有沒有被汙染或被鑽</strong>——這比任何單一方法都重要。</p>
+</blockquote>
+</section>
+<section id="sec-ch7-exercises" class="level2" data-number="9.8">
+<h2 data-number="9.8" class="anchored" data-anchor-id="sec-ch7-exercises"><span class="header-section-number">9.8</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：把 reference 拿掉會怎樣？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>DPO 的 <code>margin</code> 是「policy 相對 <strong>reference</strong> 的漲幅」之差。<strong>先寫下你的預測</strong>：如果把 <code>dpo_loss</code> 裡的 <code>ref_ch</code>、<code>ref_rej</code> 都當成 0（等於沒有 reference 錨），訓練會怎麼變？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>少了 reference 這個錨，損失只剩「把 chosen 的絕對對數機率推高、rejected 推低」，policy 會更不受 約束地漂移、更容易過度優化（把整個分布往訓練偏好硬拉），也更可能把無關的東西一起帶歪。 reference 項的作用正是 <a href="10-math-appendix.html#sec-margin-math" class="quarto-xref"><span>小节 10.2</span></a> 講的 KL 錨——它把「漲幅」而非「絕對機率」當目標， 讓 policy 待在可信舊模型附近。動手把 <code>ref_*</code> 設 0 跑一次，對照 held-out 與生成樣本。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：掃 β
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>在 <code>tiny_dpo.py</code> 把 <code>beta</code> 從 0.1 改成 0.02 和 0.5 各跑一次，記錄 A/B 兩軸的 train/held-out acc。 β 變大、變小，分別怎麼影響「學得多快 / 漂移多遠」？對照 <a href="#fig-beta" class="quarto-xref">图&nbsp;<span>9.2</span></a>。</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>固定步數下，<strong>β 小反而漂移更大</strong>（見 <a href="10-math-appendix.html#sec-margin-math" class="quarto-xref"><span>小节 10.2</span></a> 的反直覺結果）——這跟教科書「β 大＝罰得重＝ 貼緊 reference」的直覺一致，但要小心「固定步數」這個前提。A 軸（可學）通常各 β 都能類推到 held-out； B 軸（學不動）不管 β 怎麼調，held-out 都停在擲硬幣附近——<strong>煞車調得再好，學不動的東西還是學不動。</strong></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：把 B 軸的「隨機標籤」改成「可學規則」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>B 軸現在用擲硬幣指定 chosen。把它改成一條<strong>有語義、模型學得動</strong>的規則（例如「chosen = 兩段中 較長的那段」），重跑。held-out 會怎麼變？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>held-out 會從 ~50% 爬上去——因為「比較長」是個 8M 模型也能從序列長度線索學到、且能類推的通則。 這直接證明剛才的 47.7% <strong>不是 DPO 壞了</strong>，而是那條規則本身無從類推。<strong>同一套損失，換個學得動的 偏好軸，held-out 就說真話了</strong>——再次呼應「問題常在尺/任務、不在方法」。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./08-drift-retrain.html" class="pagination-link" aria-label="會腐壞的系統：drift、重訓、放量">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./10-math-appendix.html" class="pagination-link" aria-label="附錄：數學推導">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu"># 對齊：把「接龍機器」教成「會聽話、有偏好」 {#sec-alignment}</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="at">&gt; **一句話**：預訓練只會「猜下一字」。後訓練把它對齊成助理——而每一種對齊方法，都有一個</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="at">&gt; 漂亮的機制和一個會咬人的坑。</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a></span>
+<span id="cb8-6"><a href="#cb8-6"></a>我把對齊的兩個家族都親手走過：**偏好優化**（DPO → IPO）和 **RL 對齊**（GRPO → PPO），</span>
+<span id="cb8-7"><a href="#cb8-7"></a>每個都有對照實驗。這一章是整本書的皇冠。</span>
+<span id="cb8-8"><a href="#cb8-8"></a></span>
+<span id="cb8-11"><a href="#cb8-11"></a><span class="in">```{mermaid}</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：皇冠——把「接龍機器」對齊成會聽話、有偏好的助理。</span><span class="ot">"</span></span>
+<span id="cb8-13"><a href="#cb8-13"></a>flowchart LR</span>
+<span id="cb8-14"><a href="#cb8-14"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb8-15"><a href="#cb8-15"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb8-16"><a href="#cb8-16"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb8-17"><a href="#cb8-17"></a>  class I here</span>
+<span id="cb8-18"><a href="#cb8-18"></a><span class="in">```</span></span>
+<span id="cb8-19"><a href="#cb8-19"></a></span>
+<span id="cb8-20"><a href="#cb8-20"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb8-21"><a href="#cb8-21"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb8-22"><a href="#cb8-22"></a>**假設你已經會**：第 1 章的小 GPT 與「預測下一字」的訓練、第 5 章「選對指標／看 held-out」的紀律。</span>
+<span id="cb8-23"><a href="#cb8-23"></a>不需要任何 RLHF 背景。</span>
+<span id="cb8-24"><a href="#cb8-24"></a></span>
+<span id="cb8-25"><a href="#cb8-25"></a>**學完你會**：(1) 用一句話講清楚 SFT / DPO / IPO / GRPO / PPO 各自的**漂亮機制**與**會咬人的坑**；</span>
+<span id="cb8-26"><a href="#cb8-26"></a>(2) **逐行**把 DPO 損失從「序列對數機率」建起來，並說清楚 <span class="in">`margin`</span>、<span class="in">`β`</span>、<span class="in">`logsigmoid`</span> 各做什麼；</span>
+<span id="cb8-27"><a href="#cb8-27"></a>(3) 在**你自己的 CPU 上**親手重現本章最重要的一課——**train-acc 衝 100%、held-out 才說真話**。</span>
+<span id="cb8-28"><a href="#cb8-28"></a>本章的 💻 配套程式 <span class="in">`tiny_dpo.py`</span> 完整內嵌、純 CPU 兩三分鐘可跑。</span>
+<span id="cb8-29"><a href="#cb8-29"></a>:::</span>
+<span id="cb8-30"><a href="#cb8-30"></a></span>
+<span id="cb8-31"><a href="#cb8-31"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb8-32"><a href="#cb8-32"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb8-33"><a href="#cb8-33"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</span>
+<span id="cb8-34"><a href="#cb8-34"></a></span>
+<span id="cb8-35"><a href="#cb8-35"></a><span class="ss">- </span>**SFT（指令微調）**：教模型「會聽話、照問答格式回應」。*在意它*：從「接話機器」變「助理」的第一步。</span>
+<span id="cb8-36"><a href="#cb8-36"></a><span class="ss">- </span>**偏好優化（DPO / IPO）**：用「一好一壞」的比較教模型偏好。*在意它*：免 reward model 的對齊捷徑。</span>
+<span id="cb8-37"><a href="#cb8-37"></a><span class="ss">- </span>**reference model / KL 錨**：把新模型綁在舊模型附近。*在意它*：防止對齊把模型帶歪（過度優化）。</span>
+<span id="cb8-38"><a href="#cb8-38"></a><span class="ss">- </span>**RLHF（reward model / GRPO / PPO）**：用「學來的獎勵」做強化學習。*在意它*：ChatGPT 那套對齊的家族。</span>
+<span id="cb8-39"><a href="#cb8-39"></a><span class="ss">- </span>**reward hacking / Goodhart**：指標一旦變成目標就被鑽。*在意它*：對齊最有名的坑——代理分數暴漲、真實品質崩。</span>
+<span id="cb8-40"><a href="#cb8-40"></a><span class="ss">- </span>**train-acc 騙你 / 看 held-out**：訓練分數高 ≠ 真學會。*在意它*：跟第 5 章同一條鐵則。</span>
+<span id="cb8-41"><a href="#cb8-41"></a>:::</span>
+<span id="cb8-42"><a href="#cb8-42"></a></span>
+<span id="cb8-43"><a href="#cb8-43"></a><span class="fu">## SFT：從「會接話」到「會聽話」</span></span>
+<span id="cb8-44"><a href="#cb8-44"></a></span>
+<span id="cb8-45"><a href="#cb8-45"></a>第一步 SFT（指令微調）很單純：在「問：…答：…」的對話格式上續訓，模型的行為就從「續寫維基」</span>
+<span id="cb8-46"><a href="#cb8-46"></a>變成「在『答：』的位置產生回應」。</span>
+<span id="cb8-47"><a href="#cb8-47"></a></span>
+<span id="cb8-48"><a href="#cb8-48"></a>但**評估**它馬上踩到第 5 章那個坑的進階版：用維基 perplexity 量，SFT 看起來變爛了。真相是</span>
+<span id="cb8-49"><a href="#cb8-49"></a>尺被汙染（alignment tax + gold 答案洩漏進預訓練）。改量「應答行為率」，base 29% → SFT 72%——</span>
+<span id="cb8-50"><a href="#cb8-50"></a>**選對指標，結論才對。**</span>
+<span id="cb8-51"><a href="#cb8-51"></a></span>
+<span id="cb8-52"><a href="#cb8-52"></a><span class="fu">## DPO：免 reward model 的捷徑，與它的封閉式 {#sec-build-dpo}</span></span>
+<span id="cb8-53"><a href="#cb8-53"></a></span>
+<span id="cb8-54"><a href="#cb8-54"></a>DPO（直接偏好優化）給一組「同一個問題、一好一壞」的回答，用一條封閉式損失直接優化偏好，</span>
+<span id="cb8-55"><a href="#cb8-55"></a>不需要訓練 reward model、也不需要 RL。我們從**一個序列的對數機率**這個積木開始，一步一步</span>
+<span id="cb8-56"><a href="#cb8-56"></a>把這條損失建起來——這就是 <span class="in">`tiny_dpo.py`</span> 裡 <span class="in">`dpo_loss`</span> 的逐行拆解。</span>
+<span id="cb8-57"><a href="#cb8-57"></a></span>
+<span id="cb8-58"><a href="#cb8-58"></a>**第 0 步——一段序列的對數機率。** 模型對「下一字」給機率；把一整段回答每個位置的</span>
+<span id="cb8-59"><a href="#cb8-59"></a>log p(token｜前文) 加起來，就是「這個模型有多想生出這段話」的分數：</span>
+<span id="cb8-60"><a href="#cb8-60"></a></span>
+<span id="cb8-61"><a href="#cb8-61"></a><span class="in">```python</span></span>
+<span id="cb8-62"><a href="#cb8-62"></a><span class="kw">def</span> seq_logprob(model, seq):</span>
+<span id="cb8-63"><a href="#cb8-63"></a>    logits <span class="op">=</span> model(seq[:, :<span class="op">-</span><span class="dv">1</span>])                 <span class="co"># 每個位置對下一字的分數</span></span>
+<span id="cb8-64"><a href="#cb8-64"></a>    logp <span class="op">=</span> F.log_softmax(logits, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb8-65"><a href="#cb8-65"></a>    tgt <span class="op">=</span> seq[:, <span class="dv">1</span>:].unsqueeze(<span class="op">-</span><span class="dv">1</span>)              <span class="co"># 真正的下一字</span></span>
+<span id="cb8-66"><a href="#cb8-66"></a>    <span class="cf">return</span> logp.gather(<span class="op">-</span><span class="dv">1</span>, tgt).squeeze(<span class="op">-</span><span class="dv">1</span>).<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">1</span>)   <span class="co"># Σ_t log p：整段的對數機率</span></span>
+<span id="cb8-67"><a href="#cb8-67"></a><span class="in">```</span></span>
+<span id="cb8-68"><a href="#cb8-68"></a></span>
+<span id="cb8-69"><a href="#cb8-69"></a>**第 1 步——policy 相對 reference 漲了多少。** 我們不看「絕對機率」，看「**相對凍結的</span>
+<span id="cb8-70"><a href="#cb8-70"></a>reference（=SFT 後、還沒做偏好優化的那顆）漲了多少**」。對 chosen 算一次、rejected 算一次：</span>
+<span id="cb8-71"><a href="#cb8-71"></a></span>
+<span id="cb8-72"><a href="#cb8-72"></a><span class="in">```python</span></span>
+<span id="cb8-73"><a href="#cb8-73"></a>pol_ch,  pol_rej  <span class="op">=</span> seq_logprob(model, chosen), seq_logprob(model, rejected)</span>
+<span id="cb8-74"><a href="#cb8-74"></a>ref_ch,  ref_rej  <span class="op">=</span> seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)</span>
+<span id="cb8-75"><a href="#cb8-75"></a><span class="in">```</span></span>
+<span id="cb8-76"><a href="#cb8-76"></a></span>
+<span id="cb8-77"><a href="#cb8-77"></a>**第 2 步——margin：chosen 比 rejected 多漲多少。** 把兩邊的「相對 reference 漲幅」相減。</span>
+<span id="cb8-78"><a href="#cb8-78"></a>margin &gt; 0 就代表「policy 把 chosen 推得比 rejected 高」，也就是偏好排對了：</span>
+<span id="cb8-79"><a href="#cb8-79"></a></span>
+<span id="cb8-80"><a href="#cb8-80"></a><span class="in">```python</span></span>
+<span id="cb8-81"><a href="#cb8-81"></a>margin <span class="op">=</span> (pol_ch <span class="op">-</span> ref_ch) <span class="op">-</span> (pol_rej <span class="op">-</span> ref_rej)</span>
+<span id="cb8-82"><a href="#cb8-82"></a><span class="in">```</span></span>
+<span id="cb8-83"><a href="#cb8-83"></a></span>
+<span id="cb8-84"><a href="#cb8-84"></a>**第 3 步——把 margin 推大的損失。** 用 <span class="in">`logsigmoid`</span> 把 margin 變成損失：margin 越大、損失越小。</span>
+<span id="cb8-85"><a href="#cb8-85"></a><span class="in">`β`</span> 是溫度，控制「推多用力 / 離 reference 多遠」（β 的反直覺行為見 @sec-margin-math）：</span>
+<span id="cb8-86"><a href="#cb8-86"></a></span>
+<span id="cb8-87"><a href="#cb8-87"></a><span class="in">```python</span></span>
+<span id="cb8-88"><a href="#cb8-88"></a>loss <span class="op">=</span> <span class="op">-</span>F.logsigmoid(beta <span class="op">*</span> margin).mean()      <span class="co"># 拉高 chosen、壓低 rejected</span></span>
+<span id="cb8-89"><a href="#cb8-89"></a>acc  <span class="op">=</span> (margin <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">float</span>().mean()              <span class="co"># margin&gt;0 的比例 = 偏好排對率</span></span>
+<span id="cb8-90"><a href="#cb8-90"></a><span class="in">```</span></span>
+<span id="cb8-91"><a href="#cb8-91"></a></span>
+<span id="cb8-92"><a href="#cb8-92"></a>把四步拼起來就是完整的 <span class="in">`dpo_loss`</span>——**沒有 reward model、沒有 RL，就一條可微的損失**：</span>
+<span id="cb8-93"><a href="#cb8-93"></a></span>
+<span id="cb8-94"><a href="#cb8-94"></a><span class="in">```python</span></span>
+<span id="cb8-95"><a href="#cb8-95"></a><span class="kw">def</span> dpo_loss(model, ref, chosen, rejected, beta):</span>
+<span id="cb8-96"><a href="#cb8-96"></a>    pol_ch,  pol_rej  <span class="op">=</span> seq_logprob(model, chosen), seq_logprob(model, rejected)</span>
+<span id="cb8-97"><a href="#cb8-97"></a>    ref_ch,  ref_rej  <span class="op">=</span> seq_logprob(ref,   chosen), seq_logprob(ref,   rejected)</span>
+<span id="cb8-98"><a href="#cb8-98"></a>    margin <span class="op">=</span> (pol_ch <span class="op">-</span> ref_ch) <span class="op">-</span> (pol_rej <span class="op">-</span> ref_rej)</span>
+<span id="cb8-99"><a href="#cb8-99"></a>    loss <span class="op">=</span> <span class="op">-</span>F.logsigmoid(beta <span class="op">*</span> margin).mean()</span>
+<span id="cb8-100"><a href="#cb8-100"></a>    acc  <span class="op">=</span> (margin <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">float</span>().mean()</span>
+<span id="cb8-101"><a href="#cb8-101"></a>    <span class="cf">return</span> loss, acc.item()</span>
+<span id="cb8-102"><a href="#cb8-102"></a><span class="in">```</span></span>
+<span id="cb8-103"><a href="#cb8-103"></a></span>
+<span id="cb8-104"><a href="#cb8-104"></a>這條式子不是憑空來的，是從 RLHF 的目標推出來的，而且推導裡有個漂亮的「配分函數相消」——</span>
+<span id="cb8-105"><a href="#cb8-105"></a>本來 RLHF 要先學 reward、再用 RL 去最大化它，DPO 證明這兩步可以**合併成上面這一條損失**</span>
+<span id="cb8-106"><a href="#cb8-106"></a>（完整證明見 @sec-dpo-math）。</span>
+<span id="cb8-107"><a href="#cb8-107"></a></span>
+<span id="cb8-108"><a href="#cb8-108"></a><span class="fu">### 死背 vs 真學：train-acc 會騙你</span></span>
+<span id="cb8-109"><a href="#cb8-109"></a></span>
+<span id="cb8-110"><a href="#cb8-110"></a>我設了兩種偏好軸——一種模型容量內、一種超出容量——然後看它們類推得如何：</span>
+<span id="cb8-111"><a href="#cb8-111"></a></span>
+<span id="cb8-112"><a href="#cb8-112"></a><span class="al">![兩種偏好軸：train-acc 都衝 100%，held-out 才說真話。](images/dpo_generalization.png)</span>{#fig-dpo-gen width=85%}</span>
+<span id="cb8-113"><a href="#cb8-113"></a></span>
+<span id="cb8-114"><a href="#cb8-114"></a>::: {.callout-warning}</span>
+<span id="cb8-115"><a href="#cb8-115"></a><span class="fu">## 看 held-out，不要看 train</span></span>
+<span id="cb8-116"><a href="#cb8-116"></a>@fig-dpo-gen 裡兩條 train 線（虛線）都衝到 100%——只看 train 你會說「兩個都學會了」。但 held-out</span>
+<span id="cb8-117"><a href="#cb8-117"></a>（實線）一個 97%、一個只有 9%。後者需要「標題↔內容」的語義綁定，8M 模型學不動、只能把訓練題</span>
+<span id="cb8-118"><a href="#cb8-118"></a>**背起來**。**這是 MLOps 鐵則：看 held-out、別看 train。**</span>
+<span id="cb8-119"><a href="#cb8-119"></a>:::</span>
+<span id="cb8-120"><a href="#cb8-120"></a></span>
+<span id="cb8-121"><a href="#cb8-121"></a><span class="fu">### 精修 β：一個被資料打臉的直覺</span></span>
+<span id="cb8-122"><a href="#cb8-122"></a></span>
+<span id="cb8-123"><a href="#cb8-123"></a>DPO 唯一的旋鈕是 β。教科書直覺是「β 大＝KL 罰得重＝貼緊 reference」。我掃了 β，結果**固定步數下</span>
+<span id="cb8-124"><a href="#cb8-124"></a>剛好相反**——β 越小，policy 漂移越大（為什麼見 @sec-margin-math）。</span>
+<span id="cb8-125"><a href="#cb8-125"></a></span>
+<span id="cb8-126"><a href="#cb8-126"></a><span class="al">![β 旋鈕：小 β 反而更激進（漂移更大）。](images/dpo_beta_sweep.png)</span>{#fig-beta width=85%}</span>
+<span id="cb8-127"><a href="#cb8-127"></a></span>
+<span id="cb8-128"><a href="#cb8-128"></a><span class="fu">## 💻 在你的機器上：親手看 train-acc 怎麼騙你 {#sec-tiny-dpo}</span></span>
+<span id="cb8-129"><a href="#cb8-129"></a></span>
+<span id="cb8-130"><a href="#cb8-130"></a>圖會說話，但自己跑過一次更難忘。配套程式 <span class="in">`tiny_dpo.py`</span> 把上面那條 <span class="in">`dpo_loss`</span> 接到第 1 章的</span>
+<span id="cb8-131"><a href="#cb8-131"></a>char-level 小 GPT 上，**純 CPU、兩三分鐘**，讓你親手重現 @fig-dpo-gen 的那一課。</span>
+<span id="cb8-132"><a href="#cb8-132"></a></span>
+<span id="cb8-133"><a href="#cb8-133"></a>它先在莎士比亞上預訓練一顆 base 當 reference，複製一份當 policy，然後設**兩種偏好軸**做 DPO：</span>
+<span id="cb8-134"><a href="#cb8-134"></a></span>
+<span id="cb8-135"><a href="#cb8-135"></a><span class="ss">- </span>**A 軸（可學）**：chosen = 真實片段、rejected = 把同一段**字元順序打亂**。「真的比亂的好」是個</span>
+<span id="cb8-136"><a href="#cb8-136"></a>  有語義的通則 → 模型該能**類推**到沒看過的片段。</span>
+<span id="cb8-137"><a href="#cb8-137"></a><span class="ss">- </span>**B 軸（學不動）**：chosen / rejected 都是真實片段，誰是 chosen 用**擲硬幣亂指**。這規則沒有</span>
+<span id="cb8-138"><a href="#cb8-138"></a>  任何語義、無從類推 → 模型只能把訓練題**背起來**。</span>
+<span id="cb8-139"><a href="#cb8-139"></a></span>
+<span id="cb8-140"><a href="#cb8-140"></a><span class="in">```bash</span></span>
+<span id="cb8-141"><a href="#cb8-141"></a><span class="ex">curl</span> <span class="at">-o</span> input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt</span>
+<span id="cb8-142"><a href="#cb8-142"></a><span class="ex">python</span> tiny_dpo.py</span>
+<span id="cb8-143"><a href="#cb8-143"></a><span class="in">```</span></span>
+<span id="cb8-144"><a href="#cb8-144"></a></span>
+<span id="cb8-145"><a href="#cb8-145"></a>在我的 Framework 16（純 CPU）上跑出來：</span>
+<span id="cb8-146"><a href="#cb8-146"></a></span>
+<span id="cb8-147"><a href="#cb8-147"></a><span class="in">```</span></span>
+<span id="cb8-148"><a href="#cb8-148"></a><span class="in">偏好軸                               train-acc  held-out-acc</span></span>
+<span id="cb8-149"><a href="#cb8-149"></a><span class="in">---------------------------------------------------------</span></span>
+<span id="cb8-150"><a href="#cb8-150"></a><span class="in">A 可學（真實 vs 打亂）                       100.0%        100.0%</span></span>
+<span id="cb8-151"><a href="#cb8-151"></a><span class="in">B 學不動（隨機標籤）                          100.0%         47.7%</span></span>
+<span id="cb8-152"><a href="#cb8-152"></a><span class="in">```</span></span>
+<span id="cb8-153"><a href="#cb8-153"></a></span>
+<span id="cb8-154"><a href="#cb8-154"></a>**怎麼讀**：兩軸的 **train-acc 都是 100%**——只看 train，你會宣稱「兩個都學會了」。但 held-out</span>
+<span id="cb8-155"><a href="#cb8-155"></a>說了真話：A 軸 100%（真的學到「真&gt;亂」這個通則、能類推），B 軸掉回 **47.7%≈擲硬幣**（規則無從</span>
+<span id="cb8-156"><a href="#cb8-156"></a>類推，100% 只是死背訓練題）。這跟 @fig-dpo-gen 的容量內 vs 容量外是同一個形狀，只是縮到你的</span>
+<span id="cb8-157"><a href="#cb8-157"></a>筆電上、兩三分鐘就親眼看到（@fig-dpo-tiny）。</span>
+<span id="cb8-158"><a href="#cb8-158"></a></span>
+<span id="cb8-159"><a href="#cb8-159"></a><span class="al">![tiny_dpo（純 CPU 真跑）：兩種偏好軸的 train-acc 都衝到 100%（灰），但 held-out（深藍）才說真話——A 可學的軸 100%、B 學不動的軸掉回擲硬幣線（紅虛線）。只看 train 兩個沒差，看 held-out 高下立判。](images/dpo_trainvsheldout.png)</span>{#fig-dpo-tiny width=72%}</span>
+<span id="cb8-160"><a href="#cb8-160"></a></span>
+<span id="cb8-161"><a href="#cb8-161"></a>::: {.callout-important}</span>
+<span id="cb8-162"><a href="#cb8-162"></a><span class="fu">## 這就是 MLOps 鐵則的最小可重現版</span></span>
+<span id="cb8-163"><a href="#cb8-163"></a>**train 上漂亮的數字，可能只是背起來。** 衡量「有沒有真學會」的唯一誠實方式是看 **held-out**。</span>
+<span id="cb8-164"><a href="#cb8-164"></a>這條鐵則在 DPO 如此、在你日後任何模型都如此——這也是為什麼第 5 章要花整章講「質疑你的尺」。</span>
+<span id="cb8-165"><a href="#cb8-165"></a>:::</span>
+<span id="cb8-166"><a href="#cb8-166"></a></span>
+<span id="cb8-167"><a href="#cb8-167"></a><span class="fu">## IPO：把「margin 推到無窮」改成「回歸固定目標」</span></span>
+<span id="cb8-168"><a href="#cb8-168"></a></span>
+<span id="cb8-169"><a href="#cb8-169"></a>DPO 的 logistic 損失飽和後梯度雖小卻永不歸零 → margin 被一路推爆 → 過度優化。IPO 改用平方損失</span>
+<span id="cb8-170"><a href="#cb8-170"></a>$(m-\frac{1}{2\beta})^2$，給 margin 一個**有限目標**，到了就停。</span>
+<span id="cb8-171"><a href="#cb8-171"></a></span>
+<span id="cb8-172"><a href="#cb8-172"></a><span class="al">![DPO vs IPO：DPO margin 爆衝、IPO 釘在目標；但 clean 偏好上 DPO 反而較準。](images/dpo_vs_ipo.png)</span>{#fig-ipo width=85%}</span>
+<span id="cb8-173"><a href="#cb8-173"></a></span>
+<span id="cb8-174"><a href="#cb8-174"></a>::: {.callout-tip}</span>
+<span id="cb8-175"><a href="#cb8-175"></a><span class="fu">## 防過度優化的工具不是「無腦更好」</span></span>
+<span id="cb8-176"><a href="#cb8-176"></a>@fig-ipo 右圖：clean 偏好上 IPO held-out 78% &lt; DPO 97%。IPO 拿準度換穩定，它的勝場在「過度優化</span>
+<span id="cb8-177"><a href="#cb8-177"></a>會傷」的場景（偏好含雜訊時 DPO 會死記）。**煞車是保險，不是免費的。**</span>
+<span id="cb8-178"><a href="#cb8-178"></a>:::</span>
+<span id="cb8-179"><a href="#cb8-179"></a></span>
+<span id="cb8-180"><a href="#cb8-180"></a><span class="fu">## RLHF 之一 — GRPO，與招牌坑 reward hacking</span></span>
+<span id="cb8-181"><a href="#cb8-181"></a></span>
+<span id="cb8-182"><a href="#cb8-182"></a>DPO 把 reward 隱含在 policy 裡；RLHF 把它做成一顆**獨立的 reward model**，再用 RL 去最大化它。</span>
+<span id="cb8-183"><a href="#cb8-183"></a>我用 GRPO（DeepSeek，不需 critic）做，並刻意演示對齊最有名的坑：</span>
+<span id="cb8-184"><a href="#cb8-184"></a></span>
+<span id="cb8-185"><a href="#cb8-185"></a><span class="al">![reward hacking：拿掉 KL 錨，RM 分數（代理）暴漲、輸出多樣性（真實）崩潰。](images/grpo_reward_hacking.png)</span>{#fig-hack width=85%}</span>
+<span id="cb8-186"><a href="#cb8-186"></a></span>
+<span id="cb8-187"><a href="#cb8-187"></a>::: {.callout-important}</span>
+<span id="cb8-188"><a href="#cb8-188"></a><span class="fu">## Goodhart：指標一旦變成目標，就不再是好指標</span></span>
+<span id="cb8-189"><a href="#cb8-189"></a>@fig-hack：拿掉 KL 錨，policy 把 RM 分數從 3.7 衝到 **13.2**，輸出卻 collapse 成「不管問什麼都吐</span>
+<span id="cb8-190"><a href="#cb8-190"></a>同一串高分垃圾」（多樣性 100%→6%）。那串垃圾落在 RM 訓練分布外、被誤判高分——policy 鑽了漏洞。</span>
+<span id="cb8-191"><a href="#cb8-191"></a>這和稽核裡「KPI 被優化就造假」是同一回事。防法＝**KL 錨**把 policy 綁在可信舊模型附近。</span>
+<span id="cb8-192"><a href="#cb8-192"></a>:::</span>
+<span id="cb8-193"><a href="#cb8-193"></a></span>
+<span id="cb8-194"><a href="#cb8-194"></a><span class="fu">## RLHF 之二 — PPO，與 GRPO 簡化掉的兩塊</span></span>
+<span id="cb8-195"><a href="#cb8-195"></a></span>
+<span id="cb8-196"><a href="#cb8-196"></a>把 GRPO 的精簡還原回 PPO（InstructGPT 用的經典），就看得到 GRPO 丟掉了什麼：</span>
+<span id="cb8-197"><a href="#cb8-197"></a></span>
+<span id="cb8-198"><a href="#cb8-198"></a><span class="pp">|</span> 零件 <span class="pp">|</span> PPO 有 <span class="pp">|</span> GRPO 怎麼省 <span class="pp">|</span></span>
+<span id="cb8-199"><a href="#cb8-199"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb8-200"><a href="#cb8-200"></a><span class="pp">|</span> Critic（value 網路）<span class="pp">|</span> 學一個基準 $A=R-V(x)$ <span class="pp">|</span> 用「同組 K 個回答的平均」當基準 <span class="pp">|</span></span>
+<span id="cb8-201"><a href="#cb8-201"></a><span class="pp">|</span> Clipped surrogate <span class="pp">|</span> ratio 夾在 $<span class="co">[</span><span class="ot">1\pm\epsilon</span><span class="co">]</span>$、可重用 rollout 多 epoch <span class="pp">|</span> 一批只訓一次，不需要 <span class="pp">|</span></span>
+<span id="cb8-202"><a href="#cb8-202"></a></span>
+<span id="cb8-203"><a href="#cb8-203"></a><span class="al">![PPO clip：拿掉 clip，一步走太遠把 policy 走崩；clip 把更新夾住就穩。](images/ppo_clip_vs_noclip.png)</span>{#fig-ppo width=85%}</span>
+<span id="cb8-204"><a href="#cb8-204"></a></span>
+<span id="cb8-205"><a href="#cb8-205"></a>@fig-ppo（為了隔離 clip，刻意關掉 KL 罰）：無 clip 時某一步把 policy 推太遠 → 直接走崩</span>
+<span id="cb8-206"><a href="#cb8-206"></a>（多樣性 100%→6%、RM 7.5→0.2）；clip 把 importance ratio 夾住 → 穩定改進。這就是 PPO 名字裡</span>
+<span id="cb8-207"><a href="#cb8-207"></a>**Proximal（近端）** 的意義：逼新 policy 待在舊的附近。</span>
+<span id="cb8-208"><a href="#cb8-208"></a></span>
+<span id="cb8-209"><a href="#cb8-209"></a><span class="fu">## 帶走什麼：一條貫穿四種方法的主線</span></span>
+<span id="cb8-210"><a href="#cb8-210"></a></span>
+<span id="cb8-211"><a href="#cb8-211"></a><span class="pp">|</span> 方法 <span class="pp">|</span> 漂亮的機制 <span class="pp">|</span> 會咬人的坑 <span class="pp">|</span></span>
+<span id="cb8-212"><a href="#cb8-212"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb8-213"><a href="#cb8-213"></a><span class="pp">|</span> SFT <span class="pp">|</span> 學會應答格式 <span class="pp">|</span> 評估的尺被汙染 <span class="pp">|</span></span>
+<span id="cb8-214"><a href="#cb8-214"></a><span class="pp">|</span> DPO <span class="pp">|</span> 配分函數相消、免 RL <span class="pp">|</span> train-acc 騙你（死背 vs 真學）<span class="pp">|</span></span>
+<span id="cb8-215"><a href="#cb8-215"></a><span class="pp">|</span> IPO <span class="pp">|</span> margin 有限目標、防過度優化 <span class="pp">|</span> 不是無腦更好（拿準度換穩定）<span class="pp">|</span></span>
+<span id="cb8-216"><a href="#cb8-216"></a><span class="pp">|</span> GRPO <span class="pp">|</span> 不需 critic <span class="pp">|</span> reward model 被 hack（Goodhart）<span class="pp">|</span></span>
+<span id="cb8-217"><a href="#cb8-217"></a><span class="pp">|</span> PPO <span class="pp">|</span> clip 防破壞性更新 <span class="pp">|</span> 要隔離一個機制得先關掉會蓋過它的另一個 <span class="pp">|</span></span>
+<span id="cb8-218"><a href="#cb8-218"></a></span>
+<span id="cb8-219"><a href="#cb8-219"></a><span class="at">&gt; 五個方法，五次「換把尺、結論就翻」。**永遠質疑你的指標有沒有被汙染或被鑽**——這比任何單一方法都重要。</span></span>
+<span id="cb8-220"><a href="#cb8-220"></a></span>
+<span id="cb8-221"><a href="#cb8-221"></a><span class="fu">## 練習 {#sec-ch7-exercises}</span></span>
+<span id="cb8-222"><a href="#cb8-222"></a></span>
+<span id="cb8-223"><a href="#cb8-223"></a>::: {.callout-note}</span>
+<span id="cb8-224"><a href="#cb8-224"></a><span class="fu">## 1（先預測）：把 reference 拿掉會怎樣？</span></span>
+<span id="cb8-225"><a href="#cb8-225"></a>DPO 的 <span class="in">`margin`</span> 是「policy 相對 **reference** 的漲幅」之差。**先寫下你的預測**：如果把 <span class="in">`dpo_loss`</span></span>
+<span id="cb8-226"><a href="#cb8-226"></a>裡的 <span class="in">`ref_ch`</span>、<span class="in">`ref_rej`</span> 都當成 0（等於沒有 reference 錨），訓練會怎麼變？</span>
+<span id="cb8-227"><a href="#cb8-227"></a></span>
+<span id="cb8-228"><a href="#cb8-228"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb8-229"><a href="#cb8-229"></a><span class="fu">## 參考答案</span></span>
+<span id="cb8-230"><a href="#cb8-230"></a>少了 reference 這個錨，損失只剩「把 chosen 的絕對對數機率推高、rejected 推低」，policy 會更不受</span>
+<span id="cb8-231"><a href="#cb8-231"></a>約束地漂移、更容易過度優化（把整個分布往訓練偏好硬拉），也更可能把無關的東西一起帶歪。</span>
+<span id="cb8-232"><a href="#cb8-232"></a>reference 項的作用正是 @sec-margin-math 講的 KL 錨——它把「漲幅」而非「絕對機率」當目標，</span>
+<span id="cb8-233"><a href="#cb8-233"></a>讓 policy 待在可信舊模型附近。動手把 <span class="in">`ref_*`</span> 設 0 跑一次，對照 held-out 與生成樣本。</span>
+<span id="cb8-234"><a href="#cb8-234"></a>:::</span>
+<span id="cb8-235"><a href="#cb8-235"></a>:::</span>
+<span id="cb8-236"><a href="#cb8-236"></a></span>
+<span id="cb8-237"><a href="#cb8-237"></a>::: {.callout-note}</span>
+<span id="cb8-238"><a href="#cb8-238"></a><span class="fu">## 2（動手）：掃 β</span></span>
+<span id="cb8-239"><a href="#cb8-239"></a>在 <span class="in">`tiny_dpo.py`</span> 把 <span class="in">`beta`</span> 從 0.1 改成 0.02 和 0.5 各跑一次，記錄 A/B 兩軸的 train/held-out acc。</span>
+<span id="cb8-240"><a href="#cb8-240"></a>β 變大、變小，分別怎麼影響「學得多快 / 漂移多遠」？對照 @fig-beta。</span>
+<span id="cb8-241"><a href="#cb8-241"></a></span>
+<span id="cb8-242"><a href="#cb8-242"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb8-243"><a href="#cb8-243"></a><span class="fu">## 參考答案</span></span>
+<span id="cb8-244"><a href="#cb8-244"></a>固定步數下，**β 小反而漂移更大**（見 @sec-margin-math 的反直覺結果）——這跟教科書「β 大＝罰得重＝</span>
+<span id="cb8-245"><a href="#cb8-245"></a>貼緊 reference」的直覺一致，但要小心「固定步數」這個前提。A 軸（可學）通常各 β 都能類推到 held-out；</span>
+<span id="cb8-246"><a href="#cb8-246"></a>B 軸（學不動）不管 β 怎麼調，held-out 都停在擲硬幣附近——**煞車調得再好，學不動的東西還是學不動。**</span>
+<span id="cb8-247"><a href="#cb8-247"></a>:::</span>
+<span id="cb8-248"><a href="#cb8-248"></a>:::</span>
+<span id="cb8-249"><a href="#cb8-249"></a></span>
+<span id="cb8-250"><a href="#cb8-250"></a>::: {.callout-warning}</span>
+<span id="cb8-251"><a href="#cb8-251"></a><span class="fu">## 3（弄壞）：把 B 軸的「隨機標籤」改成「可學規則」</span></span>
+<span id="cb8-252"><a href="#cb8-252"></a>B 軸現在用擲硬幣指定 chosen。把它改成一條**有語義、模型學得動**的規則（例如「chosen = 兩段中</span>
+<span id="cb8-253"><a href="#cb8-253"></a>較長的那段」），重跑。held-out 會怎麼變？</span>
+<span id="cb8-254"><a href="#cb8-254"></a></span>
+<span id="cb8-255"><a href="#cb8-255"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb8-256"><a href="#cb8-256"></a><span class="fu">## 參考答案</span></span>
+<span id="cb8-257"><a href="#cb8-257"></a>held-out 會從 ~50% 爬上去——因為「比較長」是個 8M 模型也能從序列長度線索學到、且能類推的通則。</span>
+<span id="cb8-258"><a href="#cb8-258"></a>這直接證明剛才的 47.7% **不是 DPO 壞了**，而是那條規則本身無從類推。**同一套損失，換個學得動的</span>
+<span id="cb8-259"><a href="#cb8-259"></a>偏好軸，held-out 就說真話了**——再次呼應「問題常在尺/任務、不在方法」。</span>
+<span id="cb8-260"><a href="#cb8-260"></a>:::</span>
+<span id="cb8-261"><a href="#cb8-261"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/09-alignment.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></div></div></footer></body></html>

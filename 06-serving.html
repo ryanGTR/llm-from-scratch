@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hant" xml:lang="zh-Hant"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; 服務化與可觀測：從 checkpoint 到能被呼叫的服務 – 從零打造並對齊一個 LLM</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./07-governance.html" rel="next">
+<link href="./05-evaluation.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-639d468870d77206aa4a86877949ccee.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-94e84ed9b82d5d1d9342ea61bad04538.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./06-serving.html">第三部　維運 / MLOps</a></li><li class="breadcrumb-item"><a href="./06-serving.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">從零打造並對齊一個 LLM</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/ryanGTR/llm-from-scratch" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言：一個銀行 IT 為什麼從零刻 LLM</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">第一部　原理</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-minimal-gpt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">最小的 GPT：從 attention 到自回歸</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-modern-components.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">把它變現代：RMSNorm、SwiGLU、RoPE、GQA</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-efficiency.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">跑多快：FlashAttention、KV-cache、取樣</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">第二部　資料與評估</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-real-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">真實資料的坑：從 1 MB 英文到 105 MB 中文</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">第四部　對齊</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">參考文獻</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#服務跟訓練要的東西不一樣" id="toc-服務跟訓練要的東西不一樣" class="nav-link active" data-scroll-target="#服務跟訓練要的東西不一樣"><span class="header-section-number">6.1</span> 服務跟訓練要的東西不一樣</a></li>
+  <li><a href="#sec-build-service" id="toc-sec-build-service" class="nav-link" data-scroll-target="#sec-build-service"><span class="header-section-number">6.2</span> 逐行把一個「會自報 metrics」的服務建起來</a></li>
+  <li><a href="#sec-tiny-observability" id="toc-sec-tiny-observability" class="nav-link" data-scroll-target="#sec-tiny-observability"><span class="header-section-number">6.3</span> 💻 在你的機器上：冷啟動與尾延遲</a></li>
+  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">6.4</span> 帶走什麼</a></li>
+  <li><a href="#sec-serving-exercises" id="toc-sec-serving-exercises" class="nav-link" data-scroll-target="#sec-serving-exercises"><span class="header-section-number">6.5</span> 練習</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/06-serving.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./06-serving.html">第三部　維運 / MLOps</a></li><li class="breadcrumb-item"><a href="./06-serving.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span id="sec-serving" class="quarto-section-identifier"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>一句話</strong>：訓練是「離線、一次性、看 loss」；服務是「線上、持續、面對真實流量」。把模型變成 <strong>能被呼叫、看得見、量得到</strong>的服務，是 MLOps 的第一關。</p>
+</blockquote>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class F here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：踏進第三部（維運／MLOps），把訓好的模型推上線。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：第 5 章的評估判準。不需要 MLOps / k8s / 容器背景（會用到的概念都會在這裡建立類比）。</p>
+<p><strong>學完你會</strong>：(1) 說清楚服務跟訓練要的東西差在哪（快 / 可觀測 / 可重現）；(2) <strong>逐行</strong>把一個帶 metrics 的最小推論服務建起來；(3) 在<strong>你自己的 CPU 上</strong>親手量到<strong>冷啟動</strong>與<strong>尾延遲 p95</strong>—— 體會「你不量就不知道、量了立刻看到」這句可觀測性的核心。本章 💻 配套程式 <code>tiny_observability.py</code> 純 CPU、十幾秒、不需語料、不需 GPU。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</p>
+<ul>
+<li><strong>推論 API（FastAPI）</strong>：把模型包成可被呼叫的服務。<em>在意它</em>：模型要能被產品呼叫才有價值。</li>
+<li><strong>延遲 / 吞吐（latency / throughput）</strong>：回應多快、每秒處理多少。<em>在意它</em>：使用者體感與容量規劃的兩個基本盤。</li>
+<li><strong>p50 / p95（百分位）</strong>：延遲分布的中位與尾巴。<em>在意它</em>：只看平均會把尾延遲藏起來；SLA 該訂在尾巴。</li>
+<li><strong>冷啟動</strong>：第一個請求特別慢。<em>在意它</em>：低流量、剛部署時的體感雷。</li>
+<li><strong>可觀測性（Prometheus / Grafana）</strong>：自動記錄每個請求的數據。<em>在意它</em>：不量就不知道、量了立刻看到。</li>
+<li><strong>podman pod / 容器</strong>：把服務打包、隔離、可重現部署。<em>在意它</em>：通往 k8s 的平滑路徑。</li>
+</ul>
+</div>
+</div>
+</div>
+<section id="服務跟訓練要的東西不一樣" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="服務跟訓練要的東西不一樣"><span class="header-section-number">6.1</span> 服務跟訓練要的東西不一樣</h2>
+<p>前面五章我們把一個模型訓出來、評估好了。但「訓出一個好模型」和「有一個能上線、能被呼叫、能被 觀測的系統」是兩回事。服務要的東西完全不同——要快、要能被呼叫、要看得到。我把它一層層接起來：</p>
+<ul>
+<li><strong>推論 API</strong>：用 FastAPI 把模型包成服務，常駐載入 checkpoint 和 tokenizer。端點有 <code>/health</code> （就緒探針，回模型載好沒、device、參數量）、<code>/generate</code>（主端點，回生成文字 + 延遲 + 吞吐）、 <code>/metrics</code>（給 Prometheus 抓）、<code>/model</code>（治理，回報自己是哪顆模型——下一章 <a href="07-governance.html" class="quarto-xref"><span>章节 7</span></a> 詳談）。</li>
+<li><strong>可觀測性</strong>：Prometheus metrics（請求數、延遲 histogram、生成 token 數）加結構化 JSON 日誌， 每個請求自動計數、計時、記狀態。</li>
+<li><strong>容器化</strong>：用 Podman + GPU（透過 CDI passthrough）把服務打包。模型權重用 runtime mount 掛進去、 跟映像解耦——換模型不用重 build 映像。</li>
+<li><strong>監控儀表板</strong>：Prometheus + Grafana，用一個 podman pod 把 API、Prometheus、Grafana 三個容器放在 一起、共享 localhost。</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>podman pod 就是 k8s「Pod」的微縮版
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>把多個容器放進一個 pod、共享網路命名空間、互相用 localhost 找得到——這正是 Kubernetes「Pod」概念的 微縮版。單機這樣剛好夠；要多副本、跨機、自動擴縮，才需要真的 k8s。從這裡到 k8s 是一條平滑的路。</p>
+</div>
+</div>
+</section>
+<section id="sec-build-service" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="sec-build-service"><span class="header-section-number">6.2</span> 逐行把一個「會自報 metrics」的服務建起來</h2>
+<p>服務的骨架不神祕：<strong>常駐一顆模型 + 每個請求自動記數據</strong>。我們用 <code>tiny_observability.py</code> 逐行建出來。</p>
+<p><strong>第 0 步——常駐模型。</strong> 服務啟動時把模型載進記憶體一次，之後每個請求重複用（不要每次都重載）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">class</span> Service:</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb1-3"><a href="#cb1-3"></a>        <span class="va">self</span>.model <span class="op">=</span> GPT().<span class="bu">eval</span>()      <span class="co"># 啟動時載一次，常駐</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>        <span class="va">self</span>.n_requests <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>        <span class="va">self</span>.n_tokens <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>        <span class="va">self</span>.latencies <span class="op">=</span> []</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——每個請求自動記 metrics。</strong> 處理請求時順手計時、計數、累計 token。可觀測性的精神就是 「把每個請求的事實留下來」：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> generate(<span class="va">self</span>, prompt, n_new<span class="op">=</span><span class="dv">40</span>):</span>
+<span id="cb2-2"><a href="#cb2-2"></a>    t0 <span class="op">=</span> time.perf_counter()</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    out <span class="op">=</span> <span class="va">self</span>.model.generate(prompt, n_new)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>    dt <span class="op">=</span> (time.perf_counter() <span class="op">-</span> t0) <span class="op">*</span> <span class="dv">1000</span>      <span class="co"># ms</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>    <span class="va">self</span>.n_requests <span class="op">+=</span> <span class="dv">1</span>                        <span class="co"># ← /metrics 的 requests_total</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>    <span class="va">self</span>.n_tokens <span class="op">+=</span> n_new                      <span class="co"># ← tokens_generated</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a>    <span class="va">self</span>.latencies.append(dt)                   <span class="co"># ← 算 p50/p95 用</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>    <span class="cf">return</span> out, dt</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——別只看平均，看百分位。</strong> 平均延遲會被少數慢請求拉歪、也會把尾延遲藏起來。使用者體感 是<strong>尾巴</strong>（p95、p99），所以服務要看百分位：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">def</span> pct(xs, p):</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    s <span class="op">=</span> <span class="bu">sorted</span>(xs)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>    <span class="cf">return</span> s[<span class="bu">min</span>(<span class="bu">len</span>(s) <span class="op">-</span> <span class="dv">1</span>, <span class="bu">int</span>(p <span class="op">/</span> <span class="dv">100</span> <span class="op">*</span> <span class="bu">len</span>(s)))]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-tiny-observability" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="sec-tiny-observability"><span class="header-section-number">6.3</span> 💻 在你的機器上：冷啟動與尾延遲</h2>
+<p>可觀測性最好的學法是親手量一次。配套程式 <code>tiny_observability.py</code>（純 CPU、十幾秒、不需語料）把 一顆小模型包成服務、打 30 個請求、印出延遲：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">python</span> tiny_observability.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16（純 CPU）上：</p>
+<pre><code>模型 0.83M，device=cpu
+
+=== 打 30 個請求，看延遲 ===
+  冷啟動（第 1 個請求）：  27.0 ms
+  暖機後 p50：            18.0 ms
+  暖機後 p95：            22.0 ms
+  冷/暖倍數：              1.5×
+
+=== /metrics（一裝上就有數據）===
+  requests_total      = 30
+  tokens_generated    = 1200
+  latency_p50_ms      = 18.0
+  latency_p95_ms      = 22.0</code></pre>
+<p><strong>怎麼讀</strong>：</p>
+<ol type="1">
+<li><strong>冷啟動是真的</strong>：第一個請求明顯比之後慢（這裡 CPU 上約 1.5×；原因是 lazy 初始化、執行緒池暖機、 配置快取）。在 GPU 上更誇張——我在正式服務量到<strong>第一個請求約 354 ms、暖機後約 50 ms</strong>（首次 呼叫要即時編譯 CUDA kernel）。不管哪種，重點一樣：<strong>量了才知道</strong>。</li>
+<li><strong>看尾巴不看平均</strong>：p95（22 ms）比 p50（18 ms）高——使用者體感是尾延遲。只報平均會把這段藏起來。</li>
+</ol>
+<div id="fig-latency" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-latency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/serving_latency.png" class="img-fluid figure-img" style="width:68.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-latency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6.1: 可觀測性（純 CPU 真跑）：冷啟動（第 1 個請求）明顯高於暖機後；而且 p95 尾延遲高於 p50——這些只報平均就看不到的東西，一裝上 metrics 立刻現形。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>可觀測性的價值＝把模糊變事實
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="#fig-latency" class="quarto-xref">图&nbsp;<span>6.1</span></a> 的每一根都是「你不主動量、就只會憑感覺」的東西。可觀測性把「好像第一次比較慢」變成 「冷 27 ms vs 暖 18 ms」、把「大致還行」變成「p95 = 22 ms」。<strong>先有事實，才有得優化、才有得對 SLA 負責。</strong></p>
+</div>
+</div>
+</section>
+<section id="帶走什麼" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">6.4</span> 帶走什麼</h2>
+<ul>
+<li>服務跟訓練要的東西不同：要快、能被呼叫、看得見。推論 API + metrics + 容器 + 儀表板一層層接起來。</li>
+<li>podman pod 是 k8s Pod 的微縮版——單機夠用，要擴縮才上 k8s。</li>
+<li><strong>可觀測性的核心是把模糊變事實</strong>：冷啟動、尾延遲 p95 都是「不量就不知道、量了立刻看到」。</li>
+<li>服務只是整條鏈的一段——下一章把它接到<strong>治理</strong>（<a href="07-governance.html" class="quarto-xref"><span>章节 7</span></a>）：線上這顆到底是哪顆、憑什麼上線。</li>
+</ul>
+</section>
+<section id="sec-serving-exercises" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="sec-serving-exercises"><span class="header-section-number">6.5</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：把 n_new 加大，冷/暖差距會怎樣？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>tiny_observability.py</code> 每個請求生成 40 個 token。<strong>先寫下你的預測</strong>：把 <code>n_new</code> 加到 200，冷啟動相對 暖機的「倍數」會變大還變小？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>通常<strong>倍數變小</strong>——冷啟動的固定開銷（初始化、暖機）被攤平到更長的生成上，佔比下降。這也是為什麼 「冷啟動」在短請求、低流量服務上最有感。動手把 <code>n_new</code> 改大，看冷/暖倍數怎麼收斂。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：加一個 p99
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>服務的 SLA 常用 p99。在 <code>pct</code> 的基礎上印出 p99，比較 p50/p95/p99。它們的差距告訴你什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>p99 通常比 p95 再高一截——尾巴越往後拉越長。p50 和 p99 差很多，代表延遲分布有長尾（少數請求很慢）， 這種情況只報平均會嚴重低估使用者最差體感。SLA 訂在 p95/p99 而非平均，正是為了對尾巴負責。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：只報平均延遲
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>把延遲報告改成只印 <code>mean(latencies)</code>，把冷啟動那一筆也混進去平均。這會掩蓋掉什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>平均會把冷啟動的那一筆大值稀釋進去、也把尾延遲藏起來——你會得到一個「看起來還行」的數字，卻看不到 「第一個請求很慢」和「p95 偏高」這兩個真正影響體感的事實。這就是為什麼可觀測性要看分布（百分位）、 不只看一個總數——又一次「選對指標」。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./05-evaluation.html" class="pagination-link" aria-label="不騙自己的評估">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./07-governance.html" class="pagination-link" aria-label="模型治理：把稽核接到 ML">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu"># 服務化與可觀測：從 checkpoint 到能被呼叫的服務 {#sec-serving}</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="at">&gt; **一句話**：訓練是「離線、一次性、看 loss」；服務是「線上、持續、面對真實流量」。把模型變成</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="at">&gt; **能被呼叫、看得見、量得到**的服務，是 MLOps 的第一關。</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="in">```{mermaid}</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：踏進第三部（維運／MLOps），把訓好的模型推上線。</span><span class="ot">"</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a>flowchart LR</span>
+<span id="cb6-11"><a href="#cb6-11"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb6-12"><a href="#cb6-12"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb6-13"><a href="#cb6-13"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a>  class F here</span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="in">```</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a></span>
+<span id="cb6-17"><a href="#cb6-17"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a>**假設你已經會**：第 5 章的評估判準。不需要 MLOps / k8s / 容器背景（會用到的概念都會在這裡建立類比）。</span>
+<span id="cb6-20"><a href="#cb6-20"></a></span>
+<span id="cb6-21"><a href="#cb6-21"></a>**學完你會**：(1) 說清楚服務跟訓練要的東西差在哪（快 / 可觀測 / 可重現）；(2) **逐行**把一個帶</span>
+<span id="cb6-22"><a href="#cb6-22"></a>metrics 的最小推論服務建起來；(3) 在**你自己的 CPU 上**親手量到**冷啟動**與**尾延遲 p95**——</span>
+<span id="cb6-23"><a href="#cb6-23"></a>體會「你不量就不知道、量了立刻看到」這句可觀測性的核心。本章 💻 配套程式 <span class="in">`tiny_observability.py`</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a>純 CPU、十幾秒、不需語料、不需 GPU。</span>
+<span id="cb6-25"><a href="#cb6-25"></a>:::</span>
+<span id="cb6-26"><a href="#cb6-26"></a></span>
+<span id="cb6-27"><a href="#cb6-27"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-28"><a href="#cb6-28"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb6-29"><a href="#cb6-29"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</span>
+<span id="cb6-30"><a href="#cb6-30"></a></span>
+<span id="cb6-31"><a href="#cb6-31"></a><span class="ss">- </span>**推論 API（FastAPI）**：把模型包成可被呼叫的服務。*在意它*：模型要能被產品呼叫才有價值。</span>
+<span id="cb6-32"><a href="#cb6-32"></a><span class="ss">- </span>**延遲 / 吞吐（latency / throughput）**：回應多快、每秒處理多少。*在意它*：使用者體感與容量規劃的兩個基本盤。</span>
+<span id="cb6-33"><a href="#cb6-33"></a><span class="ss">- </span>**p50 / p95（百分位）**：延遲分布的中位與尾巴。*在意它*：只看平均會把尾延遲藏起來；SLA 該訂在尾巴。</span>
+<span id="cb6-34"><a href="#cb6-34"></a><span class="ss">- </span>**冷啟動**：第一個請求特別慢。*在意它*：低流量、剛部署時的體感雷。</span>
+<span id="cb6-35"><a href="#cb6-35"></a><span class="ss">- </span>**可觀測性（Prometheus / Grafana）**：自動記錄每個請求的數據。*在意它*：不量就不知道、量了立刻看到。</span>
+<span id="cb6-36"><a href="#cb6-36"></a><span class="ss">- </span>**podman pod / 容器**：把服務打包、隔離、可重現部署。*在意它*：通往 k8s 的平滑路徑。</span>
+<span id="cb6-37"><a href="#cb6-37"></a>:::</span>
+<span id="cb6-38"><a href="#cb6-38"></a></span>
+<span id="cb6-39"><a href="#cb6-39"></a><span class="fu">## 服務跟訓練要的東西不一樣</span></span>
+<span id="cb6-40"><a href="#cb6-40"></a></span>
+<span id="cb6-41"><a href="#cb6-41"></a>前面五章我們把一個模型訓出來、評估好了。但「訓出一個好模型」和「有一個能上線、能被呼叫、能被</span>
+<span id="cb6-42"><a href="#cb6-42"></a>觀測的系統」是兩回事。服務要的東西完全不同——要快、要能被呼叫、要看得到。我把它一層層接起來：</span>
+<span id="cb6-43"><a href="#cb6-43"></a></span>
+<span id="cb6-44"><a href="#cb6-44"></a><span class="ss">- </span>**推論 API**：用 FastAPI 把模型包成服務，常駐載入 checkpoint 和 tokenizer。端點有 <span class="in">`/health`</span></span>
+<span id="cb6-45"><a href="#cb6-45"></a>  （就緒探針，回模型載好沒、device、參數量）、<span class="in">`/generate`</span>（主端點，回生成文字 + 延遲 + 吞吐）、</span>
+<span id="cb6-46"><a href="#cb6-46"></a>  <span class="in">`/metrics`</span>（給 Prometheus 抓）、<span class="in">`/model`</span>（治理，回報自己是哪顆模型——下一章 @sec-governance 詳談）。</span>
+<span id="cb6-47"><a href="#cb6-47"></a><span class="ss">- </span>**可觀測性**：Prometheus metrics（請求數、延遲 histogram、生成 token 數）加結構化 JSON 日誌，</span>
+<span id="cb6-48"><a href="#cb6-48"></a>  每個請求自動計數、計時、記狀態。</span>
+<span id="cb6-49"><a href="#cb6-49"></a><span class="ss">- </span>**容器化**：用 Podman + GPU（透過 CDI passthrough）把服務打包。模型權重用 runtime mount 掛進去、</span>
+<span id="cb6-50"><a href="#cb6-50"></a>  跟映像解耦——換模型不用重 build 映像。</span>
+<span id="cb6-51"><a href="#cb6-51"></a><span class="ss">- </span>**監控儀表板**：Prometheus + Grafana，用一個 podman pod 把 API、Prometheus、Grafana 三個容器放在</span>
+<span id="cb6-52"><a href="#cb6-52"></a>  一起、共享 localhost。</span>
+<span id="cb6-53"><a href="#cb6-53"></a></span>
+<span id="cb6-54"><a href="#cb6-54"></a>::: {.callout-tip}</span>
+<span id="cb6-55"><a href="#cb6-55"></a><span class="fu">## podman pod 就是 k8s「Pod」的微縮版</span></span>
+<span id="cb6-56"><a href="#cb6-56"></a>把多個容器放進一個 pod、共享網路命名空間、互相用 localhost 找得到——這正是 Kubernetes「Pod」概念的</span>
+<span id="cb6-57"><a href="#cb6-57"></a>微縮版。單機這樣剛好夠；要多副本、跨機、自動擴縮，才需要真的 k8s。從這裡到 k8s 是一條平滑的路。</span>
+<span id="cb6-58"><a href="#cb6-58"></a>:::</span>
+<span id="cb6-59"><a href="#cb6-59"></a></span>
+<span id="cb6-60"><a href="#cb6-60"></a><span class="fu">## 逐行把一個「會自報 metrics」的服務建起來 {#sec-build-service}</span></span>
+<span id="cb6-61"><a href="#cb6-61"></a></span>
+<span id="cb6-62"><a href="#cb6-62"></a>服務的骨架不神祕：**常駐一顆模型 + 每個請求自動記數據**。我們用 <span class="in">`tiny_observability.py`</span> 逐行建出來。</span>
+<span id="cb6-63"><a href="#cb6-63"></a></span>
+<span id="cb6-64"><a href="#cb6-64"></a>**第 0 步——常駐模型。** 服務啟動時把模型載進記憶體一次，之後每個請求重複用（不要每次都重載）：</span>
+<span id="cb6-65"><a href="#cb6-65"></a></span>
+<span id="cb6-66"><a href="#cb6-66"></a><span class="in">```python</span></span>
+<span id="cb6-67"><a href="#cb6-67"></a><span class="kw">class</span> Service:</span>
+<span id="cb6-68"><a href="#cb6-68"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb6-69"><a href="#cb6-69"></a>        <span class="va">self</span>.model <span class="op">=</span> GPT().<span class="bu">eval</span>()      <span class="co"># 啟動時載一次，常駐</span></span>
+<span id="cb6-70"><a href="#cb6-70"></a>        <span class="va">self</span>.n_requests <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-71"><a href="#cb6-71"></a>        <span class="va">self</span>.n_tokens <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-72"><a href="#cb6-72"></a>        <span class="va">self</span>.latencies <span class="op">=</span> []</span>
+<span id="cb6-73"><a href="#cb6-73"></a><span class="in">```</span></span>
+<span id="cb6-74"><a href="#cb6-74"></a></span>
+<span id="cb6-75"><a href="#cb6-75"></a>**第 1 步——每個請求自動記 metrics。** 處理請求時順手計時、計數、累計 token。可觀測性的精神就是</span>
+<span id="cb6-76"><a href="#cb6-76"></a>「把每個請求的事實留下來」：</span>
+<span id="cb6-77"><a href="#cb6-77"></a></span>
+<span id="cb6-78"><a href="#cb6-78"></a><span class="in">```python</span></span>
+<span id="cb6-79"><a href="#cb6-79"></a><span class="kw">def</span> generate(<span class="va">self</span>, prompt, n_new<span class="op">=</span><span class="dv">40</span>):</span>
+<span id="cb6-80"><a href="#cb6-80"></a>    t0 <span class="op">=</span> time.perf_counter()</span>
+<span id="cb6-81"><a href="#cb6-81"></a>    out <span class="op">=</span> <span class="va">self</span>.model.generate(prompt, n_new)</span>
+<span id="cb6-82"><a href="#cb6-82"></a>    dt <span class="op">=</span> (time.perf_counter() <span class="op">-</span> t0) <span class="op">*</span> <span class="dv">1000</span>      <span class="co"># ms</span></span>
+<span id="cb6-83"><a href="#cb6-83"></a>    <span class="va">self</span>.n_requests <span class="op">+=</span> <span class="dv">1</span>                        <span class="co"># ← /metrics 的 requests_total</span></span>
+<span id="cb6-84"><a href="#cb6-84"></a>    <span class="va">self</span>.n_tokens <span class="op">+=</span> n_new                      <span class="co"># ← tokens_generated</span></span>
+<span id="cb6-85"><a href="#cb6-85"></a>    <span class="va">self</span>.latencies.append(dt)                   <span class="co"># ← 算 p50/p95 用</span></span>
+<span id="cb6-86"><a href="#cb6-86"></a>    <span class="cf">return</span> out, dt</span>
+<span id="cb6-87"><a href="#cb6-87"></a><span class="in">```</span></span>
+<span id="cb6-88"><a href="#cb6-88"></a></span>
+<span id="cb6-89"><a href="#cb6-89"></a>**第 2 步——別只看平均，看百分位。** 平均延遲會被少數慢請求拉歪、也會把尾延遲藏起來。使用者體感</span>
+<span id="cb6-90"><a href="#cb6-90"></a>是**尾巴**（p95、p99），所以服務要看百分位：</span>
+<span id="cb6-91"><a href="#cb6-91"></a></span>
+<span id="cb6-92"><a href="#cb6-92"></a><span class="in">```python</span></span>
+<span id="cb6-93"><a href="#cb6-93"></a><span class="kw">def</span> pct(xs, p):</span>
+<span id="cb6-94"><a href="#cb6-94"></a>    s <span class="op">=</span> <span class="bu">sorted</span>(xs)</span>
+<span id="cb6-95"><a href="#cb6-95"></a>    <span class="cf">return</span> s[<span class="bu">min</span>(<span class="bu">len</span>(s) <span class="op">-</span> <span class="dv">1</span>, <span class="bu">int</span>(p <span class="op">/</span> <span class="dv">100</span> <span class="op">*</span> <span class="bu">len</span>(s)))]</span>
+<span id="cb6-96"><a href="#cb6-96"></a><span class="in">```</span></span>
+<span id="cb6-97"><a href="#cb6-97"></a></span>
+<span id="cb6-98"><a href="#cb6-98"></a><span class="fu">## 💻 在你的機器上：冷啟動與尾延遲 {#sec-tiny-observability}</span></span>
+<span id="cb6-99"><a href="#cb6-99"></a></span>
+<span id="cb6-100"><a href="#cb6-100"></a>可觀測性最好的學法是親手量一次。配套程式 <span class="in">`tiny_observability.py`</span>（純 CPU、十幾秒、不需語料）把</span>
+<span id="cb6-101"><a href="#cb6-101"></a>一顆小模型包成服務、打 30 個請求、印出延遲：</span>
+<span id="cb6-102"><a href="#cb6-102"></a></span>
+<span id="cb6-103"><a href="#cb6-103"></a><span class="in">```bash</span></span>
+<span id="cb6-104"><a href="#cb6-104"></a><span class="ex">python</span> tiny_observability.py</span>
+<span id="cb6-105"><a href="#cb6-105"></a><span class="in">```</span></span>
+<span id="cb6-106"><a href="#cb6-106"></a></span>
+<span id="cb6-107"><a href="#cb6-107"></a>在我的 Framework 16（純 CPU）上：</span>
+<span id="cb6-108"><a href="#cb6-108"></a></span>
+<span id="cb6-109"><a href="#cb6-109"></a><span class="in">```</span></span>
+<span id="cb6-110"><a href="#cb6-110"></a><span class="in">模型 0.83M，device=cpu</span></span>
+<span id="cb6-111"><a href="#cb6-111"></a></span>
+<span id="cb6-112"><a href="#cb6-112"></a><span class="in">=== 打 30 個請求，看延遲 ===</span></span>
+<span id="cb6-113"><a href="#cb6-113"></a><span class="in">  冷啟動（第 1 個請求）：  27.0 ms</span></span>
+<span id="cb6-114"><a href="#cb6-114"></a><span class="in">  暖機後 p50：            18.0 ms</span></span>
+<span id="cb6-115"><a href="#cb6-115"></a><span class="in">  暖機後 p95：            22.0 ms</span></span>
+<span id="cb6-116"><a href="#cb6-116"></a><span class="in">  冷/暖倍數：              1.5×</span></span>
+<span id="cb6-117"><a href="#cb6-117"></a></span>
+<span id="cb6-118"><a href="#cb6-118"></a><span class="in">=== /metrics（一裝上就有數據）===</span></span>
+<span id="cb6-119"><a href="#cb6-119"></a><span class="in">  requests_total      = 30</span></span>
+<span id="cb6-120"><a href="#cb6-120"></a><span class="in">  tokens_generated    = 1200</span></span>
+<span id="cb6-121"><a href="#cb6-121"></a><span class="in">  latency_p50_ms      = 18.0</span></span>
+<span id="cb6-122"><a href="#cb6-122"></a><span class="in">  latency_p95_ms      = 22.0</span></span>
+<span id="cb6-123"><a href="#cb6-123"></a><span class="in">```</span></span>
+<span id="cb6-124"><a href="#cb6-124"></a></span>
+<span id="cb6-125"><a href="#cb6-125"></a>**怎麼讀**：</span>
+<span id="cb6-126"><a href="#cb6-126"></a></span>
+<span id="cb6-127"><a href="#cb6-127"></a><span class="ss">1. </span>**冷啟動是真的**：第一個請求明顯比之後慢（這裡 CPU 上約 1.5×；原因是 lazy 初始化、執行緒池暖機、</span>
+<span id="cb6-128"><a href="#cb6-128"></a>   配置快取）。在 GPU 上更誇張——我在正式服務量到**第一個請求約 354 ms、暖機後約 50 ms**（首次</span>
+<span id="cb6-129"><a href="#cb6-129"></a>   呼叫要即時編譯 CUDA kernel）。不管哪種，重點一樣：**量了才知道**。</span>
+<span id="cb6-130"><a href="#cb6-130"></a><span class="ss">2. </span>**看尾巴不看平均**：p95（22 ms）比 p50（18 ms）高——使用者體感是尾延遲。只報平均會把這段藏起來。</span>
+<span id="cb6-131"><a href="#cb6-131"></a></span>
+<span id="cb6-132"><a href="#cb6-132"></a><span class="al">![可觀測性（純 CPU 真跑）：冷啟動（第 1 個請求）明顯高於暖機後；而且 p95 尾延遲高於 p50——這些只報平均就看不到的東西，一裝上 metrics 立刻現形。](images/serving_latency.png)</span>{#fig-latency width=68%}</span>
+<span id="cb6-133"><a href="#cb6-133"></a></span>
+<span id="cb6-134"><a href="#cb6-134"></a>::: {.callout-note}</span>
+<span id="cb6-135"><a href="#cb6-135"></a><span class="fu">## 可觀測性的價值＝把模糊變事實</span></span>
+<span id="cb6-136"><a href="#cb6-136"></a>@fig-latency 的每一根都是「你不主動量、就只會憑感覺」的東西。可觀測性把「好像第一次比較慢」變成</span>
+<span id="cb6-137"><a href="#cb6-137"></a>「冷 27 ms vs 暖 18 ms」、把「大致還行」變成「p95 = 22 ms」。**先有事實，才有得優化、才有得對 SLA 負責。**</span>
+<span id="cb6-138"><a href="#cb6-138"></a>:::</span>
+<span id="cb6-139"><a href="#cb6-139"></a></span>
+<span id="cb6-140"><a href="#cb6-140"></a><span class="fu">## 帶走什麼</span></span>
+<span id="cb6-141"><a href="#cb6-141"></a></span>
+<span id="cb6-142"><a href="#cb6-142"></a><span class="ss">- </span>服務跟訓練要的東西不同：要快、能被呼叫、看得見。推論 API + metrics + 容器 + 儀表板一層層接起來。</span>
+<span id="cb6-143"><a href="#cb6-143"></a><span class="ss">- </span>podman pod 是 k8s Pod 的微縮版——單機夠用，要擴縮才上 k8s。</span>
+<span id="cb6-144"><a href="#cb6-144"></a><span class="ss">- </span>**可觀測性的核心是把模糊變事實**：冷啟動、尾延遲 p95 都是「不量就不知道、量了立刻看到」。</span>
+<span id="cb6-145"><a href="#cb6-145"></a><span class="ss">- </span>服務只是整條鏈的一段——下一章把它接到**治理**（@sec-governance）：線上這顆到底是哪顆、憑什麼上線。</span>
+<span id="cb6-146"><a href="#cb6-146"></a></span>
+<span id="cb6-147"><a href="#cb6-147"></a><span class="fu">## 練習 {#sec-serving-exercises}</span></span>
+<span id="cb6-148"><a href="#cb6-148"></a></span>
+<span id="cb6-149"><a href="#cb6-149"></a>::: {.callout-note}</span>
+<span id="cb6-150"><a href="#cb6-150"></a><span class="fu">## 1（先預測）：把 n_new 加大，冷/暖差距會怎樣？</span></span>
+<span id="cb6-151"><a href="#cb6-151"></a><span class="in">`tiny_observability.py`</span> 每個請求生成 40 個 token。**先寫下你的預測**：把 <span class="in">`n_new`</span> 加到 200，冷啟動相對</span>
+<span id="cb6-152"><a href="#cb6-152"></a>暖機的「倍數」會變大還變小？</span>
+<span id="cb6-153"><a href="#cb6-153"></a></span>
+<span id="cb6-154"><a href="#cb6-154"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-155"><a href="#cb6-155"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-156"><a href="#cb6-156"></a>通常**倍數變小**——冷啟動的固定開銷（初始化、暖機）被攤平到更長的生成上，佔比下降。這也是為什麼</span>
+<span id="cb6-157"><a href="#cb6-157"></a>「冷啟動」在短請求、低流量服務上最有感。動手把 <span class="in">`n_new`</span> 改大，看冷/暖倍數怎麼收斂。</span>
+<span id="cb6-158"><a href="#cb6-158"></a>:::</span>
+<span id="cb6-159"><a href="#cb6-159"></a>:::</span>
+<span id="cb6-160"><a href="#cb6-160"></a></span>
+<span id="cb6-161"><a href="#cb6-161"></a>::: {.callout-note}</span>
+<span id="cb6-162"><a href="#cb6-162"></a><span class="fu">## 2（動手）：加一個 p99</span></span>
+<span id="cb6-163"><a href="#cb6-163"></a>服務的 SLA 常用 p99。在 <span class="in">`pct`</span> 的基礎上印出 p99，比較 p50/p95/p99。它們的差距告訴你什麼？</span>
+<span id="cb6-164"><a href="#cb6-164"></a></span>
+<span id="cb6-165"><a href="#cb6-165"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-166"><a href="#cb6-166"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-167"><a href="#cb6-167"></a>p99 通常比 p95 再高一截——尾巴越往後拉越長。p50 和 p99 差很多，代表延遲分布有長尾（少數請求很慢），</span>
+<span id="cb6-168"><a href="#cb6-168"></a>這種情況只報平均會嚴重低估使用者最差體感。SLA 訂在 p95/p99 而非平均，正是為了對尾巴負責。</span>
+<span id="cb6-169"><a href="#cb6-169"></a>:::</span>
+<span id="cb6-170"><a href="#cb6-170"></a>:::</span>
+<span id="cb6-171"><a href="#cb6-171"></a></span>
+<span id="cb6-172"><a href="#cb6-172"></a>::: {.callout-warning}</span>
+<span id="cb6-173"><a href="#cb6-173"></a><span class="fu">## 3（弄壞）：只報平均延遲</span></span>
+<span id="cb6-174"><a href="#cb6-174"></a>把延遲報告改成只印 <span class="in">`mean(latencies)`</span>，把冷啟動那一筆也混進去平均。這會掩蓋掉什麼？</span>
+<span id="cb6-175"><a href="#cb6-175"></a></span>
+<span id="cb6-176"><a href="#cb6-176"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb6-177"><a href="#cb6-177"></a><span class="fu">## 參考答案</span></span>
+<span id="cb6-178"><a href="#cb6-178"></a>平均會把冷啟動的那一筆大值稀釋進去、也把尾延遲藏起來——你會得到一個「看起來還行」的數字，卻看不到</span>
+<span id="cb6-179"><a href="#cb6-179"></a>「第一個請求很慢」和「p95 偏高」這兩個真正影響體感的事實。這就是為什麼可觀測性要看分布（百分位）、</span>
+<span id="cb6-180"><a href="#cb6-180"></a>不只看一個總數——又一次「選對指標」。</span>
+<span id="cb6-181"><a href="#cb6-181"></a>:::</span>
+<span id="cb6-182"><a href="#cb6-182"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/06-serving.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></div></div></footer></body></html>

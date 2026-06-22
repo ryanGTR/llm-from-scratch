@@ -68,7 +68,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./06-deploy-governance.html" rel="next">
+<link href="./06-serving.html" rel="next">
 <link href="./04-real-data.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -107,6 +107,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "搜索"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
@@ -163,7 +166,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　工程</a></li><li class="breadcrumb-item"><a href="./05-evaluation.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　資料與評估</a></li><li class="breadcrumb-item"><a href="./05-evaluation.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
@@ -229,7 +232,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">第二部　工程</span></a>
+ <span class="menu-text">第二部　資料與評估</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -247,18 +250,12 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./06-deploy-governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">上線與治理：把稽核接到 ML</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
- <span class="menu-text">第三部　對齊</span></a>
+ <span class="menu-text">第三部　維運 / MLOps</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -266,8 +263,20 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./07-alignment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  <a href="./06-serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">模型治理：把稽核接到 ML</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-drift-retrain.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">會腐壞的系統：drift、重訓、放量</span></span></a>
   </div>
 </li>
       </ul>
@@ -275,7 +284,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
- <span class="menu-text">附錄</span></a>
+ <span class="menu-text">第四部　對齊</span></a>
           <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -283,8 +292,31 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-math-appendix.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">附錄：數學推導</span></a>
+  <a href="./09-alignment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">對齊：把「接龍機器」教成「會聽話、有偏好」</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">附錄</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-math-appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">附錄：數學推導</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">附錄：術語表與符號約定</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -306,17 +338,26 @@ window.Quarto = {
    
   <ul>
   <li><a href="#先講判準再驗證" id="toc-先講判準再驗證" class="nav-link active" data-scroll-target="#先講判準再驗證"><span class="header-section-number">5.1</span> 先講判準，再驗證</a></li>
-  <li><a href="#用對的尺bpc-而不是-raw-loss" id="toc-用對的尺bpc-而不是-raw-loss" class="nav-link" data-scroll-target="#用對的尺bpc-而不是-raw-loss"><span class="header-section-number">5.2</span> 用對的尺：BPC 而不是 raw loss</a></li>
+  <li><a href="#用對的尺bpc-而不是-raw-loss" id="toc-用對的尺bpc-而不是-raw-loss" class="nav-link" data-scroll-target="#用對的尺bpc-而不是-raw-loss"><span class="header-section-number">5.2</span> 用對的尺：BPC 而不是 raw loss</a>
+  <ul class="collapse">
+  <li><a href="#sec-build-bpc" id="toc-sec-build-bpc" class="nav-link" data-scroll-target="#sec-build-bpc"><span class="header-section-number">5.2.1</span> 逐行把 BPC 算出來</a></li>
+  </ul></li>
   <li><a href="#重大性原則什麼時候該跑多-seed" id="toc-重大性原則什麼時候該跑多-seed" class="nav-link" data-scroll-target="#重大性原則什麼時候該跑多-seed"><span class="header-section-number">5.3</span> 重大性原則：什麼時候該跑多 seed</a></li>
-  <li><a href="#選對指標一把被汙染的尺如何給出相反的結論" id="toc-選對指標一把被汙染的尺如何給出相反的結論" class="nav-link" data-scroll-target="#選對指標一把被汙染的尺如何給出相反的結論"><span class="header-section-number">5.4</span> 選對指標：一把被汙染的尺如何給出相反的結論</a></li>
-  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">5.5</span> 帶走什麼</a></li>
+  <li><a href="#sec-tiny-eval" id="toc-sec-tiny-eval" class="nav-link" data-scroll-target="#sec-tiny-eval"><span class="header-section-number">5.4</span> 💻 在你的機器上：亂猜基準 + BPC + 多 seed</a></li>
+  <li><a href="#sec-baseline" id="toc-sec-baseline" class="nav-link" data-scroll-target="#sec-baseline"><span class="header-section-number">5.5</span> 先贏過笨基準：你的模型有沒有「賺到」複雜度</a>
+  <ul class="collapse">
+  <li><a href="#sec-correctness" id="toc-sec-correctness" class="nav-link" data-scroll-target="#sec-correctness"><span class="header-section-number">5.5.1</span> 正確性 baseline：你沒在騙自己</a></li>
+  </ul></li>
+  <li><a href="#選對指標一把被汙染的尺如何給出相反的結論" id="toc-選對指標一把被汙染的尺如何給出相反的結論" class="nav-link" data-scroll-target="#選對指標一把被汙染的尺如何給出相反的結論"><span class="header-section-number">5.6</span> 選對指標：一把被汙染的尺如何給出相反的結論</a></li>
+  <li><a href="#帶走什麼" id="toc-帶走什麼" class="nav-link" data-scroll-target="#帶走什麼"><span class="header-section-number">5.7</span> 帶走什麼</a></li>
+  <li><a href="#sec-ch5-exercises" id="toc-sec-ch5-exercises" class="nav-link" data-scroll-target="#sec-ch5-exercises"><span class="header-section-number">5.8</span> 練習</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/ryanGTR/llm-from-scratch/blob/main/05-evaluation.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li><li><a href="https://github.com/ryanGTR/llm-from-scratch/issues/new" class="toc-action"><i class="bi empty"></i>反馈问题</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　工程</a></li><li class="breadcrumb-item"><a href="./05-evaluation.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./04-real-data.html">第二部　資料與評估</a></li><li class="breadcrumb-item"><a href="./05-evaluation.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></a></li></ol></nav>
 <div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title"><span id="sec-eval" class="quarto-section-identifier"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">不騙自己的評估</span></span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
 </div>
@@ -339,6 +380,63 @@ window.Quarto = {
 <p><strong>一句話</strong>：評估難的不是算數字，是<strong>選對該量的東西、並質疑它有沒有被汙染</strong>。這是整本書的主線， 這一章把它講透。</p>
 </blockquote>
 <p>訓練一個模型不難，難的是「誠實地知道它到底好不好」。這一章講四件事：先講判準、用對的尺、知道什麼 時候該重複跑、以及——最重要的——<strong>質疑你的尺有沒有被汙染</strong>。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+  A["01 GPT"]--&gt;B["02 零件"]--&gt;C["03 效率"]--&gt;D["04 資料"]--&gt;E["05 評估"]--&gt;F["06 服務"]--&gt;G["07 治理"]--&gt;H["08 漂移"]
+  E -.後訓練.-&gt; I["09 對齊"]
+  classDef here fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;
+  class E here
+</pre>
+</div>
+<p></p><figcaption> 你在這裡：誠實地評估模型到底好不好。</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>這章的定位（讀之前先對齊期待）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>假設你已經會</strong>：第 1 章的 cross-entropy loss、第 2 章的對照實驗。不需要任何統計學背景 （會用到的都會在這裡建立直覺）。</p>
+<p><strong>學完你會</strong>：(1) 永遠先有「亂猜基準」再看數字；(2) <strong>逐行</strong>把 raw loss 換算成跨 tokenizer 公平的 <strong>BPC</strong>，並懂為什麼不能直接比 raw loss；(3) 在<strong>你自己的 CPU 上</strong>親手跑「亂猜基準 + BPC + 多 seed mean±std」，量出一個具體的「雜訊尺度」當重大性判準。最重要的是學到：<strong>評估的真正難點是選對指標、 並質疑它有沒有被汙染。</strong> 本章 💻 配套程式 <code>tiny_eval.py</code> 純 CPU、約 3–4 分鐘。</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</p>
+<ul>
+<li><strong>loss / cross-entropy</strong>：「猜下一字」平均錯多少。<em>在意它</em>：訓練的北極星——但跨設定不能直接比。</li>
+<li><strong>亂猜基準</strong>：完全亂猜時的 loss（<span class="math inline">\ln V</span>）。<em>在意它</em>：沒有基準，任何數字都沒意義。</li>
+<li><strong>BPC（bits per character）</strong>：跨 tokenizer 公平的尺。<em>在意它</em>：用錯尺，A/B 結論可能整個翻過來。</li>
+<li><strong>held-out（保留集）</strong>：用模型沒看過的資料評。<em>在意它</em>：看 train 會被「死背」騙。</li>
+<li><strong>多 seed / 重大性</strong>：跑多次看 mean±std。<em>在意它</em>：單一漂亮數字可能只是運氣；只在「差距小、決策貴」時才多跑。</li>
+<li><strong>指標被汙染</strong>：尺本身偏了（如測試集洩漏）。<em>在意它</em>：全書最重要一課——先質疑你的尺，再信數字。</li>
+</ul>
+</div>
+</div>
+</div>
 <section id="先講判準再驗證" class="level2" data-number="5.1">
 <h2 data-number="5.1" class="anchored" data-anchor-id="先講判準再驗證"><span class="header-section-number">5.1</span> 先講判準，再驗證</h2>
 <p>最容易自欺的方式，是訓完之後才去找「它哪裡好」。所以我的紀律是<strong>訓練前先寫死「什麼叫成功」</strong>， 訓完逐項對，不事後移動球門：</p>
@@ -399,6 +497,17 @@ window.Quarto = {
 <p>把它換算到「每個字元幾 bit」這個跨 tokenizer 通用的尺度上。換完：char 2.56 vs BPE <strong>2.37</strong>——其實是 BPE 更好、而且序列只有一半長。<strong>換對尺，結論整個翻過來。</strong></p>
 </div>
 </div>
+<section id="sec-build-bpc" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="sec-build-bpc"><span class="header-section-number">5.2.1</span> 逐行把 BPC 算出來</h3>
+<p>BPC 不神祕，三步就從 raw loss 換出來。我們逐步建它（對應 <code>tiny_eval.py</code> 印出的數字）。</p>
+<p><strong>第 0 步——loss 的單位是 nat，換成 bit。</strong> cross-entropy 預設用自然對數，單位是 nat。除以 <span class="math inline">\ln 2</span> 換成 bit（資訊理論的通用單位）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a>bits_per_token <span class="op">=</span> loss <span class="op">/</span> math.log(<span class="dv">2</span>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 1 步——把「每 token」換成「每字元」。</strong> 不同 tokenizer 一個 token 含的字元數不同（char-level 是 1、BPE 可能 2–3）。除以「平均每 token 幾個字元」才公平：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>bpc <span class="op">=</span> bits_per_token <span class="op">/</span> (n_chars <span class="op">/</span> n_tokens)     <span class="co"># 每字元幾 bit，跨 tokenizer 通用</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>第 2 步——char-level 的特例。</strong> char-level 下每個 token 就是一個字元，<code>n_chars/n_tokens = 1</code>， 所以 BPC 直接就是 <code>loss / ln2</code>。<code>tiny_eval.py</code> 用的就是這個特例：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="bu">print</span>(<span class="ss">f"val loss </span><span class="sc">{</span>vl<span class="sc">:.4f}</span><span class="ss">   BPC </span><span class="sc">{</span>vl<span class="op">/</span>math<span class="sc">.</span>log(<span class="dv">2</span>)<span class="sc">:.3f}</span><span class="ss"> bits/char"</span>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>關鍵在第 1 步那個除法：它把「類別數不同」這個不公平因素正規化掉。少了它，你會像本章開頭那樣 拿 char 的 1.77 去跟 BPE 的 3.34 直接比，得到完全相反的結論。</p>
+</section>
 </section>
 <section id="重大性原則什麼時候該跑多-seed" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="重大性原則什麼時候該跑多-seed"><span class="header-section-number">5.3</span> 重大性原則：什麼時候該跑多 seed</h2>
@@ -430,8 +539,101 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="選對指標一把被汙染的尺如何給出相反的結論" class="level2" data-number="5.4">
-<h2 data-number="5.4" class="anchored" data-anchor-id="選對指標一把被汙染的尺如何給出相反的結論"><span class="header-section-number">5.4</span> 選對指標：一把被汙染的尺如何給出相反的結論</h2>
+<section id="sec-tiny-eval" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="sec-tiny-eval"><span class="header-section-number">5.4</span> 💻 在你的機器上：亂猜基準 + BPC + 多 seed</h2>
+<p>前三件評估紀律——<strong>先有基準、用對的尺、看重大性</strong>——可以一次跑出來。配套程式 <code>tiny_eval.py</code> 用第 1 章的 char-level 小 GPT，跑 3 個不同 seed，純 CPU 約 3–4 分鐘：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">curl</span> <span class="at">-o</span> input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="ex">python</span> tiny_eval.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16（純 CPU）上：</p>
+<pre><code>vocab=65  device=cpu
+亂猜基準 = ln 65 = 4.174 nat（模型要明顯低於它才算在學）
+
+  seed 1337: val loss 1.6757   BPC 2.418 bits/char
+  seed   42: val loss 1.6792   BPC 2.423 bits/char
+  seed    7: val loss 1.6856   BPC 2.432 bits/char
+
+3 seeds: val loss 1.6802 ± 0.0050   BPC 2.424 ± 0.007 bits/char
+相對亂猜基準 4.174，模型把不確定性砍了 60%。</code></pre>
+<p><strong>怎麼讀——三條紀律各一個數字</strong>：</p>
+<ol type="1">
+<li><strong>先有基準</strong>：亂猜是 <span class="math inline">\ln 65 = 4.174</span>。val loss 掉到 1.68 才證明「真的在學」、砍掉了 60% 的 不確定性——<strong>沒有基準，1.68 這個數字本身沒有意義</strong>。</li>
+<li><strong>用對的尺</strong>：每個 loss 旁邊就是換算好的 BPC（char-level 下 = loss/ln2）。要跟別的 tokenizer 比，比 BPC，不比 raw loss。</li>
+<li><strong>重大性</strong>：3 個 seed 的 std ≈ <strong>0.005</strong>。這就是你的「雜訊尺度」——一個架構改善要比 0.005 大上 好幾倍（像第 2 章 SwiGLU 的 −0.019、RoPE 的差異）才能宣稱「真的有差」，而不是 seed 的運氣。</li>
+</ol>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>把這個 std 當成你的「顯著性門檻」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>跑出 std≈0.005 後，回頭看任何一個「我換了 X，loss 從 1.680 變 1.678」的宣稱——差 0.002 比雜訊還小， <strong>那是運氣不是改善</strong>。這就是重大性原則的操作型定義：先量雜訊，再決定一個差異值不值得相信、要不要 多跑 seed 確認。</p>
+</div>
+</div>
+</section>
+<section id="sec-baseline" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="sec-baseline"><span class="header-section-number">5.5</span> 先贏過笨基準：你的模型有沒有「賺到」複雜度</h2>
+<p>到這裡，我們的評估都還在<strong>跟自己比</strong>（val loss、BPC、亂猜基準）。但「比亂猜好」門檻太低—— 亂猜根本沒在學。真正該問的是：<strong>你那顆有 attention、有梯度下降的神經網路，比一個只會數頻率的 笨模型好多少？如果差不多，那這些複雜度就白加了。</strong> 所以紀律要升級：<strong>先擺一個夠強的笨基準， 神經網路要明顯贏它，才算賺到複雜度。</strong></p>
+<p>我把「亂猜基準」升級成兩個公認的笨基準，在<strong>同一份 val、同一把尺（BPC）</strong>上比：</p>
+<ul>
+<li><strong>gzip</strong>：通用壓縮軟體的壓縮率＝資訊理論的天然 BPC（「你贏得過 gzip 嗎？」是個有名又直覺的問題）。</li>
+<li><strong>n-gram（4-gram + backoff）</strong>：char-level 語言模型的教科書基準——只數「前幾個字後面接什麼」的頻率， 沒有任何神經網路。</li>
+</ul>
+<p>配套程式 <code>tiny_baseline.py</code>（純 CPU、約 2 分鐘）把四者跑在同一份 val 上：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">python</span> tiny_baseline.py</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在我的 Framework 16（純 CPU）上：</p>
+<pre><code>vocab=65  在同一份 val（111540 字元）上比 BPC
+方法                     BPC (bits/char)
+----------------------------------------
+亂猜 (log2 V)                      6.022
+gzip -9                          3.191
+4-gram (backoff)                 2.551
+tiny GPT                         2.323</code></pre>
+<div id="fig-baseline-bpc" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline-bpc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/baseline_bpc.png" class="img-fluid figure-img" style="width:70.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline-bpc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5.2: 先贏過笨基準（純 CPU 真跑，BPC 越低越好）：亂猜 6.02 → gzip 3.19 → 4-gram 2.55 → tiny GPT 2.32。神經網路贏過會數頻率的 n-gram，才算賺到它的複雜度。
+</figcaption>
+</figure>
+</div>
+<p><strong>怎麼讀</strong>（<a href="#fig-baseline-bpc" class="quarto-xref">图&nbsp;<span>5.2</span></a>）：</p>
+<ol type="1">
+<li><strong>神經網路賺到了複雜度</strong>：tiny GPT 2.32 &lt; 4-gram 2.55 &lt; gzip 3.19 &lt; 亂猜 6.02。它確實學到了 n-gram「數頻率」學不到的東西——<strong>這就是「值得加 attention/梯度下降」的證據</strong>。</li>
+<li><strong>但別小看笨基準</strong>：GPT 只贏 4-gram 0.23 bits/char。一個只數頻率的模型，已經把亂猜的 6.02 砍到 2.55——<strong>笨基準常常比你以為的硬得多</strong>。不先跑它，你會把「比亂猜好」當成「我的模型很強」， 其實大部分功勞是 char-level 統計本來就能拿到的。</li>
+</ol>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>選對 baseline：要「下界基準」不要「虛榮基準」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>我刻意選 gzip / n-gram，而<strong>不是</strong>拿 8M 玩具去比 GPT-2。為什麼？比 GPT-2 一定輸、且毫無資訊—— 誰都知道 8M char 模型贏不了。有意義的比較是<strong>下界</strong>：「你有沒有贏過那個不該輸的笨東西？」 <strong>選對 baseline 本身就是一次『選對指標』</strong>：虛榮的比較讓你自我感覺良好或無謂自卑，對的比較才 回答真問題。這跟前面「先有亂猜基準」是同一條紀律的進階版。</p>
+</div>
+</div>
+<section id="sec-correctness" class="level3" data-number="5.5.1">
+<h3 data-number="5.5.1" class="anchored" data-anchor-id="sec-correctness"><span class="header-section-number">5.5.1</span> 正確性 baseline：你沒在騙自己</h3>
+<p>品質 baseline 問「有沒有贏笨基準」；還有一個更底層的 baseline：<strong>你確定手刻的數學是對的嗎？</strong> 書裡每個漂亮數字的前提，是底層程式真的算對——所以 from-scratch 的東西要對一個<strong>可信參照實作</strong> 數值對拍。配套程式 <code>tiny_correctness.py</code>（純 CPU、瞬間）把書裡那條手刻 causal attention （<code>softmax(QKᵀ/√d)</code> 遮罩 → <code>@V</code>）對 torch 內建的 <code>scaled_dot_product_attention</code>：</p>
+<pre><code>=== 正確性對拍（手刻 vs torch 內建可信參照）===
+  單頭 causal attention   max|diff| = 2.38e-07
+  多頭 causal attention   max|diff| = 4.77e-07
+=== 結構不變量 ===
+  softmax 每列和為 1？        True
+  因果遮罩讓未來權重=0？      True</code></pre>
+<p>差只在浮點誤差等級（~1e-7）——手刻版跟工業級實作算出<strong>同一個答案</strong>。這跟第 3 章用同一招驗 FlashAttention（logits 差 <span class="math inline">6\times10^{-7}</span>、<a href="03-efficiency.html" class="quarto-xref"><span>章节 3</span></a>）是同一條紀律：<strong>對拍可信參照 = 不騙自己</strong>。 單元測試把這個對拍釘成回歸（<code>tests/test_book_examples.py</code>），改壞了會立刻紅燈。</p>
+</section>
+</section>
+<section id="選對指標一把被汙染的尺如何給出相反的結論" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="選對指標一把被汙染的尺如何給出相反的結論"><span class="header-section-number">5.6</span> 選對指標：一把被汙染的尺如何給出相反的結論</h2>
 <p>這是整本書最重要的一課，我用後訓練的一個真實例子來講（完整脈絡在第 7 章）。</p>
 <p>做完 SFT（指令微調）後，我要評估它有沒有變好。直覺是用「維基 perplexity」——結果顯示 SFT <strong>變爛</strong>了 （perplexity 升高）。如果我就此下結論，我會說「SFT 沒用」。但那把尺<strong>被汙染</strong>了：</p>
 <ul>
@@ -443,14 +645,105 @@ window.Quarto = {
 <p><strong>同一顆模型、不同的尺、相反的結論。</strong> 用維基 perplexity 它「變爛」、用行為率它「大幅變好」。差別 不在模型，在<strong>我選的尺有沒有被汙染</strong>。</p>
 </blockquote>
 </section>
-<section id="帶走什麼" class="level2" data-number="5.5">
-<h2 data-number="5.5" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">5.5</span> 帶走什麼</h2>
+<section id="帶走什麼" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="帶走什麼"><span class="header-section-number">5.7</span> 帶走什麼</h2>
 <ul>
 <li><strong>先講判準、再驗證</strong>，並且永遠先有「亂猜基準」，數字才有意義。</li>
+<li><strong>先贏過笨基準</strong>（gzip / n-gram）才算賺到複雜度——而且選「下界基準」不選「虛榮基準」，本身就是選對指標。</li>
 <li>跨 tokenizer 用 BPC 比，不用 raw loss——換對尺，結論可能整個翻。</li>
 <li>多 seed 看<strong>重大性原則</strong>：只在差距小、決策貴、要對外宣稱時做，不必每次。</li>
 <li><strong>評估的真正難點，是選對指標、並質疑它有沒有被汙染。</strong> 這個形狀會在第 7 章的對齊一再出現—— SFT 的尺被汙染、DPO 的 train-acc 騙人、RLHF 的 reward model 被鑽。學會質疑你的尺，比學會任何單一 技巧都重要。</li>
 </ul>
+</section>
+<section id="sec-ch5-exercises" class="level2" data-number="5.8">
+<h2 data-number="5.8" class="anchored" data-anchor-id="sec-ch5-exercises"><span class="header-section-number">5.8</span> 練習</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>1（先預測）：把 vocab 變大，亂猜基準會怎樣？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>tiny_eval.py</code> 的亂猜基準是 <span class="math inline">\ln(\text{vocab})</span>。<strong>先寫下你的預測</strong>：如果改用一個 vocab 大十倍的 tokenizer，亂猜基準和 raw loss 會怎麼變？這對「能不能直接比 raw loss」說明了什麼？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>vocab 越大，亂猜基準 <span class="math inline">\ln(\text{vocab})</span> 越高，raw loss 的整個尺度也跟著抬高——所以<strong>不同 vocab 的 raw loss 根本不在同一把尺上</strong>，這正是要換 BPC 的原因。BPC 把「每字元幾 bit」這個跨 tokenizer 通用的 尺度抽出來，才公平。動手把基準那行改算別的 vocab，看數字怎麼移。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>2（動手）：加幾個 seed，看 std 怎麼收斂
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>把 <code>seeds</code> 從 3 個加到 6 個，重跑。mean 和 std 有沒有變穩？這對「要跑幾個 seed」有什麼啟示？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>seed 越多，估出來的 mean/std 越穩，但邊際效益遞減。重點不是「越多越好」，而是<strong>重大性原則</strong>： 只在「差距小、決策貴、要對外宣稱」時才多跑 seed；大差距單次就看得出來，多跑是冗餘。先量出雜訊 尺度（std），再決定一個決策值不值得花更多 seed。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>3（弄壞）：故意用「被汙染的尺」
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>想像你要證明「模型 A 比 B 好」，但偷偷用 A 的訓練資料當測試集。會量出什麼？這對應本章哪個真實案例？</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>參考答案
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>用看過的資料當測試集，A 會量出虛低的 loss（它背過），給出「A 大勝」的假結論——這正是本章 SFT 那把 被汙染的尺（gold 答案洩漏進預訓練）的形狀。修法是確保測試集<strong>真的 held-out</strong>、並質疑「這把尺有沒有 被我要比的東西汙染過」。同一顆模型、換把乾淨的尺，結論可能整個翻——這是全書最重要的一課。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 <!-- -->
@@ -916,100 +1209,310 @@ window.Quarto = {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./06-deploy-governance.html" class="pagination-link" aria-label="上線與治理：把稽核接到 ML">
-        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">上線與治理：把稽核接到 ML</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./06-serving.html" class="pagination-link" aria-label="服務化與可觀測：從 checkpoint 到能被呼叫的服務">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">服務化與可觀測：從 checkpoint 到能被呼叫的服務</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu"># 不騙自己的評估 {#sec-eval}</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="at">&gt; **一句話**：評估難的不是算數字，是**選對該量的東西、並質疑它有沒有被汙染**。這是整本書的主線，</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="at">&gt; 這一章把它講透。</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a>訓練一個模型不難，難的是「誠實地知道它到底好不好」。這一章講四件事：先講判準、用對的尺、知道什麼</span>
-<span id="cb1-7"><a href="#cb1-7"></a>時候該重複跑、以及——最重要的——**質疑你的尺有沒有被汙染**。</span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="fu">## 先講判準，再驗證</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a></span>
-<span id="cb1-11"><a href="#cb1-11"></a>最容易自欺的方式，是訓完之後才去找「它哪裡好」。所以我的紀律是**訓練前先寫死「什麼叫成功」**，</span>
-<span id="cb1-12"><a href="#cb1-12"></a>訓完逐項對，不事後移動球門：</span>
-<span id="cb1-13"><a href="#cb1-13"></a></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="pp">|</span> 判準 <span class="pp">|</span> 怎麼量 <span class="pp">|</span> 結果 <span class="pp">|</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="pp">|---|---|---|</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="pp">|</span> 有沒有在學？ <span class="pp">|</span> val loss vs 亂猜基準 $\ln 14210 = 9.56$ <span class="pp">|</span> 9.59 → 3.67 ✅ <span class="pp">|</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="pp">|</span> 會不會類推？ <span class="pp">|</span> test loss ≈ val loss？ <span class="pp">|</span> test 3.695 ≈ val 3.677（gap 0.018）✅ <span class="pp">|</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="pp">|</span> 學了多少？ <span class="pp">|</span> BPC vs 無條件熵 9.70 <span class="pp">|</span> 5.33 bits/char（靠上下文砍 45%）✅ <span class="pp">|</span></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="pp">|</span> 像不像中文？ <span class="pp">|</span> 質性讀生成樣本 <span class="pp">|</span> 真詞/語法/標點對，整體不連貫＝小模型水準 ✅ <span class="pp">|</span></span>
-<span id="cb1-20"><a href="#cb1-20"></a></span>
-<span id="cb1-21"><a href="#cb1-21"></a>注意「亂猜基準」那一格：一個 vocab 14,210 的模型，如果完全亂猜，loss 就是 $\ln 14210 \approx 9.56$。</span>
-<span id="cb1-22"><a href="#cb1-22"></a>所以 val loss 從 9.59 掉到 3.67，第一件事就證明了「它真的在學」，而不是我在自我感覺良好。**先有基準，</span>
-<span id="cb1-23"><a href="#cb1-23"></a>數字才有意義。**</span>
-<span id="cb1-24"><a href="#cb1-24"></a></span>
-<span id="cb1-25"><a href="#cb1-25"></a><span class="fu">## 用對的尺：BPC 而不是 raw loss</span></span>
-<span id="cb1-26"><a href="#cb1-26"></a></span>
-<span id="cb1-27"><a href="#cb1-27"></a>我做了 char-level 和 BPE 兩種 tokenizer 的對比，結果踩到一個陷阱：</span>
-<span id="cb1-28"><a href="#cb1-28"></a></span>
-<span id="cb1-29"><a href="#cb1-29"></a>::: {.callout-warning}</span>
-<span id="cb1-30"><a href="#cb1-30"></a><span class="fu">## 跨 tokenizer 的 raw loss 不能比</span></span>
-<span id="cb1-31"><a href="#cb1-31"></a>char（vocab 65）的 cross-entropy 是 1.77，BPE（vocab 365）是 3.34——看起來 char 大勝？**錯。**</span>
-<span id="cb1-32"><a href="#cb1-32"></a>兩者的「類別數」不同（65 類 vs 365 類），cross-entropy 的尺度本來就不一樣，不能直接比。</span>
-<span id="cb1-33"><a href="#cb1-33"></a></span>
-<span id="cb1-34"><a href="#cb1-34"></a>公平的指標是 **BPC（bits per character）**：</span>
-<span id="cb1-35"><a href="#cb1-35"></a></span>
-<span id="cb1-36"><a href="#cb1-36"></a>$$\text{BPC}=\frac{\text{loss}}{\ln 2}\Big/\frac{\text{字元數}}{\text{token 數}}$$</span>
-<span id="cb1-37"><a href="#cb1-37"></a></span>
-<span id="cb1-38"><a href="#cb1-38"></a>把它換算到「每個字元幾 bit」這個跨 tokenizer 通用的尺度上。換完：char 2.56 vs BPE **2.37**——其實是</span>
-<span id="cb1-39"><a href="#cb1-39"></a>BPE 更好、而且序列只有一半長。**換對尺，結論整個翻過來。**</span>
-<span id="cb1-40"><a href="#cb1-40"></a>:::</span>
-<span id="cb1-41"><a href="#cb1-41"></a></span>
-<span id="cb1-42"><a href="#cb1-42"></a><span class="fu">## 重大性原則：什麼時候該跑多 seed</span></span>
-<span id="cb1-43"><a href="#cb1-43"></a></span>
-<span id="cb1-44"><a href="#cb1-44"></a>單次訓練跑出來的數字，帶著抽樣的運氣。我用多 seed（跑 N 個不同隨機種子，報 mean ± std + 誤差線）</span>
-<span id="cb1-45"><a href="#cb1-45"></a>確認了第 2 章 SwiGLU/RoPE 的改善是真的：</span>
-<span id="cb1-46"><a href="#cb1-46"></a></span>
-<span id="cb1-47"><a href="#cb1-47"></a><span class="al">![多 seed：報 mean ± std，誤差棒不重疊才宣稱有差異。](images/multi_seed.png)</span>{#fig-multiseed width=72%}</span>
-<span id="cb1-48"><a href="#cb1-48"></a></span>
-<span id="cb1-49"><a href="#cb1-49"></a>實測 3 seed：classic 1.787±.007、SwiGLU 1.678±.010、RoPE 1.625±.006。SwiGLU 比 classic 差 0.109，是雜訊</span>
-<span id="cb1-50"><a href="#cb1-50"></a>（≈0.01）的 11 倍；RoPE 差 0.162，是 22 倍——**確認是真差異，不是運氣**。我還抓到一件事：之前單次跑的</span>
-<span id="cb1-51"><a href="#cb1-51"></a>classic baseline 1.7712 其實是運氣偏低，真實 mean 是 1.787——**單一裸數字會騙人。**</span>
-<span id="cb1-52"><a href="#cb1-52"></a></span>
-<span id="cb1-53"><a href="#cb1-53"></a>但多 seed 不必每次做。它的價值**非均勻**：</span>
-<span id="cb1-54"><a href="#cb1-54"></a></span>
-<span id="cb1-55"><a href="#cb1-55"></a>::: {.callout-tip}</span>
-<span id="cb1-56"><a href="#cb1-56"></a><span class="fu">## 重大性原則（借自稽核）</span></span>
-<span id="cb1-57"><a href="#cb1-57"></a>大差距（如 SwiGLU/RoPE）單次跑就看得出來，多 seed 是冗餘的。多 seed 真正有用的場合，是「差距小到</span>
-<span id="cb1-58"><a href="#cb1-58"></a>跟雜訊同級」的決策——那時單次會誤導你。</span>
-<span id="cb1-59"><a href="#cb1-59"></a></span>
-<span id="cb1-60"><a href="#cb1-60"></a>所以原則是：**只在「差距小、決策貴、或要對外宣稱」時才加做多 seed。** 這跟稽核的重大性原則一模一樣：</span>
-<span id="cb1-61"><a href="#cb1-61"></a>不是每個科目都查到底，是把查核力氣放在「錯了會出大事」的地方。</span>
-<span id="cb1-62"><a href="#cb1-62"></a>:::</span>
-<span id="cb1-63"><a href="#cb1-63"></a></span>
-<span id="cb1-64"><a href="#cb1-64"></a><span class="fu">## 選對指標：一把被汙染的尺如何給出相反的結論</span></span>
-<span id="cb1-65"><a href="#cb1-65"></a></span>
-<span id="cb1-66"><a href="#cb1-66"></a>這是整本書最重要的一課，我用後訓練的一個真實例子來講（完整脈絡在第 7 章）。</span>
-<span id="cb1-67"><a href="#cb1-67"></a></span>
-<span id="cb1-68"><a href="#cb1-68"></a>做完 SFT（指令微調）後，我要評估它有沒有變好。直覺是用「維基 perplexity」——結果顯示 SFT **變爛**了</span>
-<span id="cb1-69"><a href="#cb1-69"></a>（perplexity 升高）。如果我就此下結論，我會說「SFT 沒用」。但那把尺**被汙染**了：</span>
-<span id="cb1-70"><a href="#cb1-70"></a></span>
-<span id="cb1-71"><a href="#cb1-71"></a><span class="ss">- </span>維基 perplexity 是**預訓練**的尺。SFT 為了學會「應答格式」付出了 alignment tax，在「續寫維基」這件</span>
-<span id="cb1-72"><a href="#cb1-72"></a>  它不再專注的事上自然變差——但這不代表它變笨。</span>
-<span id="cb1-73"><a href="#cb1-73"></a><span class="ss">- </span>我退一步，改量「回答段對 gold 答案的 loss」，以為這樣公平。結果**還是被汙染**：gold 答案是維基定義句，</span>
-<span id="cb1-74"><a href="#cb1-74"></a>  base 模型預訓練時看過，所以 base 的 loss 反而低。尺又一次騙了我。</span>
-<span id="cb1-75"><a href="#cb1-75"></a></span>
-<span id="cb1-76"><a href="#cb1-76"></a>最後我換成量「**行為**」而不是「背特定答案」：生成式應答行為率——給一個問題，模型是否以定義句回應</span>
-<span id="cb1-77"><a href="#cb1-77"></a>（不需要 gold）。結果 base 29% → SFT **72%**，才終於看出 SFT 的真價值。</span>
-<span id="cb1-78"><a href="#cb1-78"></a></span>
-<span id="cb1-79"><a href="#cb1-79"></a><span class="at">&gt; **同一顆模型、不同的尺、相反的結論。** 用維基 perplexity 它「變爛」、用行為率它「大幅變好」。差別</span></span>
-<span id="cb1-80"><a href="#cb1-80"></a><span class="at">&gt; 不在模型，在**我選的尺有沒有被汙染**。</span></span>
-<span id="cb1-81"><a href="#cb1-81"></a></span>
-<span id="cb1-82"><a href="#cb1-82"></a><span class="fu">## 帶走什麼</span></span>
-<span id="cb1-83"><a href="#cb1-83"></a></span>
-<span id="cb1-84"><a href="#cb1-84"></a><span class="ss">- </span>**先講判準、再驗證**，並且永遠先有「亂猜基準」，數字才有意義。</span>
-<span id="cb1-85"><a href="#cb1-85"></a><span class="ss">- </span>跨 tokenizer 用 BPC 比，不用 raw loss——換對尺，結論可能整個翻。</span>
-<span id="cb1-86"><a href="#cb1-86"></a><span class="ss">- </span>多 seed 看**重大性原則**：只在差距小、決策貴、要對外宣稱時做，不必每次。</span>
-<span id="cb1-87"><a href="#cb1-87"></a><span class="ss">- </span>**評估的真正難點，是選對指標、並質疑它有沒有被汙染。** 這個形狀會在第 7 章的對齊一再出現——</span>
-<span id="cb1-88"><a href="#cb1-88"></a>  SFT 的尺被汙染、DPO 的 train-acc 騙人、RLHF 的 reward model 被鑽。學會質疑你的尺，比學會任何單一</span>
-<span id="cb1-89"><a href="#cb1-89"></a>  技巧都重要。</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu"># 不騙自己的評估 {#sec-eval}</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="at">&gt; **一句話**：評估難的不是算數字，是**選對該量的東西、並質疑它有沒有被汙染**。這是整本書的主線，</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="at">&gt; 這一章把它講透。</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a></span>
+<span id="cb9-6"><a href="#cb9-6"></a>訓練一個模型不難，難的是「誠實地知道它到底好不好」。這一章講四件事：先講判準、用對的尺、知道什麼</span>
+<span id="cb9-7"><a href="#cb9-7"></a>時候該重複跑、以及——最重要的——**質疑你的尺有沒有被汙染**。</span>
+<span id="cb9-8"><a href="#cb9-8"></a></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="in">```{mermaid}</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a>%%| fig-cap: <span class="ot">"</span><span class="st">你在這裡：誠實地評估模型到底好不好。</span><span class="ot">"</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a>flowchart LR</span>
+<span id="cb9-14"><a href="#cb9-14"></a>  A[<span class="ot">"</span><span class="st">01 GPT</span><span class="ot">"</span>]--&gt;B[<span class="ot">"</span><span class="st">02 零件</span><span class="ot">"</span>]--&gt;C[<span class="ot">"</span><span class="st">03 效率</span><span class="ot">"</span>]--&gt;D[<span class="ot">"</span><span class="st">04 資料</span><span class="ot">"</span>]--&gt;E[<span class="ot">"</span><span class="st">05 評估</span><span class="ot">"</span>]--&gt;F[<span class="ot">"</span><span class="st">06 服務</span><span class="ot">"</span>]--&gt;G[<span class="ot">"</span><span class="st">07 治理</span><span class="ot">"</span>]--&gt;H[<span class="ot">"</span><span class="st">08 漂移</span><span class="ot">"</span>]</span>
+<span id="cb9-15"><a href="#cb9-15"></a>  E -.後訓練.-&gt; I[<span class="ot">"</span><span class="st">09 對齊</span><span class="ot">"</span>]</span>
+<span id="cb9-16"><a href="#cb9-16"></a>  classDef here fill:<span class="co">#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px;</span></span>
+<span id="cb9-17"><a href="#cb9-17"></a>  class E here</span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="in">```</span></span>
+<span id="cb9-19"><a href="#cb9-19"></a></span>
+<span id="cb9-20"><a href="#cb9-20"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb9-21"><a href="#cb9-21"></a><span class="fu">## 這章的定位（讀之前先對齊期待）</span></span>
+<span id="cb9-22"><a href="#cb9-22"></a>**假設你已經會**：第 1 章的 cross-entropy loss、第 2 章的對照實驗。不需要任何統計學背景</span>
+<span id="cb9-23"><a href="#cb9-23"></a>（會用到的都會在這裡建立直覺）。</span>
+<span id="cb9-24"><a href="#cb9-24"></a></span>
+<span id="cb9-25"><a href="#cb9-25"></a>**學完你會**：(1) 永遠先有「亂猜基準」再看數字；(2) **逐行**把 raw loss 換算成跨 tokenizer 公平的</span>
+<span id="cb9-26"><a href="#cb9-26"></a>**BPC**，並懂為什麼不能直接比 raw loss；(3) 在**你自己的 CPU 上**親手跑「亂猜基準 + BPC + 多 seed</span>
+<span id="cb9-27"><a href="#cb9-27"></a>mean±std」，量出一個具體的「雜訊尺度」當重大性判準。最重要的是學到：**評估的真正難點是選對指標、</span>
+<span id="cb9-28"><a href="#cb9-28"></a>並質疑它有沒有被汙染。** 本章 💻 配套程式 <span class="in">`tiny_eval.py`</span> 純 CPU、約 3–4 分鐘。</span>
+<span id="cb9-29"><a href="#cb9-29"></a>:::</span>
+<span id="cb9-30"><a href="#cb9-30"></a></span>
+<span id="cb9-31"><a href="#cb9-31"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb9-32"><a href="#cb9-32"></a><span class="fu">## 🎯 給技術主管：本章關鍵術語速查（懂的人可跳過）</span></span>
+<span id="cb9-33"><a href="#cb9-33"></a>不必親手實作也能跟上——每個術語一句白話 + 為什麼你該在意。</span>
+<span id="cb9-34"><a href="#cb9-34"></a></span>
+<span id="cb9-35"><a href="#cb9-35"></a><span class="ss">- </span>**loss / cross-entropy**：「猜下一字」平均錯多少。*在意它*：訓練的北極星——但跨設定不能直接比。</span>
+<span id="cb9-36"><a href="#cb9-36"></a><span class="ss">- </span>**亂猜基準**：完全亂猜時的 loss（$\ln V$）。*在意它*：沒有基準，任何數字都沒意義。</span>
+<span id="cb9-37"><a href="#cb9-37"></a><span class="ss">- </span>**BPC（bits per character）**：跨 tokenizer 公平的尺。*在意它*：用錯尺，A/B 結論可能整個翻過來。</span>
+<span id="cb9-38"><a href="#cb9-38"></a><span class="ss">- </span>**held-out（保留集）**：用模型沒看過的資料評。*在意它*：看 train 會被「死背」騙。</span>
+<span id="cb9-39"><a href="#cb9-39"></a><span class="ss">- </span>**多 seed / 重大性**：跑多次看 mean±std。*在意它*：單一漂亮數字可能只是運氣；只在「差距小、決策貴」時才多跑。</span>
+<span id="cb9-40"><a href="#cb9-40"></a><span class="ss">- </span>**指標被汙染**：尺本身偏了（如測試集洩漏）。*在意它*：全書最重要一課——先質疑你的尺，再信數字。</span>
+<span id="cb9-41"><a href="#cb9-41"></a>:::</span>
+<span id="cb9-42"><a href="#cb9-42"></a></span>
+<span id="cb9-43"><a href="#cb9-43"></a><span class="fu">## 先講判準，再驗證</span></span>
+<span id="cb9-44"><a href="#cb9-44"></a></span>
+<span id="cb9-45"><a href="#cb9-45"></a>最容易自欺的方式，是訓完之後才去找「它哪裡好」。所以我的紀律是**訓練前先寫死「什麼叫成功」**，</span>
+<span id="cb9-46"><a href="#cb9-46"></a>訓完逐項對，不事後移動球門：</span>
+<span id="cb9-47"><a href="#cb9-47"></a></span>
+<span id="cb9-48"><a href="#cb9-48"></a><span class="pp">|</span> 判準 <span class="pp">|</span> 怎麼量 <span class="pp">|</span> 結果 <span class="pp">|</span></span>
+<span id="cb9-49"><a href="#cb9-49"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb9-50"><a href="#cb9-50"></a><span class="pp">|</span> 有沒有在學？ <span class="pp">|</span> val loss vs 亂猜基準 $\ln 14210 = 9.56$ <span class="pp">|</span> 9.59 → 3.67 ✅ <span class="pp">|</span></span>
+<span id="cb9-51"><a href="#cb9-51"></a><span class="pp">|</span> 會不會類推？ <span class="pp">|</span> test loss ≈ val loss？ <span class="pp">|</span> test 3.695 ≈ val 3.677（gap 0.018）✅ <span class="pp">|</span></span>
+<span id="cb9-52"><a href="#cb9-52"></a><span class="pp">|</span> 學了多少？ <span class="pp">|</span> BPC vs 無條件熵 9.70 <span class="pp">|</span> 5.33 bits/char（靠上下文砍 45%）✅ <span class="pp">|</span></span>
+<span id="cb9-53"><a href="#cb9-53"></a><span class="pp">|</span> 像不像中文？ <span class="pp">|</span> 質性讀生成樣本 <span class="pp">|</span> 真詞/語法/標點對，整體不連貫＝小模型水準 ✅ <span class="pp">|</span></span>
+<span id="cb9-54"><a href="#cb9-54"></a></span>
+<span id="cb9-55"><a href="#cb9-55"></a>注意「亂猜基準」那一格：一個 vocab 14,210 的模型，如果完全亂猜，loss 就是 $\ln 14210 \approx 9.56$。</span>
+<span id="cb9-56"><a href="#cb9-56"></a>所以 val loss 從 9.59 掉到 3.67，第一件事就證明了「它真的在學」，而不是我在自我感覺良好。**先有基準，</span>
+<span id="cb9-57"><a href="#cb9-57"></a>數字才有意義。**</span>
+<span id="cb9-58"><a href="#cb9-58"></a></span>
+<span id="cb9-59"><a href="#cb9-59"></a><span class="fu">## 用對的尺：BPC 而不是 raw loss</span></span>
+<span id="cb9-60"><a href="#cb9-60"></a></span>
+<span id="cb9-61"><a href="#cb9-61"></a>我做了 char-level 和 BPE 兩種 tokenizer 的對比，結果踩到一個陷阱：</span>
+<span id="cb9-62"><a href="#cb9-62"></a></span>
+<span id="cb9-63"><a href="#cb9-63"></a>::: {.callout-warning}</span>
+<span id="cb9-64"><a href="#cb9-64"></a><span class="fu">## 跨 tokenizer 的 raw loss 不能比</span></span>
+<span id="cb9-65"><a href="#cb9-65"></a>char（vocab 65）的 cross-entropy 是 1.77，BPE（vocab 365）是 3.34——看起來 char 大勝？**錯。**</span>
+<span id="cb9-66"><a href="#cb9-66"></a>兩者的「類別數」不同（65 類 vs 365 類），cross-entropy 的尺度本來就不一樣，不能直接比。</span>
+<span id="cb9-67"><a href="#cb9-67"></a></span>
+<span id="cb9-68"><a href="#cb9-68"></a>公平的指標是 **BPC（bits per character）**：</span>
+<span id="cb9-69"><a href="#cb9-69"></a></span>
+<span id="cb9-70"><a href="#cb9-70"></a>$$\text{BPC}=\frac{\text{loss}}{\ln 2}\Big/\frac{\text{字元數}}{\text{token 數}}$$</span>
+<span id="cb9-71"><a href="#cb9-71"></a></span>
+<span id="cb9-72"><a href="#cb9-72"></a>把它換算到「每個字元幾 bit」這個跨 tokenizer 通用的尺度上。換完：char 2.56 vs BPE **2.37**——其實是</span>
+<span id="cb9-73"><a href="#cb9-73"></a>BPE 更好、而且序列只有一半長。**換對尺，結論整個翻過來。**</span>
+<span id="cb9-74"><a href="#cb9-74"></a>:::</span>
+<span id="cb9-75"><a href="#cb9-75"></a></span>
+<span id="cb9-76"><a href="#cb9-76"></a><span class="fu">### 逐行把 BPC 算出來 {#sec-build-bpc}</span></span>
+<span id="cb9-77"><a href="#cb9-77"></a></span>
+<span id="cb9-78"><a href="#cb9-78"></a>BPC 不神祕，三步就從 raw loss 換出來。我們逐步建它（對應 <span class="in">`tiny_eval.py`</span> 印出的數字）。</span>
+<span id="cb9-79"><a href="#cb9-79"></a></span>
+<span id="cb9-80"><a href="#cb9-80"></a>**第 0 步——loss 的單位是 nat，換成 bit。** cross-entropy 預設用自然對數，單位是 nat。除以</span>
+<span id="cb9-81"><a href="#cb9-81"></a>$\ln 2$ 換成 bit（資訊理論的通用單位）：</span>
+<span id="cb9-82"><a href="#cb9-82"></a></span>
+<span id="cb9-83"><a href="#cb9-83"></a><span class="in">```python</span></span>
+<span id="cb9-84"><a href="#cb9-84"></a>bits_per_token <span class="op">=</span> loss <span class="op">/</span> math.log(<span class="dv">2</span>)</span>
+<span id="cb9-85"><a href="#cb9-85"></a><span class="in">```</span></span>
+<span id="cb9-86"><a href="#cb9-86"></a></span>
+<span id="cb9-87"><a href="#cb9-87"></a>**第 1 步——把「每 token」換成「每字元」。** 不同 tokenizer 一個 token 含的字元數不同（char-level</span>
+<span id="cb9-88"><a href="#cb9-88"></a>是 1、BPE 可能 2–3）。除以「平均每 token 幾個字元」才公平：</span>
+<span id="cb9-89"><a href="#cb9-89"></a></span>
+<span id="cb9-90"><a href="#cb9-90"></a><span class="in">```python</span></span>
+<span id="cb9-91"><a href="#cb9-91"></a>bpc <span class="op">=</span> bits_per_token <span class="op">/</span> (n_chars <span class="op">/</span> n_tokens)     <span class="co"># 每字元幾 bit，跨 tokenizer 通用</span></span>
+<span id="cb9-92"><a href="#cb9-92"></a><span class="in">```</span></span>
+<span id="cb9-93"><a href="#cb9-93"></a></span>
+<span id="cb9-94"><a href="#cb9-94"></a>**第 2 步——char-level 的特例。** char-level 下每個 token 就是一個字元，<span class="in">`n_chars/n_tokens = 1`</span>，</span>
+<span id="cb9-95"><a href="#cb9-95"></a>所以 BPC 直接就是 <span class="in">`loss / ln2`</span>。<span class="in">`tiny_eval.py`</span> 用的就是這個特例：</span>
+<span id="cb9-96"><a href="#cb9-96"></a></span>
+<span id="cb9-97"><a href="#cb9-97"></a><span class="in">```python</span></span>
+<span id="cb9-98"><a href="#cb9-98"></a><span class="bu">print</span>(<span class="ss">f"val loss </span><span class="sc">{</span>vl<span class="sc">:.4f}</span><span class="ss">   BPC </span><span class="sc">{</span>vl<span class="op">/</span>math<span class="sc">.</span>log(<span class="dv">2</span>)<span class="sc">:.3f}</span><span class="ss"> bits/char"</span>)</span>
+<span id="cb9-99"><a href="#cb9-99"></a><span class="in">```</span></span>
+<span id="cb9-100"><a href="#cb9-100"></a></span>
+<span id="cb9-101"><a href="#cb9-101"></a>關鍵在第 1 步那個除法：它把「類別數不同」這個不公平因素正規化掉。少了它，你會像本章開頭那樣</span>
+<span id="cb9-102"><a href="#cb9-102"></a>拿 char 的 1.77 去跟 BPE 的 3.34 直接比，得到完全相反的結論。</span>
+<span id="cb9-103"><a href="#cb9-103"></a></span>
+<span id="cb9-104"><a href="#cb9-104"></a><span class="fu">## 重大性原則：什麼時候該跑多 seed</span></span>
+<span id="cb9-105"><a href="#cb9-105"></a></span>
+<span id="cb9-106"><a href="#cb9-106"></a>單次訓練跑出來的數字，帶著抽樣的運氣。我用多 seed（跑 N 個不同隨機種子，報 mean ± std + 誤差線）</span>
+<span id="cb9-107"><a href="#cb9-107"></a>確認了第 2 章 SwiGLU/RoPE 的改善是真的：</span>
+<span id="cb9-108"><a href="#cb9-108"></a></span>
+<span id="cb9-109"><a href="#cb9-109"></a><span class="al">![多 seed：報 mean ± std，誤差棒不重疊才宣稱有差異。](images/multi_seed.png)</span>{#fig-multiseed width=72%}</span>
+<span id="cb9-110"><a href="#cb9-110"></a></span>
+<span id="cb9-111"><a href="#cb9-111"></a>實測 3 seed：classic 1.787±.007、SwiGLU 1.678±.010、RoPE 1.625±.006。SwiGLU 比 classic 差 0.109，是雜訊</span>
+<span id="cb9-112"><a href="#cb9-112"></a>（≈0.01）的 11 倍；RoPE 差 0.162，是 22 倍——**確認是真差異，不是運氣**。我還抓到一件事：之前單次跑的</span>
+<span id="cb9-113"><a href="#cb9-113"></a>classic baseline 1.7712 其實是運氣偏低，真實 mean 是 1.787——**單一裸數字會騙人。**</span>
+<span id="cb9-114"><a href="#cb9-114"></a></span>
+<span id="cb9-115"><a href="#cb9-115"></a>但多 seed 不必每次做。它的價值**非均勻**：</span>
+<span id="cb9-116"><a href="#cb9-116"></a></span>
+<span id="cb9-117"><a href="#cb9-117"></a>::: {.callout-tip}</span>
+<span id="cb9-118"><a href="#cb9-118"></a><span class="fu">## 重大性原則（借自稽核）</span></span>
+<span id="cb9-119"><a href="#cb9-119"></a>大差距（如 SwiGLU/RoPE）單次跑就看得出來，多 seed 是冗餘的。多 seed 真正有用的場合，是「差距小到</span>
+<span id="cb9-120"><a href="#cb9-120"></a>跟雜訊同級」的決策——那時單次會誤導你。</span>
+<span id="cb9-121"><a href="#cb9-121"></a></span>
+<span id="cb9-122"><a href="#cb9-122"></a>所以原則是：**只在「差距小、決策貴、或要對外宣稱」時才加做多 seed。** 這跟稽核的重大性原則一模一樣：</span>
+<span id="cb9-123"><a href="#cb9-123"></a>不是每個科目都查到底，是把查核力氣放在「錯了會出大事」的地方。</span>
+<span id="cb9-124"><a href="#cb9-124"></a>:::</span>
+<span id="cb9-125"><a href="#cb9-125"></a></span>
+<span id="cb9-126"><a href="#cb9-126"></a><span class="fu">## 💻 在你的機器上：亂猜基準 + BPC + 多 seed {#sec-tiny-eval}</span></span>
+<span id="cb9-127"><a href="#cb9-127"></a></span>
+<span id="cb9-128"><a href="#cb9-128"></a>前三件評估紀律——**先有基準、用對的尺、看重大性**——可以一次跑出來。配套程式 <span class="in">`tiny_eval.py`</span></span>
+<span id="cb9-129"><a href="#cb9-129"></a>用第 1 章的 char-level 小 GPT，跑 3 個不同 seed，純 CPU 約 3–4 分鐘：</span>
+<span id="cb9-130"><a href="#cb9-130"></a></span>
+<span id="cb9-131"><a href="#cb9-131"></a><span class="in">```bash</span></span>
+<span id="cb9-132"><a href="#cb9-132"></a><span class="ex">curl</span> <span class="at">-o</span> input.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt</span>
+<span id="cb9-133"><a href="#cb9-133"></a><span class="ex">python</span> tiny_eval.py</span>
+<span id="cb9-134"><a href="#cb9-134"></a><span class="in">```</span></span>
+<span id="cb9-135"><a href="#cb9-135"></a></span>
+<span id="cb9-136"><a href="#cb9-136"></a>在我的 Framework 16（純 CPU）上：</span>
+<span id="cb9-137"><a href="#cb9-137"></a></span>
+<span id="cb9-138"><a href="#cb9-138"></a><span class="in">```</span></span>
+<span id="cb9-139"><a href="#cb9-139"></a><span class="in">vocab=65  device=cpu</span></span>
+<span id="cb9-140"><a href="#cb9-140"></a><span class="in">亂猜基準 = ln 65 = 4.174 nat（模型要明顯低於它才算在學）</span></span>
+<span id="cb9-141"><a href="#cb9-141"></a></span>
+<span id="cb9-142"><a href="#cb9-142"></a><span class="in">  seed 1337: val loss 1.6757   BPC 2.418 bits/char</span></span>
+<span id="cb9-143"><a href="#cb9-143"></a><span class="in">  seed   42: val loss 1.6792   BPC 2.423 bits/char</span></span>
+<span id="cb9-144"><a href="#cb9-144"></a><span class="in">  seed    7: val loss 1.6856   BPC 2.432 bits/char</span></span>
+<span id="cb9-145"><a href="#cb9-145"></a></span>
+<span id="cb9-146"><a href="#cb9-146"></a><span class="in">3 seeds: val loss 1.6802 ± 0.0050   BPC 2.424 ± 0.007 bits/char</span></span>
+<span id="cb9-147"><a href="#cb9-147"></a><span class="in">相對亂猜基準 4.174，模型把不確定性砍了 60%。</span></span>
+<span id="cb9-148"><a href="#cb9-148"></a><span class="in">```</span></span>
+<span id="cb9-149"><a href="#cb9-149"></a></span>
+<span id="cb9-150"><a href="#cb9-150"></a>**怎麼讀——三條紀律各一個數字**：</span>
+<span id="cb9-151"><a href="#cb9-151"></a></span>
+<span id="cb9-152"><a href="#cb9-152"></a><span class="ss">1. </span>**先有基準**：亂猜是 $\ln 65 = 4.174$。val loss 掉到 1.68 才證明「真的在學」、砍掉了 60% 的</span>
+<span id="cb9-153"><a href="#cb9-153"></a>   不確定性——**沒有基準，1.68 這個數字本身沒有意義**。</span>
+<span id="cb9-154"><a href="#cb9-154"></a><span class="ss">2. </span>**用對的尺**：每個 loss 旁邊就是換算好的 BPC（char-level 下 = loss/ln2）。要跟別的 tokenizer</span>
+<span id="cb9-155"><a href="#cb9-155"></a>   比，比 BPC，不比 raw loss。</span>
+<span id="cb9-156"><a href="#cb9-156"></a><span class="ss">3. </span>**重大性**：3 個 seed 的 std ≈ **0.005**。這就是你的「雜訊尺度」——一個架構改善要比 0.005 大上</span>
+<span id="cb9-157"><a href="#cb9-157"></a>   好幾倍（像第 2 章 SwiGLU 的 −0.019、RoPE 的差異）才能宣稱「真的有差」，而不是 seed 的運氣。</span>
+<span id="cb9-158"><a href="#cb9-158"></a></span>
+<span id="cb9-159"><a href="#cb9-159"></a>::: {.callout-tip}</span>
+<span id="cb9-160"><a href="#cb9-160"></a><span class="fu">## 把這個 std 當成你的「顯著性門檻」</span></span>
+<span id="cb9-161"><a href="#cb9-161"></a>跑出 std≈0.005 後，回頭看任何一個「我換了 X，loss 從 1.680 變 1.678」的宣稱——差 0.002 比雜訊還小，</span>
+<span id="cb9-162"><a href="#cb9-162"></a>**那是運氣不是改善**。這就是重大性原則的操作型定義：先量雜訊，再決定一個差異值不值得相信、要不要</span>
+<span id="cb9-163"><a href="#cb9-163"></a>多跑 seed 確認。</span>
+<span id="cb9-164"><a href="#cb9-164"></a>:::</span>
+<span id="cb9-165"><a href="#cb9-165"></a></span>
+<span id="cb9-166"><a href="#cb9-166"></a><span class="fu">## 先贏過笨基準：你的模型有沒有「賺到」複雜度 {#sec-baseline}</span></span>
+<span id="cb9-167"><a href="#cb9-167"></a></span>
+<span id="cb9-168"><a href="#cb9-168"></a>到這裡，我們的評估都還在**跟自己比**（val loss、BPC、亂猜基準）。但「比亂猜好」門檻太低——</span>
+<span id="cb9-169"><a href="#cb9-169"></a>亂猜根本沒在學。真正該問的是：**你那顆有 attention、有梯度下降的神經網路，比一個只會數頻率的</span>
+<span id="cb9-170"><a href="#cb9-170"></a>笨模型好多少？如果差不多，那這些複雜度就白加了。** 所以紀律要升級：**先擺一個夠強的笨基準，</span>
+<span id="cb9-171"><a href="#cb9-171"></a>神經網路要明顯贏它，才算賺到複雜度。**</span>
+<span id="cb9-172"><a href="#cb9-172"></a></span>
+<span id="cb9-173"><a href="#cb9-173"></a>我把「亂猜基準」升級成兩個公認的笨基準，在**同一份 val、同一把尺（BPC）**上比：</span>
+<span id="cb9-174"><a href="#cb9-174"></a></span>
+<span id="cb9-175"><a href="#cb9-175"></a><span class="ss">- </span>**gzip**：通用壓縮軟體的壓縮率＝資訊理論的天然 BPC（「你贏得過 gzip 嗎？」是個有名又直覺的問題）。</span>
+<span id="cb9-176"><a href="#cb9-176"></a><span class="ss">- </span>**n-gram（4-gram + backoff）**：char-level 語言模型的教科書基準——只數「前幾個字後面接什麼」的頻率，</span>
+<span id="cb9-177"><a href="#cb9-177"></a>  沒有任何神經網路。</span>
+<span id="cb9-178"><a href="#cb9-178"></a></span>
+<span id="cb9-179"><a href="#cb9-179"></a>配套程式 <span class="in">`tiny_baseline.py`</span>（純 CPU、約 2 分鐘）把四者跑在同一份 val 上：</span>
+<span id="cb9-180"><a href="#cb9-180"></a></span>
+<span id="cb9-181"><a href="#cb9-181"></a><span class="in">```bash</span></span>
+<span id="cb9-182"><a href="#cb9-182"></a><span class="ex">python</span> tiny_baseline.py</span>
+<span id="cb9-183"><a href="#cb9-183"></a><span class="in">```</span></span>
+<span id="cb9-184"><a href="#cb9-184"></a></span>
+<span id="cb9-185"><a href="#cb9-185"></a>在我的 Framework 16（純 CPU）上：</span>
+<span id="cb9-186"><a href="#cb9-186"></a></span>
+<span id="cb9-187"><a href="#cb9-187"></a><span class="in">```</span></span>
+<span id="cb9-188"><a href="#cb9-188"></a><span class="in">vocab=65  在同一份 val（111540 字元）上比 BPC</span></span>
+<span id="cb9-189"><a href="#cb9-189"></a><span class="in">方法                     BPC (bits/char)</span></span>
+<span id="cb9-190"><a href="#cb9-190"></a><span class="in">----------------------------------------</span></span>
+<span id="cb9-191"><a href="#cb9-191"></a><span class="in">亂猜 (log2 V)                      6.022</span></span>
+<span id="cb9-192"><a href="#cb9-192"></a><span class="in">gzip -9                          3.191</span></span>
+<span id="cb9-193"><a href="#cb9-193"></a><span class="in">4-gram (backoff)                 2.551</span></span>
+<span id="cb9-194"><a href="#cb9-194"></a><span class="in">tiny GPT                         2.323</span></span>
+<span id="cb9-195"><a href="#cb9-195"></a><span class="in">```</span></span>
+<span id="cb9-196"><a href="#cb9-196"></a></span>
+<span id="cb9-197"><a href="#cb9-197"></a><span class="al">![先贏過笨基準（純 CPU 真跑，BPC 越低越好）：亂猜 6.02 → gzip 3.19 → 4-gram 2.55 → tiny GPT 2.32。神經網路贏過會數頻率的 n-gram，才算賺到它的複雜度。](images/baseline_bpc.png)</span>{#fig-baseline-bpc width=70%}</span>
+<span id="cb9-198"><a href="#cb9-198"></a></span>
+<span id="cb9-199"><a href="#cb9-199"></a>**怎麼讀**（@fig-baseline-bpc）：</span>
+<span id="cb9-200"><a href="#cb9-200"></a></span>
+<span id="cb9-201"><a href="#cb9-201"></a><span class="ss">1. </span>**神經網路賺到了複雜度**：tiny GPT 2.32 &lt; 4-gram 2.55 &lt; gzip 3.19 &lt; 亂猜 6.02。它確實學到了</span>
+<span id="cb9-202"><a href="#cb9-202"></a>   n-gram「數頻率」學不到的東西——**這就是「值得加 attention/梯度下降」的證據**。</span>
+<span id="cb9-203"><a href="#cb9-203"></a><span class="ss">2. </span>**但別小看笨基準**：GPT 只贏 4-gram 0.23 bits/char。一個只數頻率的模型，已經把亂猜的 6.02</span>
+<span id="cb9-204"><a href="#cb9-204"></a>   砍到 2.55——**笨基準常常比你以為的硬得多**。不先跑它，你會把「比亂猜好」當成「我的模型很強」，</span>
+<span id="cb9-205"><a href="#cb9-205"></a>   其實大部分功勞是 char-level 統計本來就能拿到的。</span>
+<span id="cb9-206"><a href="#cb9-206"></a></span>
+<span id="cb9-207"><a href="#cb9-207"></a>::: {.callout-important}</span>
+<span id="cb9-208"><a href="#cb9-208"></a><span class="fu">## 選對 baseline：要「下界基準」不要「虛榮基準」</span></span>
+<span id="cb9-209"><a href="#cb9-209"></a>我刻意選 gzip / n-gram，而**不是**拿 8M 玩具去比 GPT-2。為什麼？比 GPT-2 一定輸、且毫無資訊——</span>
+<span id="cb9-210"><a href="#cb9-210"></a>誰都知道 8M char 模型贏不了。有意義的比較是**下界**：「你有沒有贏過那個不該輸的笨東西？」</span>
+<span id="cb9-211"><a href="#cb9-211"></a>**選對 baseline 本身就是一次『選對指標』**：虛榮的比較讓你自我感覺良好或無謂自卑，對的比較才</span>
+<span id="cb9-212"><a href="#cb9-212"></a>回答真問題。這跟前面「先有亂猜基準」是同一條紀律的進階版。</span>
+<span id="cb9-213"><a href="#cb9-213"></a>:::</span>
+<span id="cb9-214"><a href="#cb9-214"></a></span>
+<span id="cb9-215"><a href="#cb9-215"></a><span class="fu">### 正確性 baseline：你沒在騙自己 {#sec-correctness}</span></span>
+<span id="cb9-216"><a href="#cb9-216"></a></span>
+<span id="cb9-217"><a href="#cb9-217"></a>品質 baseline 問「有沒有贏笨基準」；還有一個更底層的 baseline：**你確定手刻的數學是對的嗎？**</span>
+<span id="cb9-218"><a href="#cb9-218"></a>書裡每個漂亮數字的前提，是底層程式真的算對——所以 from-scratch 的東西要對一個**可信參照實作**</span>
+<span id="cb9-219"><a href="#cb9-219"></a>數值對拍。配套程式 <span class="in">`tiny_correctness.py`</span>（純 CPU、瞬間）把書裡那條手刻 causal attention</span>
+<span id="cb9-220"><a href="#cb9-220"></a>（<span class="in">`softmax(QKᵀ/√d)`</span> 遮罩 → <span class="in">`@V`</span>）對 torch 內建的 <span class="in">`scaled_dot_product_attention`</span>：</span>
+<span id="cb9-221"><a href="#cb9-221"></a></span>
+<span id="cb9-222"><a href="#cb9-222"></a><span class="in">```</span></span>
+<span id="cb9-223"><a href="#cb9-223"></a><span class="in">=== 正確性對拍（手刻 vs torch 內建可信參照）===</span></span>
+<span id="cb9-224"><a href="#cb9-224"></a><span class="in">  單頭 causal attention   max|diff| = 2.38e-07</span></span>
+<span id="cb9-225"><a href="#cb9-225"></a><span class="in">  多頭 causal attention   max|diff| = 4.77e-07</span></span>
+<span id="cb9-226"><a href="#cb9-226"></a><span class="in">=== 結構不變量 ===</span></span>
+<span id="cb9-227"><a href="#cb9-227"></a><span class="in">  softmax 每列和為 1？        True</span></span>
+<span id="cb9-228"><a href="#cb9-228"></a><span class="in">  因果遮罩讓未來權重=0？      True</span></span>
+<span id="cb9-229"><a href="#cb9-229"></a><span class="in">```</span></span>
+<span id="cb9-230"><a href="#cb9-230"></a></span>
+<span id="cb9-231"><a href="#cb9-231"></a>差只在浮點誤差等級（~1e-7）——手刻版跟工業級實作算出**同一個答案**。這跟第 3 章用同一招驗</span>
+<span id="cb9-232"><a href="#cb9-232"></a>FlashAttention（logits 差 $6\times10^{-7}$、@sec-efficiency）是同一條紀律：**對拍可信參照 = 不騙自己**。</span>
+<span id="cb9-233"><a href="#cb9-233"></a>單元測試把這個對拍釘成回歸（<span class="in">`tests/test_book_examples.py`</span>），改壞了會立刻紅燈。</span>
+<span id="cb9-234"><a href="#cb9-234"></a></span>
+<span id="cb9-235"><a href="#cb9-235"></a><span class="fu">## 選對指標：一把被汙染的尺如何給出相反的結論</span></span>
+<span id="cb9-236"><a href="#cb9-236"></a></span>
+<span id="cb9-237"><a href="#cb9-237"></a>這是整本書最重要的一課，我用後訓練的一個真實例子來講（完整脈絡在第 7 章）。</span>
+<span id="cb9-238"><a href="#cb9-238"></a></span>
+<span id="cb9-239"><a href="#cb9-239"></a>做完 SFT（指令微調）後，我要評估它有沒有變好。直覺是用「維基 perplexity」——結果顯示 SFT **變爛**了</span>
+<span id="cb9-240"><a href="#cb9-240"></a>（perplexity 升高）。如果我就此下結論，我會說「SFT 沒用」。但那把尺**被汙染**了：</span>
+<span id="cb9-241"><a href="#cb9-241"></a></span>
+<span id="cb9-242"><a href="#cb9-242"></a><span class="ss">- </span>維基 perplexity 是**預訓練**的尺。SFT 為了學會「應答格式」付出了 alignment tax，在「續寫維基」這件</span>
+<span id="cb9-243"><a href="#cb9-243"></a>  它不再專注的事上自然變差——但這不代表它變笨。</span>
+<span id="cb9-244"><a href="#cb9-244"></a><span class="ss">- </span>我退一步，改量「回答段對 gold 答案的 loss」，以為這樣公平。結果**還是被汙染**：gold 答案是維基定義句，</span>
+<span id="cb9-245"><a href="#cb9-245"></a>  base 模型預訓練時看過，所以 base 的 loss 反而低。尺又一次騙了我。</span>
+<span id="cb9-246"><a href="#cb9-246"></a></span>
+<span id="cb9-247"><a href="#cb9-247"></a>最後我換成量「**行為**」而不是「背特定答案」：生成式應答行為率——給一個問題，模型是否以定義句回應</span>
+<span id="cb9-248"><a href="#cb9-248"></a>（不需要 gold）。結果 base 29% → SFT **72%**，才終於看出 SFT 的真價值。</span>
+<span id="cb9-249"><a href="#cb9-249"></a></span>
+<span id="cb9-250"><a href="#cb9-250"></a><span class="at">&gt; **同一顆模型、不同的尺、相反的結論。** 用維基 perplexity 它「變爛」、用行為率它「大幅變好」。差別</span></span>
+<span id="cb9-251"><a href="#cb9-251"></a><span class="at">&gt; 不在模型，在**我選的尺有沒有被汙染**。</span></span>
+<span id="cb9-252"><a href="#cb9-252"></a></span>
+<span id="cb9-253"><a href="#cb9-253"></a><span class="fu">## 帶走什麼</span></span>
+<span id="cb9-254"><a href="#cb9-254"></a></span>
+<span id="cb9-255"><a href="#cb9-255"></a><span class="ss">- </span>**先講判準、再驗證**，並且永遠先有「亂猜基準」，數字才有意義。</span>
+<span id="cb9-256"><a href="#cb9-256"></a><span class="ss">- </span>**先贏過笨基準**（gzip / n-gram）才算賺到複雜度——而且選「下界基準」不選「虛榮基準」，本身就是選對指標。</span>
+<span id="cb9-257"><a href="#cb9-257"></a><span class="ss">- </span>跨 tokenizer 用 BPC 比，不用 raw loss——換對尺，結論可能整個翻。</span>
+<span id="cb9-258"><a href="#cb9-258"></a><span class="ss">- </span>多 seed 看**重大性原則**：只在差距小、決策貴、要對外宣稱時做，不必每次。</span>
+<span id="cb9-259"><a href="#cb9-259"></a><span class="ss">- </span>**評估的真正難點，是選對指標、並質疑它有沒有被汙染。** 這個形狀會在第 7 章的對齊一再出現——</span>
+<span id="cb9-260"><a href="#cb9-260"></a>  SFT 的尺被汙染、DPO 的 train-acc 騙人、RLHF 的 reward model 被鑽。學會質疑你的尺，比學會任何單一</span>
+<span id="cb9-261"><a href="#cb9-261"></a>  技巧都重要。</span>
+<span id="cb9-262"><a href="#cb9-262"></a></span>
+<span id="cb9-263"><a href="#cb9-263"></a><span class="fu">## 練習 {#sec-ch5-exercises}</span></span>
+<span id="cb9-264"><a href="#cb9-264"></a></span>
+<span id="cb9-265"><a href="#cb9-265"></a>::: {.callout-note}</span>
+<span id="cb9-266"><a href="#cb9-266"></a><span class="fu">## 1（先預測）：把 vocab 變大，亂猜基準會怎樣？</span></span>
+<span id="cb9-267"><a href="#cb9-267"></a><span class="in">`tiny_eval.py`</span> 的亂猜基準是 $\ln(\text{vocab})$。**先寫下你的預測**：如果改用一個 vocab 大十倍的</span>
+<span id="cb9-268"><a href="#cb9-268"></a>tokenizer，亂猜基準和 raw loss 會怎麼變？這對「能不能直接比 raw loss」說明了什麼？</span>
+<span id="cb9-269"><a href="#cb9-269"></a></span>
+<span id="cb9-270"><a href="#cb9-270"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb9-271"><a href="#cb9-271"></a><span class="fu">## 參考答案</span></span>
+<span id="cb9-272"><a href="#cb9-272"></a>vocab 越大，亂猜基準 $\ln(\text{vocab})$ 越高，raw loss 的整個尺度也跟著抬高——所以**不同 vocab 的</span>
+<span id="cb9-273"><a href="#cb9-273"></a>raw loss 根本不在同一把尺上**，這正是要換 BPC 的原因。BPC 把「每字元幾 bit」這個跨 tokenizer 通用的</span>
+<span id="cb9-274"><a href="#cb9-274"></a>尺度抽出來，才公平。動手把基準那行改算別的 vocab，看數字怎麼移。</span>
+<span id="cb9-275"><a href="#cb9-275"></a>:::</span>
+<span id="cb9-276"><a href="#cb9-276"></a>:::</span>
+<span id="cb9-277"><a href="#cb9-277"></a></span>
+<span id="cb9-278"><a href="#cb9-278"></a>::: {.callout-note}</span>
+<span id="cb9-279"><a href="#cb9-279"></a><span class="fu">## 2（動手）：加幾個 seed，看 std 怎麼收斂</span></span>
+<span id="cb9-280"><a href="#cb9-280"></a>把 <span class="in">`seeds`</span> 從 3 個加到 6 個，重跑。mean 和 std 有沒有變穩？這對「要跑幾個 seed」有什麼啟示？</span>
+<span id="cb9-281"><a href="#cb9-281"></a></span>
+<span id="cb9-282"><a href="#cb9-282"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb9-283"><a href="#cb9-283"></a><span class="fu">## 參考答案</span></span>
+<span id="cb9-284"><a href="#cb9-284"></a>seed 越多，估出來的 mean/std 越穩，但邊際效益遞減。重點不是「越多越好」，而是**重大性原則**：</span>
+<span id="cb9-285"><a href="#cb9-285"></a>只在「差距小、決策貴、要對外宣稱」時才多跑 seed；大差距單次就看得出來，多跑是冗餘。先量出雜訊</span>
+<span id="cb9-286"><a href="#cb9-286"></a>尺度（std），再決定一個決策值不值得花更多 seed。</span>
+<span id="cb9-287"><a href="#cb9-287"></a>:::</span>
+<span id="cb9-288"><a href="#cb9-288"></a>:::</span>
+<span id="cb9-289"><a href="#cb9-289"></a></span>
+<span id="cb9-290"><a href="#cb9-290"></a>::: {.callout-warning}</span>
+<span id="cb9-291"><a href="#cb9-291"></a><span class="fu">## 3（弄壞）：故意用「被汙染的尺」</span></span>
+<span id="cb9-292"><a href="#cb9-292"></a>想像你要證明「模型 A 比 B 好」，但偷偷用 A 的訓練資料當測試集。會量出什麼？這對應本章哪個真實案例？</span>
+<span id="cb9-293"><a href="#cb9-293"></a></span>
+<span id="cb9-294"><a href="#cb9-294"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb9-295"><a href="#cb9-295"></a><span class="fu">## 參考答案</span></span>
+<span id="cb9-296"><a href="#cb9-296"></a>用看過的資料當測試集，A 會量出虛低的 loss（它背過），給出「A 大勝」的假結論——這正是本章 SFT 那把</span>
+<span id="cb9-297"><a href="#cb9-297"></a>被汙染的尺（gold 答案洩漏進預訓練）的形狀。修法是確保測試集**真的 held-out**、並質疑「這把尺有沒有</span>
+<span id="cb9-298"><a href="#cb9-298"></a>被我要比的東西汙染過」。同一顆模型、換把乾淨的尺，結論可能整個翻——這是全書最重要的一課。</span>
+<span id="cb9-299"><a href="#cb9-299"></a>:::</span>
+<span id="cb9-300"><a href="#cb9-300"></a>:::</span>
+</code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
